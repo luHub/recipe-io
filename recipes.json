@@ -1,1 +1,228 @@
-
+[
+  {
+    "title": "Linguine with Harissa, Shrimp, and Parmigiano Reggiano",
+    "time": "35–45 min",
+    "servings": "2",
+    "ingredients": [
+      "1 red pointed pepper",
+      "2 garlic cloves",
+      "1 red onion",
+      "5g fresh basil",
+      "20g Parmigiano Reggiano",
+      "180g linguine",
+      "½ sachet dried oregano",
+      "20g harissa",
+      "160g shrimp",
+      "1 pack diced tomatoes with basil"
+    ],
+    "instructions": [
+      "Prep ingredients and cook pasta (reserve pasta water).",
+      "Cook pepper and shrimp, then set aside.",
+      "Sauté onion and garlic, add harissa, then tomatoes and spices. Simmer.",
+      "Combine pasta, shrimp, and sauce. Adjust with pasta water.",
+      "Finish with olive oil, parmesan, and basil."
+    ]
+  },
+  {
+    "title": "Stir-fry with Pork Tenderloin and Oyster Sauce",
+    "time": "30–40 min",
+    "servings": "2",
+    "ingredients": [
+      "150 g jasmine rice",
+      "1 green pointed bell pepper",
+      "1 bunch scallions",
+      "2 cm fresh ginger",
+      "2 garlic cloves",
+      "50 g oyster sauce",
+      "50 g bean sprouts",
+      "2 pork tenderloins",
+      "80 g onion chutney",
+      "1 sachet black sesame seeds",
+      "100 g broccolini",
+      "75 g sweet chili tortilla chips",
+      "1 tbsp sunflower oil",
+      "¼ chicken bouillon cube",
+      "120 ml water",
+      "1 tbsp butter",
+      "1 tsp sambal (optional)",
+      "Salt and pepper to taste"
+    ],
+    "instructions": [
+      "Cook jasmine rice for 10–12 minutes, drain and keep warm.",
+      "Prep vegetables: slice pepper, broccolini, scallions; mince garlic and ginger.",
+      "Stir-fry white scallions, then add pepper and broccolini.",
+      "Add garlic, ginger, oyster sauce, bouillon, and water. Simmer, then add bean sprouts.",
+      "Sear pork in butter, add onion chutney and remaining water.",
+      "Serve rice with vegetables, sliced pork, sauce, sesame seeds, and scallion greens."
+    ]
+  }
+  ,
+  {
+    "title": "Sticky Turkey with Vegetable Soup",
+    "time": "35–45 min",
+    "servings": "2",
+    "ingredients": [
+      "2 turkey fillets",
+      "1 onion",
+      "400 g potatoes",
+      "1 bell pepper",
+      "2 garlic cloves",
+      "50 g yogurt",
+      "1 bay leaf",
+      "3 tsp paprika powder",
+      "1 carrot",
+      "5 g fresh chives",
+      "80 g roasted pepper sauce",
+      "600 ml vegetable bouillon",
+      "1 tbsp butter",
+      "1 tbsp white balsamic vinegar",
+      "1 tsp honey",
+      "1 tsp ketjap manis",
+      "1 tsp white wine vinegar",
+      "1 tbsp sunflower oil",
+      "Salt and pepper to taste"
+    ],
+    "instructions": [
+      "Prepare bouillon. Slice onion, garlic, pepper, and carrot.",
+      "Cook onion, garlic, carrot in butter. Add potatoes.",
+      "Add paprika, bay leaf, vinegar, and bouillon. Simmer 12–15 minutes.",
+      "Cook turkey with paprika and pepper strips. Add honey and slice.",
+      "Mix yogurt with vinegar and chop chives.",
+      "Blend soup with roasted pepper sauce and ketjap.",
+      "Serve soup topped with turkey, yogurt drizzle, and chives."
+    ]
+  }
+  ,
+  {
+    "title": "Bulgur Bowl with Avocado and White Cheese",
+    "time": "25–35 min",
+    "servings": "2",
+    "ingredients": [
+      "2 red onions",
+      "2 tomatoes",
+      "150 g bulgur",
+      "20 g parsley and mint",
+      "20 g sliced almonds",
+      "1 avocado",
+      "50 g white cheese",
+      "20 g dried cranberries",
+      "½ sachet ground coriander",
+      "½ red pepper",
+      "¼ cucumber",
+      "350 ml vegetable bouillon",
+      "½ tbsp olive oil",
+      "1 tbsp white wine vinegar",
+      "Extra virgin olive oil to taste",
+      "Salt and pepper to taste"
+    ],
+    "instructions": [
+      "Prepare bouillon. Slice onion, cucumber, and tomatoes.",
+      "Cook bulgur in bouillon for 10–12 minutes, then drain.",
+      "Toast almonds. Caramelize onions in olive oil.",
+      "Chop herbs, slice avocado, crumble cheese, chop pepper.",
+      "Mix vegetables, vinegar, spices, bulgur, onions, and herbs.",
+      "Serve topped with avocado, almonds, cheese, cranberries, and herbs."
+    ]
+  }
+  ,
+  {
+    "title": "Flatbread with Pork Tenderloin and Feta Sauce",
+    "time": "30–40 min",
+    "servings": "2",
+    "ingredients": [
+      "1 red onion",
+      "2 garlic cloves",
+      "1 aubergine",
+      "1 tomato",
+      "1 sachet Middle Eastern spice mix",
+      "1 mini cucumber",
+      "Fresh dill, mint, parsley",
+      "50 g feta",
+      "150 g Greek yogurt",
+      "4 flatbreads",
+      "2 pork tenderloins",
+      "2 tbsp olive oil",
+      "2 tbsp red wine vinegar",
+      "1 tsp honey",
+      "Sambal to taste",
+      "Salt and pepper to taste"
+    ],
+    "instructions": [
+      "Pickle onion with vinegar and honey.",
+      "Slice aubergine, garlic, and pork.",
+      "Cook aubergine with garlic until soft.",
+      "Cook pork with spices and onion.",
+      "Prepare cucumber, herbs, tomato, and warm flatbread.",
+      "Mix feta, yogurt, cucumber, and herbs into sauce.",
+      "Assemble flatbreads with fillings and serve."
+    ]
+  }
+  ,
+  {
+    "title": "Fusion Risotto with Miso and Parmigiano Reggiano",
+    "time": "40–50 min",
+    "servings": "2",
+    "ingredients": [
+      "2 eggs",
+      "1 bunch scallions",
+      "250 g chestnut mushrooms",
+      "2 garlic cloves",
+      "25 g white miso",
+      "150 g risotto rice",
+      "100 g broccolini",
+      "1 lime",
+      "5 g Thai basil",
+      "50 g soy beans",
+      "1 sachet black sesame seeds",
+      "20 g Parmigiano Reggiano",
+      "50 g mascarpone",
+      "8 ml chili oil",
+      "2 tbsp olive oil",
+      "600 ml water",
+      "1 tbsp extra virgin olive oil",
+      "Optional low-sodium soy sauce",
+      "Salt and pepper to taste"
+    ],
+    "instructions": [
+      "Boil eggs for 6–8 minutes and cool. Prepare miso bouillon.",
+      "Sauté mushrooms, white scallions, and garlic. Add rice and toast.",
+      "Gradually add miso bouillon and cook risotto for 25–30 minutes.",
+      "Sauté broccolini and prepare lime dressing with soy beans and herbs.",
+      "Mix mascarpone and Parmigiano into risotto.",
+      "Serve risotto topped with broccolini salad and egg halves.",
+      "Finish with chili oil, sesame seeds, and remaining herbs."
+    ]
+  }
+  ,
+  {
+    "title": "Pumpkin Soup with Beurre Noisette, Sage, and Croutons",
+    "time": "35–45 min",
+    "servings": "2",
+    "ingredients": [
+      "1 onion",
+      "1 garlic clove",
+      "1 carrot",
+      "300 g pumpkin cubes",
+      "1 sweet potato",
+      "5 g fresh thyme",
+      "20 g pumpkin seeds",
+      "1 whole wheat ciabatta",
+      "10 g fresh sage",
+      "50 g crème fraîche",
+      "2 tbsp olive oil",
+      "600 ml vegetable bouillon",
+      "1 tbsp white balsamic vinegar",
+      "1 tbsp butter",
+      "1 tsp honey",
+      "Salt and pepper to taste"
+    ],
+    "instructions": [
+      "Sauté onion in olive oil and prepare bouillon.",
+      "Cook pumpkin, carrot, sweet potato, garlic, and thyme. Add vinegar, honey, and bouillon. Simmer.",
+      "Make croutons from ciabatta with garlic and olive oil.",
+      "Blend soup until smooth and season.",
+      "Fry sage and thyme in butter until golden, add pumpkin seeds.",
+      "Serve soup with crème fraîche, croutons, and sage butter topping."
+    ]
+  }
+]
