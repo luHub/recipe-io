@@ -1,44 +1,39 @@
-# Contribute
+# recipe-io
 
-## How to Add New Recipes via Pull Request
+Food instructables and more for the busy-busy life
 
-1. **Fork the Repository**: Click on the `Fork` button at the top right corner of the repository page to create a personal copy of the repository.
+## Have you ever! 
 
-2. **Clone Your Fork**: Use the following command to clone your forked repository to your local machine:
-   
-   ```bash
-   git clone https://github.com/your-username/recipe-io.git
-   ```
+Have you ever buried your face in your hands in the middle of the supermarket wondering why are you there, what life desicions took you to this extrange place, to buy food, food that you like, food that makes sense of totla connection with food... while the latest generations cannot remember a 10 items food list and the energy electrolytic wall shelft is growing as a reminder that Idiocracy is closer than we think?
 
-3. **Create a New Branch**: Before making changes, create a new branch:
-   
-   ```bash
-   git checkout -b your-feature-branch
-   ```
+## recipe-io (should be read as "recipio")
 
-4. **Edit the `recipes.json` File**: Open the `recipes.json` file in your preferred text editor and add your new recipe following the JSON format below:
+The ultimate food recipe interface to make your life easier. You load your recipes and it shows the instructions but also if you select more than one recipe you generate a global list of all the ingredients you need.
 
-   ```json
-   {
-     "name": "Recipe Name",
-     "ingredients": ["Ingredient 1", "Ingredient 2"],
-     "instructions": "Steps to make the recipe."
-   }
-   ```
+### recipe-io
 
-5. **Commit Your Changes**: After editing, save your changes and commit them:
-   
-   ```bash
-   git add recipes.json
-   git commit -m "Add new recipe: Recipe Name"
-   ```
+Recipe-io is a cutting edge code that runs locally on your phone or PC. Just donwload and open a browser
 
-6. **Push Your Changes**: Push the changes back to your fork:
-   
-   ```bash
-   git push origin your-feature-branch
-   ```
+- recipe.html
+- recipe.json
 
-7. **Create a Pull Request**: Go to the original repository on GitHub and click on the `Pull Requests` tab. Click on `New Pull Request` and select your branch. Fill out the necessary details and submit the pull request.
+## recipe.json
 
-Thank you for contributing!
+Is a file of recipes in json format. you can modify it and bring your own recipes (BYOR) l. 
+
+
+## Contribute 
+
+Create a MR with more recipes and we do a bigger list. 
+
+## Explore
+
+Put the code to any LLM, or do it your self, and start your spin-offs but don't forget to share or comment.
+
+## LLM tips
+
+- Plain JS
+- No Dependencies
+- Basic Accessibility
+- Basic CCS
+- If yoy are new, go for the theory of what a good UI should look like.
