@@ -8,7 +8,7 @@ Food instructables and more for the busy-busy life
 
 Have you ever buried your face in your hands in the middle of the supermarket wondering why are you there, what life desicions took you to this extrange place, to buy food, food that you like, food that makes sense of totla connection with food... while the latest generations cannot remember a 10 items food list and the energy electrolytic wall shelft is growing as a reminder that Idiocracy is closer than we think?
 
-## recipe-io (should be read as "recipio")
+## recipe-io (should be read as "recipe input output")
 
 The ultimate food recipe interface to make your life easier. You load your recipes and it shows the instructions but also if you select more than one recipe you generate a global list of all the ingredients you need.
 
