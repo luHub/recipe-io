@@ -1,12 +1,16 @@
 # README
 
-# recipe-io
+
+recipe-io
 
 Food instructables and more for the busy-busy life
 
 ## Have you ever! 
 
-Have you ever buried your face in your hands in the middle of the supermarket wondering why are you there, what life desicions took you to this extrange place, to buy food, food that you like, food that makes sense of totla connection with food... while the latest generations cannot remember a 10 items food list and the energy electrolytic wall shelft is growing as a reminder that Idiocracy is closer than we think?
+Have you ever buried your face in your hands in the middle of the supermarket wondering why are you there, what life desicions took you to this extrange place, to buy food, food that you like, food that you don't like, and food you just don't give a f#ck. The primitive man used to hunt the food, to chase the food, to take only what is needed, and bring it back as trophy of glory. Modern men just go to the supermarket as the edge point of a global supply chain. The primitive man, used to to knows the ways to hunt, the modern man got lost in the supermarket which is mostly saturated with useless crap and sugary fashion... Back in modern times... Grandmothers could store 30 days recipes in their brains, in the daemonic 
+sense of totla connection with food... while the latest generations cannot remember a 10 items food list and the energy electrolytic wall shelft is growing as a reminder that Idiocracy is closer than what we expect. But not everything is lost yet, we can get back on track with the "recipe-io" or "recipio" to help you... 
+
+
 
 ## recipe-io (should be read as "recipe input output")
 
