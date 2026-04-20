@@ -3,7 +3,7 @@
 
 recipe-io
 
-Food intractable and more for the busy-busy life
+Food instructable and more for the busy-busy life
 
 ## Have you ever! 
 
