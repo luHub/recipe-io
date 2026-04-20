@@ -225,4 +225,28 @@
       "Serve soup with crème fraîche, croutons, and sage butter topping."
     ]
   }
+,
+{
+  "title": "Ground Beef with Potatoes and Tomato",
+  "time": "40 min",
+  "servings": 4,
+  "ingredients": [
+    "1000 g ground beef",
+    "2 garlic cloves",
+    "1 onion",
+    "2 potatoes",
+    "1 tomato",
+    "salt",
+    "black pepper"
+  ],
+  "instructions": [
+    "Peel the potatoes and cut them into small cubes.",
+    "Chop the tomato.",
+    "Crush the garlic and mix it with the ground beef.",
+    "Finely chop the onion to taste.",
+    "Heat a pan over high heat and add the beef mixture, breaking it apart while cooking.",
+    "Reduce the heat to low and cover the pan.",
+    "Stir occasionally, turning the meat from the bottom to prevent burning and ensure even cooking."
+  ]
+}
 ]
