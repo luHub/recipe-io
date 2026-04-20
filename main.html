@@ -1,197 +1,242 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recipe Selector</title>
+
 <style>
 :root{
   --bg:#07070c;
   --panel:#0f0f18;
   --panel2:#121225;
   --text:#eaeaf2;
-  --muted:#a0a0b3;
-  --accent:#7c5cff;
-  --accent2:#00e5ff;
+  --accent:#00e5ff;
   --border:rgba(255,255,255,0.08);
-}*{box-sizing:border-box}
+}
 
-body { margin:0; font-family: Arial, Helvetica, sans-serif; background: radial-gradient(circle at top, #14142a 0%, var(--bg) 60%); color:var(--text); }
+*{box-sizing:border-box}
 
-.container { padding:16px; max-width:900px; margin:auto; display:flex; flex-direction:column; gap:14px; }
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(circle at top,#14142a 0%,var(--bg) 60%);
+  color:var(--text);
+}
 
-.card { background: linear-gradient(180deg, var(--panel), var(--panel2)); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:10px; }
+.container{
+  padding:16px;
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
 
-h2 { margin:0 0 8px 0; font-size:18px; letter-spacing:0.5px; }
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+}
 
-h3 { margin:0; font-size:18px; color:var(--accent2); }
+select, button{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  cursor:pointer;
+  transition:all 0.15s ease;
+}
 
-p { margin:4px 0; color:var(--muted); }
+button:active{
+  transform:scale(0.96);
+  box-shadow:0 0 0 3px rgba(0,229,255,0.2);
+}
 
-select, button { width:100%; padding:12px; background:rgba(255,255,255,0.03); color:var(--text); border:1px solid var(--border); border-radius:12px; outline:none; font-size:14px; transition:0.2s ease; }
+button:hover{
+  border-color:var(--accent);
+}
 
-select:focus, button:focus { border-color:var(--accent2); box-shadow:0 0 0 3px rgba(0,229,255,0.2); }
+.icon-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
 
-button { cursor:pointer; font-weight:bold; letter-spacing:0.5px; }
+.icon-btn svg{
+  width:16px;
+  height:16px;
+  fill:currentColor;
+}
 
-button:hover { border-color:var(--accent); transform: translateY(-1px); }
+label{
+  display:block;
+  margin:4px 0;
+}
 
-button:active { transform: translateY(0px); }
-
-label { display:flex; align-items:center; gap:10px; padding:6px 0; cursor:pointer; color:var(--text); }
-
-input[type="checkbox"] { accent-color: var(--accent2); transform: scale(1.1); }
-
-ul, ol { padding-left:18px; color:var(--text); }
-
-li { margin-bottom:4px; }
-
-.checkbox-list { max-height:220px; overflow:auto; padding-right:6px; display:flex; flex-direction:column; gap:6px; }
-
-/* accessibility */ :focus-visible { outline:2px solid var(--accent2); outline-offset:2px; }
-
-@media (prefers-reduced-motion: reduce) {
-
-{ transition:none !important; } } </style>
-
-
+ul, ol{
+  padding-left:18px;
+}
+</style>
 </head>
+
 <body>
-<div class="container"><div class="card">
+
+<div class="container">
+
+<div class="card">
 <h2>Select Recipe</h2>
-<select id="recipeSelect"></select>
-</div><div class="card">
+<select id="recipeSelect" onchange="showRecipe()"></select>
+</div>
+
+<div class="card">
 <h2>Recipe</h2>
 <div id="recipeDisplay"></div>
-</div><div class="card">
-<h2>Select Recipes for Grocery List</h2>
-<div id="recipeCheckboxes" class="checkbox-list"></div>
+</div>
+
+<div class="card">
+<h2>Select Recipes</h2>
+<div id="recipeCheckboxes"></div>
 <button onclick="generateGroceryList()">Generate Grocery List</button>
-</div><div class="card">
+</div>
+
+<div class="card">
 <h2>Grocery List</h2>
-<ul id="groceryList"></ul>
-</div></div><script>
-let recipes = [];
-let selectedRecipes = [];
+<div id="groceryList"></div>
+</div>
 
-async function loadRecipes() {
-  try {
-    const response = await fetch("recipes.json");
-    if (!response.ok) throw new Error("Failed to load recipes.json");
-    recipes = await response.json();
-    initUI();
-  } catch (err) {
-    console.error("Error loading recipes:", err);
-  }
-}
+</div>
 
-function initUI() {
-  populateSelect();
-  populateCheckboxes();
-}
+<script>
+let selectedRecipes=[];
 
-function populateSelect() {
-  const select = document.getElementById("recipeSelect");
-  select.innerHTML = "";
+function loadRecipes(){
+ fetch("recipes.json")
+  .then(r=>r.json())
+  .then(data=>{
+    window.recipes=data;
 
-  recipes.forEach((r, i) => {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = r.title;
-    select.appendChild(option);
+    const select=document.getElementById("recipeSelect");
+    data.forEach((r,i)=>{
+      const o=document.createElement("option");
+      o.value=i;
+      o.textContent=r.title;
+      select.appendChild(o);
+    });
+
+    renderCheckboxes();
+    showRecipe();
   });
-
-  select.addEventListener("change", () => {
-    displayRecipe(select.value);
-  });
-
-  if (recipes.length > 0) displayRecipe(0);
 }
 
-function displayRecipe(index) {
-  const r = recipes[index];
-  const container = document.getElementById("recipeDisplay");
+function showRecipe(){
+  const r=window.recipes[document.getElementById("recipeSelect").value];
 
-  container.innerHTML = "";
+  document.getElementById("recipeDisplay").innerHTML=
+  `<h3>${r.title}</h3>
+   <p><b>Time:</b> ${r.time || "-"}</p>
+   <p><b>Servings:</b> ${r.servings || "-"}</p>
 
-  const html = `
-    <h3>${r.title}</h3>
-    <p><b>Time:</b> ${r.time}</p>
-    <p><b>Servings:</b> ${r.servings}</p>
-    <h4>Ingredients</h4>
-    <ul>${r.ingredients.map(i => `<li>${i}</li>`).join("")}</ul>
-    <h4>Instructions</h4>
-    <ol>${r.instructions.map(s => `<li>${s}</li>`).join("")}</ol>
+   <h4>Ingredients</h4>
+   <ul>${(r.ingredients || []).map(i=>`<li>${i}</li>`).join("")}</ul>
+
+   <h4>Preparation</h4>
+   <ol>${(r.instructions || []).map(i=>`<li>${i}</li>`).join("")}</ol>
   `;
-
-  container.innerHTML = html;
 }
 
-function populateCheckboxes() {
-  const container = document.getElementById("recipeCheckboxes");
-  container.innerHTML = "";
+function renderCheckboxes(){
+  const c=document.getElementById("recipeCheckboxes");
+  c.innerHTML="";
 
-  recipes.forEach((r, i) => {
-    const label = document.createElement("label");
-    label.style.display = "block";
+  window.recipes.forEach((r,i)=>{
+    const label=document.createElement("label");
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.onchange = () => toggleRecipe(i);
+    const cb=document.createElement("input");
+    cb.type="checkbox";
 
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(" " + r.title));
+    cb.onchange=e=>{
+      if(e.target.checked) selectedRecipes.push(i);
+      else selectedRecipes=selectedRecipes.filter(v=>v!==i);
+    };
 
-    container.appendChild(label);
+    label.appendChild(cb);
+    label.append(" "+r.title);
+    c.appendChild(label);
   });
 }
 
-function toggleRecipe(index) {
-  if (selectedRecipes.includes(index)) {
-    selectedRecipes = selectedRecipes.filter(i => i !== index);
-  } else {
-    selectedRecipes.push(index);
+function parseIngredient(str){
+  const parts=str.split(" ");
+  const qty=parseFloat(parts[0]);
+
+  if(!isNaN(qty)){
+    return {
+      name:parts.slice(2).join(" "),
+      unit:parts[1]||"",
+      qty:qty
+    };
   }
+  return {name:str,unit:"",qty:1};
 }
 
-function parseIngredient(ingredient) {
-  const parts = ingredient.split(" ");
-  const quantity = parseFloat(parts[0]);
-
-  if (!isNaN(quantity)) {
-    const unit = parts[1] || "";
-    const name = parts.slice(2).join(" ");
-    return { name, quantity, unit };
+function generateGroceryList(){
+  if(selectedRecipes.length===0){
+    document.getElementById("groceryList").innerHTML="<p>No recipes selected</p>";
+    return;
   }
 
-  return { name: ingredient, quantity: 1, unit: "" };
-}
+  const map={};
 
-function generateGroceryList() {
-  const merged = {};
+  selectedRecipes.forEach(i=>{
+    window.recipes[i].ingredients.forEach(ing=>{
+      const p=parseIngredient(ing);
+      const key=p.name+"|"+p.unit;
 
-  selectedRecipes.forEach(index => {
-    recipes[index].ingredients.forEach(ingredient => {
-      const parsed = parseIngredient(ingredient);
-      const key = parsed.name + "|" + parsed.unit;
-
-      if (!merged[key]) {
-        merged[key] = { name: parsed.name, quantity: 0, unit: parsed.unit };
-      }
-
-      merged[key].quantity += parsed.quantity;
+      if(!map[key]) map[key]={...p};
+      else map[key].qty+=p.qty;
     });
   });
 
-  const list = document.getElementById("groceryList");
-  list.innerHTML = "";
-
-  Object.values(merged).forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = `${item.quantity} ${item.unit} ${item.name}`.trim();
-    list.appendChild(li);
+  const items=Object.values(map).map(i=>{
+    return `${i.qty} ${i.unit} ${i.name}`.trim();
   });
+
+  window.generatedText="Grocery List:\n"+items.join("\n");
+
+  document.getElementById("groceryList").innerHTML=
+  `<ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul>
+
+   <button class="icon-btn" onclick="copyList()">
+     <svg viewBox="0 0 16 16">
+       <path d="M0 4a2 2 0 0 1 2-2h6v2H2v10h10v-6h2v6a2 2 0 0 1-2 2H2z"/>
+       <path d="M5 0h6a2 2 0 0 1 2 2v6h-2V2H5z"/>
+     </svg>
+     Copy
+   </button>`;
 }
 
-loadRecipes();
-</script></body>
+function copyList(){
+  if(!window.generatedText) return;
+
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(window.generatedText);
+  }else{
+    const t=document.createElement("textarea");
+    t.value=window.generatedText;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    document.body.removeChild(t);
+  }
+}
+
+window.onload=loadRecipes;
+</script>
+
+</body>
 </html>
