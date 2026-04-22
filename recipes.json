@@ -948,5 +948,176 @@
       "Servir com manjericão."
     ]
   }
+},
+{
+  "title": {
+    "en": "Fusion Risotto with Miso and Parmigiano Reggiano",
+    "es": "Risotto Fusión con Miso y Parmigiano Reggiano",
+    "nl": "Fusion Risotto met Miso en Parmigiano Reggiano",
+    "de": "Fusion Risotto mit Miso und Parmigiano Reggiano",
+    "fr": "Risotto Fusion au Miso et Parmigiano Reggiano",
+    "it": "Risotto Fusion con Miso e Parmigiano Reggiano",
+    "pt": "Risoto Fusion com Miso e Parmigiano Reggiano"
+  },
+  "time": "40–50 min",
+  "servings": 2,
+  "ingredients": {
+    "en": [
+      "200 g risotto rice",
+      "1 tbsp white miso paste",
+      "20 g Parmigiano Reggiano",
+      "1 onion",
+      "1 garlic clove",
+      "700 ml vegetable broth",
+      "1 tbsp butter",
+      "1 tbsp olive oil",
+      "Salt and pepper"
+    ],
+    "es": [
+      "200 g arroz para risotto",
+      "1 cucharada de miso blanco",
+      "20 g Parmigiano Reggiano",
+      "1 cebolla",
+      "1 diente de ajo",
+      "700 ml caldo vegetal",
+      "1 cucharada de mantequilla",
+      "1 cucharada de aceite de oliva",
+      "Sal y pimienta"
+    ],
+    "nl": [
+      "200 g risottorijst",
+      "1 eetlepel witte misopasta",
+      "20 g Parmigiano Reggiano",
+      "1 ui",
+      "1 teentje knoflook",
+      "700 ml groentebouillon",
+      "1 eetlepel boter",
+      "1 eetlepel olijfolie",
+      "Zout en peper"
+    ],
+    "de": [
+      "200 g Risottoreis",
+      "1 EL weiße Miso-Paste",
+      "20 g Parmigiano Reggiano",
+      "1 Zwiebel",
+      "1 Knoblauchzehe",
+      "700 ml Gemüsebrühe",
+      "1 EL Butter",
+      "1 EL Olivenöl",
+      "Salz und Pfeffer"
+    ],
+    "fr": [
+      "200 g riz à risotto",
+      "1 cuillère à soupe de miso blanc",
+      "20 g Parmigiano Reggiano",
+      "1 oignon",
+      "1 gousse d’ail",
+      "700 ml bouillon de légumes",
+      "1 cuillère à soupe de beurre",
+      "1 cuillère à soupe d’huile d’olive",
+      "Sel et poivre"
+    ],
+    "it": [
+      "200 g riso per risotto",
+      "1 cucchiaio di miso bianco",
+      "20 g Parmigiano Reggiano",
+      "1 cipolla",
+      "1 spicchio d’aglio",
+      "700 ml brodo vegetale",
+      "1 cucchiaio di burro",
+      "1 cucchiaio di olio d’oliva",
+      "Sale e pepe"
+    ],
+    "pt": [
+      "200 g arroz para risoto",
+      "1 colher de sopa de miso branco",
+      "20 g Parmigiano Reggiano",
+      "1 cebola",
+      "1 dente de alho",
+      "700 ml caldo vegetal",
+      "1 colher de sopa de manteiga",
+      "1 colher de sopa de azeite",
+      "Sal e pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Heat the broth and keep it warm.",
+      "Chop onion and garlic.",
+      "Heat olive oil and butter in a pan.",
+      "Cook onion and garlic until soft.",
+      "Add risotto rice and toast for 1 minute.",
+      "Add broth gradually, stirring constantly.",
+      "Continue adding broth until rice is creamy and cooked.",
+      "Stir in miso paste and cheese.",
+      "Season with salt and pepper and serve."
+    ],
+    "es": [
+      "Calienta el caldo y mantenlo caliente.",
+      "Pica la cebolla y el ajo.",
+      "Calienta aceite y mantequilla en una sartén.",
+      "Sofríe la cebolla y el ajo.",
+      "Añade el arroz y tuéstalo 1 minuto.",
+      "Agrega el caldo poco a poco removiendo.",
+      "Continúa hasta que el arroz esté cremoso.",
+      "Añade miso y queso.",
+      "Sazona y sirve."
+    ],
+    "nl": [
+      "Verwarm de bouillon en houd warm.",
+      "Snipper ui en knoflook.",
+      "Verhit olie en boter in een pan.",
+      "Bak ui en knoflook zacht.",
+      "Voeg rijst toe en bak 1 minuut.",
+      "Voeg bouillon beetje bij beetje toe.",
+      "Roer tot de rijst romig is.",
+      "Roer miso en kaas erdoor.",
+      "Breng op smaak en serveer."
+    ],
+    "de": [
+      "Brühe erhitzen und warm halten.",
+      "Zwiebel und Knoblauch hacken.",
+      "Öl und Butter erhitzen.",
+      "Zwiebel und Knoblauch anbraten.",
+      "Reis hinzufügen und kurz rösten.",
+      "Nach und nach Brühe hinzufügen.",
+      "Rühren bis cremig.",
+      "Miso und Käse einrühren.",
+      "Würzen und servieren."
+    ],
+    "fr": [
+      "Chauffer le bouillon.",
+      "Hacher l’oignon et l’ail.",
+      "Chauffer huile et beurre.",
+      "Faire revenir l’oignon et l’ail.",
+      "Ajouter le riz et toaster.",
+      "Ajouter le bouillon progressivement.",
+      "Remuer jusqu’à texture crémeuse.",
+      "Ajouter miso et fromage.",
+      "Assaisonner et servir."
+    ],
+    "it": [
+      "Scaldare il brodo.",
+      "Tritare cipolla e aglio.",
+      "Scaldare olio e burro.",
+      "Soffriggere cipolla e aglio.",
+      "Aggiungere riso e tostare.",
+      "Aggiungere brodo poco a poco.",
+      "Mescolare fino a cremoso.",
+      "Aggiungere miso e formaggio.",
+      "Condire e servire."
+    ],
+    "pt": [
+      "Aquecer o caldo.",
+      "Picar cebola e alho.",
+      "Aquecer azeite e manteiga.",
+      "Refogar cebola e alho.",
+      "Adicionar arroz e tostar.",
+      "Adicionar caldo gradualmente.",
+      "Mexer até ficar cremoso.",
+      "Adicionar miso e queijo.",
+      "Temperar e servir."
+    ]
+  }
 }
 ]
