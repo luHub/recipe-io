@@ -7,23 +7,39 @@
 
 <style>
 :root{
-  --bg:#07070c;
-  --panel:#0f0f18;
-  --panel2:#121225;
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
   --text:#eaeaf2;
-  --accent:#00e5ff;
-  --border:rgba(255,255,255,0.08);
+  --accent:#00aaff;
 }
 
-*{box-sizing:border-box}
-
+/* base */
 body{
   margin:0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: radial-gradient(circle at top,#14142a 0%,var(--bg) 60%);
+  font-family: Arial, sans-serif;
+  background: var(--bg);
   color:var(--text);
 }
 
+/* language top bar */
+.topbar{
+  display:flex;
+  justify-content:flex-end;
+  padding:10px 16px;
+}
+
+.lang-select{
+  width:auto;
+  padding:6px 10px;
+  font-size:12px;
+  border-radius:8px;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+}
+
+/* layout */
 .container{
   padding:16px;
   max-width:900px;
@@ -33,208 +49,246 @@ body{
   gap:14px;
 }
 
+/* cards */
 .card{
-  background:linear-gradient(180deg,var(--panel),var(--panel2));
-  border:1px solid var(--border);
-  border-radius:16px;
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
   padding:16px;
 }
 
-select, button{
+/* inputs */
+select{
   width:100%;
   padding:12px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,0.03);
-  color:var(--text);
+  border-radius:10px;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+}
+
+/* BUTTONS (RAZOR STYLE ON) */
+button{
+  width:100%;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  padding:14px;
+  border-radius:10px;
   cursor:pointer;
-  transition:all 0.15s ease;
+  margin-top:10px;
+  font-weight:bold;
+
+  box-shadow:
+    0 0 6px rgba(0,170,255,0.4),
+    0 0 12px rgba(0,170,255,0.2);
+
+  transition:all 0.12s ease;
+}
+
+button:hover{
+  box-shadow:
+    0 0 10px rgba(0,170,255,0.6),
+    0 0 18px rgba(0,170,255,0.3);
 }
 
 button:active{
   transform:scale(0.96);
-  box-shadow:0 0 0 3px rgba(0,229,255,0.2);
+  box-shadow:
+    0 0 16px rgba(0,170,255,0.9),
+    0 0 28px rgba(0,170,255,0.5);
 }
 
-button:hover{
-  border-color:var(--accent);
-}
-
+/* copy icon button */
 .icon-btn{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:8px;
 }
 
 .icon-btn svg{
   width:16px;
   height:16px;
-  fill:currentColor;
+  fill:white;
 }
 
-label{
-  display:block;
-  margin:4px 0;
-}
+/* lists */
+ul,ol{padding-left:18px;}
+li{margin-bottom:4px;}
 
-ul, ol{
-  padding-left:18px;
-}
 </style>
 </head>
 
 <body>
 
+<!-- top bar -->
+<div class="topbar">
+  <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+    <option value="en">EN</option>
+    <option value="es">ES</option>
+    <option value="nl">NL</option>
+    <option value="de">DE</option>
+    <option value="fr">FR</option>
+    <option value="it">IT</option>
+    <option value="pt">PT</option>
+  </select>
+</div>
+
 <div class="container">
 
+<!-- recipe select -->
 <div class="card">
 <h2>Select Recipe</h2>
 <select id="recipeSelect" onchange="showRecipe()"></select>
 </div>
 
+<!-- recipe -->
 <div class="card">
 <h2>Recipe</h2>
 <div id="recipeDisplay"></div>
 </div>
 
+<!-- grocery selection -->
 <div class="card">
 <h2>Select Recipes</h2>
 <div id="recipeCheckboxes"></div>
 <button onclick="generateGroceryList()">Generate Grocery List</button>
 </div>
 
+<!-- grocery list -->
 <div class="card">
 <h2>Grocery List</h2>
-<div id="groceryList"></div>
+<div id="groceryList">No items yet</div>
 </div>
 
 </div>
 
 <script>
-let selectedRecipes=[];
+let recipes = [];
+let selectedRecipes = [];
+let currentLang = "en";
 
+/* load */
 function loadRecipes(){
- fetch("recipes.json")
-  .then(r=>r.json())
-  .then(data=>{
-    window.recipes=data;
-
-    const select=document.getElementById("recipeSelect");
-    data.forEach((r,i)=>{
-      const o=document.createElement("option");
-      o.value=i;
-      o.textContent=r.title;
-      select.appendChild(o);
+  fetch("recipes.json")
+    .then(r=>r.json())
+    .then(data=>{
+      recipes=data;
+      populateUI();
     });
-
-    renderCheckboxes();
-    showRecipe();
-  });
 }
 
+/* UI */
+function populateUI(){
+  const select=document.getElementById("recipeSelect");
+  select.innerHTML="";
+
+  recipes.forEach((r,i)=>{
+    const o=document.createElement("option");
+    o.value=i;
+    o.textContent=r.title[currentLang];
+    select.appendChild(o);
+  });
+
+  renderCheckboxes();
+  showRecipe();
+}
+
+/* recipe */
 function showRecipe(){
-  const r=window.recipes[document.getElementById("recipeSelect").value];
+  const r=recipes[document.getElementById("recipeSelect").value];
 
   document.getElementById("recipeDisplay").innerHTML=
-  `<h3>${r.title}</h3>
-   <p><b>Time:</b> ${r.time || "-"}</p>
-   <p><b>Servings:</b> ${r.servings || "-"}</p>
-
+  `<h3>${r.title[currentLang]}</h3>
    <h4>Ingredients</h4>
-   <ul>${(r.ingredients || []).map(i=>`<li>${i}</li>`).join("")}</ul>
-
+   <ul>${r.ingredients[currentLang].map(i=>`<li>${i}</li>`).join("")}</ul>
    <h4>Preparation</h4>
-   <ol>${(r.instructions || []).map(i=>`<li>${i}</li>`).join("")}</ol>
-  `;
+   <ol>${r.instructions[currentLang].map(i=>`<li>${i}</li>`).join("")}</ol>`;
 }
 
+/* checkboxes */
 function renderCheckboxes(){
   const c=document.getElementById("recipeCheckboxes");
   c.innerHTML="";
 
-  window.recipes.forEach((r,i)=>{
+  recipes.forEach((r,i)=>{
     const label=document.createElement("label");
 
     const cb=document.createElement("input");
     cb.type="checkbox";
-
     cb.onchange=e=>{
       if(e.target.checked) selectedRecipes.push(i);
       else selectedRecipes=selectedRecipes.filter(v=>v!==i);
     };
 
     label.appendChild(cb);
-    label.append(" "+r.title);
+    label.append(" "+r.title[currentLang]);
     c.appendChild(label);
   });
 }
 
+/* language */
+function changeLanguage(){
+  currentLang=document.getElementById("langSelect").value;
+  populateUI();
+}
+
+/* parse */
 function parseIngredient(str){
   const parts=str.split(" ");
   const qty=parseFloat(parts[0]);
 
   if(!isNaN(qty)){
-    return {
-      name:parts.slice(2).join(" "),
-      unit:parts[1]||"",
-      qty:qty
-    };
+    return {name:parts.slice(2).join(" "),unit:parts[1]||"",qty:qty};
   }
+
   return {name:str,unit:"",qty:1};
 }
 
+/* grocery list */
 function generateGroceryList(){
   if(selectedRecipes.length===0){
-    document.getElementById("groceryList").innerHTML="<p>No recipes selected</p>";
+    document.getElementById("groceryList").innerText="No recipes selected";
     return;
   }
 
-  const map={};
+  const merged={};
 
   selectedRecipes.forEach(i=>{
-    window.recipes[i].ingredients.forEach(ing=>{
-      const p=parseIngredient(ing);
+    recipes[i].ingredients[currentLang].forEach(item=>{
+      const p=parseIngredient(item);
       const key=p.name+"|"+p.unit;
 
-      if(!map[key]) map[key]={...p};
-      else map[key].qty+=p.qty;
+      if(!merged[key]) merged[key]={name:p.name,unit:p.unit,qty:0};
+      merged[key].qty+=p.qty;
     });
   });
 
-  const items=Object.values(map).map(i=>{
-    return `${i.qty} ${i.unit} ${i.name}`.trim();
-  });
+  const list=Object.values(merged)
+    .map(i=>`${i.qty} ${i.unit} ${i.name}`.trim());
 
-  window.generatedText="Grocery List:\n"+items.join("\n");
+  window.generatedText="Grocery List:\n"+list.join("\n");
 
   document.getElementById("groceryList").innerHTML=
-  `<ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul>
-
-   <button class="icon-btn" onclick="copyList()">
-     <svg viewBox="0 0 16 16">
-       <path d="M0 4a2 2 0 0 1 2-2h6v2H2v10h10v-6h2v6a2 2 0 0 1-2 2H2z"/>
-       <path d="M5 0h6a2 2 0 0 1 2 2v6h-2V2H5z"/>
-     </svg>
-     Copy
-   </button>`;
+    `<ul>${list.map(i=>`<li>${i}</li>`).join("")}</ul>
+     <button class="icon-btn" onclick="copyList()">
+       <svg viewBox="0 0 16 16">
+         <path d="M0 4a2 2 0 0 1 2-2h6v2H2v10h10v-6h2v6a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4z"/>
+         <path d="M5 0h6a2 2 0 0 1 2 2v6h-2V2H5V0z"/>
+       </svg>
+       Copy
+     </button>`;
 }
 
+/* copy */
 function copyList(){
-  if(!window.generatedText) return;
-
-  if(navigator.clipboard && window.isSecureContext){
+  if(navigator.clipboard){
     navigator.clipboard.writeText(window.generatedText);
-  }else{
-    const t=document.createElement("textarea");
-    t.value=window.generatedText;
-    document.body.appendChild(t);
-    t.select();
-    document.execCommand("copy");
-    document.body.removeChild(t);
   }
 }
 
+/* init */
 window.onload=loadRecipes;
 </script>
 
