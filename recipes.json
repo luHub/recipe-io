@@ -2148,5 +2148,147 @@
       "Cozinhar até ficarem macios, mas ainda crocantes."
     ]
   }
+},
+{
+  "id": 13,
+  "title": {
+    "en": "Ground Meat with Potatoes",
+    "es": "Carne Molida con Papas",
+    "nl": "Gehakt met Aardappelen",
+    "de": "Hackfleisch mit Kartoffeln",
+    "fr": "Viande Hachée aux Pommes de Terre",
+    "it": "Carne Macinata con Patate",
+    "pt": "Carne Moída com Batatas"
+  },
+  "ingredients": {
+    "en": [
+      "1 kg ground meat",
+      "2 garlic cloves",
+      "1 onion",
+      "Salt",
+      "Pepper",
+      "2 potatoes",
+      "1 tomato"
+    ],
+    "es": [
+      "1 kg carne molida",
+      "2 dientes de ajo",
+      "1 cebolla",
+      "Sal",
+      "Pimienta",
+      "2 papas",
+      "1 tomate"
+    ],
+    "nl": [
+      "1 kg gehakt",
+      "2 teentjes knoflook",
+      "1 ui",
+      "Zout",
+      "Peper",
+      "2 aardappelen",
+      "1 tomaat"
+    ],
+    "de": [
+      "1 kg Hackfleisch",
+      "2 Knoblauchzehen",
+      "1 Zwiebel",
+      "Salz",
+      "Pfeffer",
+      "2 Kartoffeln",
+      "1 Tomate"
+    ],
+    "fr": [
+      "1 kg viande hachée",
+      "2 gousses d'ail",
+      "1 oignon",
+      "Sel",
+      "Poivre",
+      "2 pommes de terre",
+      "1 tomate"
+    ],
+    "it": [
+      "1 kg carne macinata",
+      "2 spicchi d'aglio",
+      "1 cipolla",
+      "Sale",
+      "Pepe",
+      "2 patate",
+      "1 pomodoro"
+    ],
+    "pt": [
+      "1 kg carne moída",
+      "2 dentes de alho",
+      "1 cebola",
+      "Sal",
+      "Pimenta",
+      "2 batatas",
+      "1 tomate"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Peel the potatoes and cut them into small cubes.",
+      "Chop the tomato.",
+      "Crush the garlic and mix it with the ground meat.",
+      "Finely chop the onion (to taste).",
+      "Heat a pan on high heat and add the meat mixture, breaking it apart.",
+      "Reduce to low heat and cover with a lid.",
+      "Stir occasionally, turning the bottom meat to prevent burning and ensure even cooking."
+    ],
+    "es": [
+      "Pelar las papas y cortarlas en cuadritos pequeños.",
+      "Cortar el tomate.",
+      "Machacar el ajo y mezclar con la carne molida.",
+      "Picar la cebolla pequeña o al gusto.",
+      "En una sartén a fuego alto, mezclar y separar la carne.",
+      "Luego cocinar a fuego lento con la tapa puesta.",
+      "Mover de vez en cuando y voltear la carne del fondo para que no se queme y se cocine homogéneamente."
+    ],
+    "nl": [
+      "Schil de aardappelen en snijd ze in kleine blokjes.",
+      "Snijd de tomaat.",
+      "Plet de knoflook en meng met het gehakt.",
+      "Snijd de ui fijn naar smaak.",
+      "Verhit een pan op hoog vuur en bak het gehakt terwijl je het losmaakt.",
+      "Zet het vuur laag en dek af met een deksel.",
+      "Roer af en toe en draai het vlees om zodat het niet aanbrandt en gelijkmatig gaart."
+    ],
+    "de": [
+      "Kartoffeln schälen und in kleine Würfel schneiden.",
+      "Tomate schneiden.",
+      "Knoblauch zerdrücken und mit dem Hackfleisch mischen.",
+      "Zwiebel fein hacken (nach Geschmack).",
+      "Pfanne stark erhitzen und das Fleisch unter Rühren zerteilen.",
+      "Dann bei niedriger Hitze mit Deckel weitergaren.",
+      "Gelegentlich umrühren und wenden, damit nichts anbrennt und gleichmäßig gart."
+    ],
+    "fr": [
+      "Éplucher les pommes de terre et les couper en petits cubes.",
+      "Couper la tomate.",
+      "Écraser l'ail et le mélanger avec la viande hachée.",
+      "Hacher finement l'oignon selon le goût.",
+      "Chauffer une poêle à feu vif et émietter la viande.",
+      "Réduire à feu doux et couvrir.",
+      "Remuer de temps en temps en retournant la viande pour éviter qu'elle brûle et assurer une cuisson homogène."
+    ],
+    "it": [
+      "Pelare le patate e tagliarle a cubetti piccoli.",
+      "Tagliare il pomodoro.",
+      "Schiacciare l'aglio e mescolarlo con la carne macinata.",
+      "Tritare finemente la cipolla a piacere.",
+      "Scaldare una padella a fuoco alto e separare la carne mentre cuoce.",
+      "Abbassare la fiamma e coprire con un coperchio.",
+      "Mescolare di tanto in tanto e girare la carne per evitare che si bruci e cuocia uniformemente."
+    ],
+    "pt": [
+      "Descascar as batatas e cortá-las em cubos pequenos.",
+      "Cortar o tomate.",
+      "Amassar o alho e misturar com a carne moída.",
+      "Picar a cebola bem pequena ou a gosto.",
+      "Aquecer uma panela em fogo alto e separar a carne enquanto cozinha.",
+      "Depois reduzir o fogo e tampar.",
+      "Mexer ocasionalmente e virar a carne do fundo para evitar que queime e cozinhe uniformemente."
+    ]
+  }
 }
 ]
