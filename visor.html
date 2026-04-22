@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WebGL + Phone Camera</title>
+  <title>WebGL + Phone Camera + Overlay</title>
   <style>
     html, body {
       margin: 0;
@@ -16,6 +16,9 @@
       width: 100vw;
       height: 100vh;
       display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
     #error {
       position: absolute;
@@ -23,14 +26,18 @@
       left: 10px;
       color: red;
       font-family: monospace;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
 <canvas id="gl"></canvas>
+<canvas id="overlay"></canvas>
 <div id="error"></div><script>
-const canvas = document.getElementById('gl');
-const gl = canvas.getContext('webgl');
+const glCanvas = document.getElementById('gl');
+const overlayCanvas = document.getElementById('overlay');
+const overlayCtx = overlayCanvas.getContext('2d');
+const gl = glCanvas.getContext('webgl');
 const errorEl = document.getElementById('error');
 
 if (!gl) {
@@ -39,8 +46,10 @@ if (!gl) {
 }
 
 function resize() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+  glCanvas.width = innerWidth;
+  glCanvas.height = innerHeight;
+  overlayCanvas.width = innerWidth;
+  overlayCanvas.height = innerHeight;
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 }
 window.addEventListener('resize', resize);
@@ -71,9 +80,6 @@ function createShader(type, source) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error(gl.getShaderInfoLog(shader));
-  }
   return shader;
 }
 
@@ -83,7 +89,6 @@ gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, fsSource));
 gl.linkProgram(program);
 gl.useProgram(program);
 
-// Quad
 const vertices = new Float32Array([
   -1, -1,  0, 1,
    1, -1,  1, 1,
@@ -105,7 +110,7 @@ const a_texCoord = gl.getAttribLocation(program, 'a_texCoord');
 gl.enableVertexAttribArray(a_texCoord);
 gl.vertexAttribPointer(a_texCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
 
-// Texture
+// Video texture
 const texture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, texture);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -115,6 +120,31 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 const video = document.createElement('video');
 video.autoplay = true;
 video.playsInline = true;
+
+function drawOverlay() {
+  overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+  const w = 200;
+  const h = 60;
+  const x = overlayCanvas.width / 2 - w / 2;
+  const y = overlayCanvas.height / 2 - h / 2;
+
+  // transparent rectangle
+  overlayCtx.fillStyle = 'rgba(0, 255, 0, 0.15)';
+  overlayCtx.fillRect(x, y, w, h);
+
+  // border
+  overlayCtx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+  overlayCtx.lineWidth = 2;
+  overlayCtx.strokeRect(x, y, w, h);
+
+  // text
+  overlayCtx.fillStyle = 'rgba(0, 255, 0, 0.9)';
+  overlayCtx.font = '20px monospace';
+  overlayCtx.textAlign = 'center';
+  overlayCtx.textBaseline = 'middle';
+  overlayCtx.fillText('tracking', overlayCanvas.width / 2, overlayCanvas.height / 2);
+}
 
 async function startCamera() {
   try {
@@ -137,9 +167,13 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+  drawOverlay();
+
   requestAnimationFrame(render);
 }
 
-startCamera();
+document.body.addEventListener('click', () => startCamera(), { once: true });
+errorEl.textContent = "Tap to start camera";
+
 </script></body>
 </html>
