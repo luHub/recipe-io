@@ -1119,5 +1119,743 @@
       "Temperar e servir."
     ]
   }
+},
+{
+  "title": {
+    "en": "Pumpkin Soup with Sage Butter and Croutons",
+    "es": "Sopa de Calabaza con Mantequilla de Salvia y Crutones",
+    "nl": "Pompoensoep met Salieboter en Croutons",
+    "de": "Kürbissuppe mit Salbeibutter und Croutons",
+    "fr": "Soupe de Potiron au Beurre de Sauge et Croûtons",
+    "it": "Zuppa di Zucca con Burro alla Salvia e Crostini",
+    "pt": "Sopa de Abóbora com Manteiga de Sálvia e Croutons"
+  },
+  "time": "35–45 min",
+  "servings": 2,
+  "ingredients": {
+    "en": [
+      "1 onion",
+      "1 garlic clove",
+      "1 carrot",
+      "300 g pumpkin cubes",
+      "1 sweet potato",
+      "5 g fresh thyme",
+      "20 g pumpkin seeds",
+      "1 whole wheat ciabatta",
+      "10 g fresh sage",
+      "50 g crème fraîche",
+      "600 ml vegetable broth",
+      "1 tbsp olive oil",
+      "1 tbsp butter",
+      "1 tbsp white balsamic vinegar",
+      "1 tsp honey",
+      "Salt and pepper"
+    ],
+    "es": [
+      "1 cebolla",
+      "1 diente de ajo",
+      "1 zanahoria",
+      "300 g calabaza",
+      "1 batata",
+      "5 g tomillo fresco",
+      "20 g semillas de calabaza",
+      "1 pan ciabatta integral",
+      "10 g salvia fresca",
+      "50 g crème fraîche",
+      "600 ml caldo vegetal",
+      "1 cucharada de aceite de oliva",
+      "1 cucharada de mantequilla",
+      "1 cucharada de vinagre balsámico blanco",
+      "1 cucharadita de miel",
+      "Sal y pimienta"
+    ],
+    "nl": [
+      "1 ui",
+      "1 teentje knoflook",
+      "1 wortel",
+      "300 g pompoenblokjes",
+      "1 zoete aardappel",
+      "5 g verse tijm",
+      "20 g pompoenpitten",
+      "1 volkoren ciabatta",
+      "10 g verse salie",
+      "50 g crème fraîche",
+      "600 ml groentebouillon",
+      "1 eetlepel olijfolie",
+      "1 eetlepel boter",
+      "1 eetlepel witte balsamicoazijn",
+      "1 theelepel honing",
+      "Zout en peper"
+    ],
+    "de": [
+      "1 Zwiebel",
+      "1 Knoblauchzehe",
+      "1 Karotte",
+      "300 g Kürbiswürfel",
+      "1 Süßkartoffel",
+      "5 g frischer Thymian",
+      "20 g Kürbiskerne",
+      "1 Vollkorn-Ciabatta",
+      "10 g frischer Salbei",
+      "50 g Crème fraîche",
+      "600 ml Gemüsebrühe",
+      "1 EL Olivenöl",
+      "1 EL Butter",
+      "1 EL weißer Balsamico",
+      "1 TL Honig",
+      "Salz und Pfeffer"
+    ],
+    "fr": [
+      "1 oignon",
+      "1 gousse d’ail",
+      "1 carotte",
+      "300 g de potiron",
+      "1 patate douce",
+      "5 g de thym frais",
+      "20 g de graines de courge",
+      "1 ciabatta complète",
+      "10 g de sauge fraîche",
+      "50 g de crème fraîche",
+      "600 ml de bouillon de légumes",
+      "1 cuillère à soupe d’huile d’olive",
+      "1 cuillère à soupe de beurre",
+      "1 cuillère à soupe de vinaigre balsamique blanc",
+      "1 cuillère à café de miel",
+      "Sel et poivre"
+    ],
+    "it": [
+      "1 cipolla",
+      "1 spicchio d’aglio",
+      "1 carota",
+      "300 g di zucca",
+      "1 patata dolce",
+      "5 g di timo fresco",
+      "20 g semi di zucca",
+      "1 ciabatta integrale",
+      "10 g salvia fresca",
+      "50 g crème fraîche",
+      "600 ml brodo vegetale",
+      "1 cucchiaio di olio d’oliva",
+      "1 cucchiaio di burro",
+      "1 cucchiaio di aceto balsamico bianco",
+      "1 cucchiaino di miele",
+      "Sale e pepe"
+    ],
+    "pt": [
+      "1 cebola",
+      "1 dente de alho",
+      "1 cenoura",
+      "300 g de abóbora",
+      "1 batata doce",
+      "5 g de tomilho fresco",
+      "20 g sementes de abóbora",
+      "1 pão ciabatta integral",
+      "10 g sálvia fresca",
+      "50 g crème fraîche",
+      "600 ml caldo de legumes",
+      "1 colher de sopa de azeite",
+      "1 colher de sopa de manteiga",
+      "1 colher de sopa de vinagre balsâmico branco",
+      "1 colher de chá de mel",
+      "Sal e pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Prepare the vegetable broth.",
+      "Chop onion and garlic.",
+      "Cook onion in oil for 2–3 minutes.",
+      "Add pumpkin, carrot, sweet potato, garlic, and thyme.",
+      "Cook for 3–4 minutes.",
+      "Add vinegar, honey, and broth and simmer 12–15 minutes.",
+      "Blend into a smooth soup.",
+      "Make croutons by frying bread cubes with garlic.",
+      "Prepare sage butter by melting butter and frying sage and seeds.",
+      "Serve soup with crème fraîche, croutons, and sage butter."
+    ],
+    "es": [
+      "Prepara el caldo.",
+      "Pica cebolla y ajo.",
+      "Sofríe la cebolla.",
+      "Añade verduras y cocina.",
+      "Agrega vinagre, miel y caldo.",
+      "Cocina a fuego lento.",
+      "Tritura la sopa.",
+      "Haz crutones.",
+      "Prepara mantequilla de salvia.",
+      "Sirve con toppings."
+    ],
+    "nl": [
+      "Bereid de bouillon.",
+      "Snipper ui en knoflook.",
+      "Bak ui kort.",
+      "Voeg groenten toe.",
+      "Voeg azijn, honing en bouillon toe.",
+      "Laat sudderen.",
+      "Pureer de soep.",
+      "Maak croutons.",
+      "Maak salieboter.",
+      "Serveer met toppings."
+    ],
+    "de": [
+      "Brühe vorbereiten.",
+      "Zwiebel und Knoblauch schneiden.",
+      "Zwiebel anbraten.",
+      "Gemüse hinzufügen.",
+      "Essig, Honig und Brühe hinzufügen.",
+      "Köcheln lassen.",
+      "Pürieren.",
+      "Croutons zubereiten.",
+      "Salbeibutter machen.",
+      "Servieren."
+    ],
+    "fr": [
+      "Préparer le bouillon.",
+      "Hacher l’oignon et l’ail.",
+      "Faire revenir l’oignon.",
+      "Ajouter les légumes.",
+      "Ajouter vinaigre, miel et bouillon.",
+      "Laisser mijoter.",
+      "Mixer.",
+      "Faire les croûtons.",
+      "Préparer le beurre de sauge.",
+      "Servir."
+    ],
+    "it": [
+      "Preparare il brodo.",
+      "Tritare cipolla e aglio.",
+      "Soffriggere la cipolla.",
+      "Aggiungere le verdure.",
+      "Aggiungere aceto, miele e brodo.",
+      "Cuocere a fuoco lento.",
+      "Frullare.",
+      "Preparare crostini.",
+      "Fare burro alla salvia.",
+      "Servire."
+    ],
+    "pt": [
+      "Preparar o caldo.",
+      "Picar cebola e alho.",
+      "Refogar a cebola.",
+      "Adicionar vegetais.",
+      "Adicionar vinagre, mel e caldo.",
+      "Cozinhar lentamente.",
+      "Bater no liquidificador.",
+      "Fazer croutons.",
+      "Preparar manteiga de sálvia.",
+      "Servir."
+    ]
+  }
+},
+{
+  "title": {
+    "en": "Tacos with Steak, Avocado, and Cilantro",
+    "es": "Tacos con Carne, Aguacate y Cilantro",
+    "nl": "Taco's met Steak, Avocado en Koriander",
+    "de": "Tacos mit Steak, Avocado und Koriander",
+    "fr": "Tacos au Steak, Avocat et Coriandre",
+    "it": "Tacos con Manzo, Avocado e Coriandolo",
+    "pt": "Tacos com Carne, Abacate e Coentro"
+  },
+  "time": "25–30 min",
+  "servings": 2,
+  "ingredients": {
+    "en": [
+      "1 lime",
+      "1 orange",
+      "1 garlic clove",
+      "1 red onion",
+      "10 g fresh cilantro",
+      "8 taco shells",
+      "1 avocado",
+      "50 g white cheese",
+      "1 BBQ spice mix",
+      "300 g steak strips",
+      "1 Mexican spice mix",
+      "2 plum tomatoes",
+      "1 tbsp olive oil",
+      "1 tsp extra virgin olive oil",
+      "1 tsp white wine vinegar",
+      "1 tsp honey",
+      "1 tsp flour",
+      "Salt and pepper"
+    ],
+    "es": [
+      "1 lima",
+      "1 naranja",
+      "1 diente de ajo",
+      "1 cebolla roja",
+      "10 g cilantro fresco",
+      "8 tortillas de taco",
+      "1 aguacate",
+      "50 g queso blanco",
+      "1 mezcla BBQ",
+      "300 g tiras de carne",
+      "1 mezcla mexicana",
+      "2 tomates",
+      "1 cucharada de aceite de oliva",
+      "1 cucharadita de aceite de oliva virgen extra",
+      "1 cucharadita de vinagre blanco",
+      "1 cucharadita de miel",
+      "1 cucharadita de harina",
+      "Sal y pimienta"
+    ],
+    "nl": [
+      "1 limoen",
+      "1 sinaasappel",
+      "1 teentje knoflook",
+      "1 rode ui",
+      "10 g koriander",
+      "8 taco schelpen",
+      "1 avocado",
+      "50 g witte kaas",
+      "1 BBQ kruidenmix",
+      "300 g steakreepjes",
+      "1 Mexicaanse kruidenmix",
+      "2 tomaten",
+      "1 el olijfolie",
+      "1 tl extra vierge olijfolie",
+      "1 tl witte wijnazijn",
+      "1 tl honing",
+      "1 tl bloem",
+      "Zout en peper"
+    ],
+    "de": [
+      "1 Limette",
+      "1 Orange",
+      "1 Knoblauchzehe",
+      "1 rote Zwiebel",
+      "10 g Koriander",
+      "8 Taco-Schalen",
+      "1 Avocado",
+      "50 g Weißkäse",
+      "1 BBQ-Gewürz",
+      "300 g Rindfleischstreifen",
+      "1 mexikanische Gewürzmischung",
+      "2 Tomaten",
+      "1 EL Olivenöl",
+      "1 TL Olivenöl extra",
+      "1 TL Weißweinessig",
+      "1 TL Honig",
+      "1 TL Mehl",
+      "Salz und Pfeffer"
+    ],
+    "fr": [
+      "1 citron vert",
+      "1 orange",
+      "1 gousse d’ail",
+      "1 oignon rouge",
+      "10 g coriandre",
+      "8 tacos",
+      "1 avocat",
+      "50 g fromage blanc",
+      "1 mélange BBQ",
+      "300 g bœuf en lamelles",
+      "1 mélange mexicain",
+      "2 tomates",
+      "1 c. à soupe huile d’olive",
+      "1 c. à café huile d’olive",
+      "1 c. à café vinaigre",
+      "1 c. à café miel",
+      "1 c. à café farine",
+      "Sel et poivre"
+    ],
+    "it": [
+      "1 lime",
+      "1 arancia",
+      "1 spicchio d’aglio",
+      "1 cipolla rossa",
+      "10 g coriandolo",
+      "8 tacos",
+      "1 avocado",
+      "50 g formaggio bianco",
+      "1 mix BBQ",
+      "300 g strisce di manzo",
+      "1 mix messicano",
+      "2 pomodori",
+      "1 cucchiaio olio d’oliva",
+      "1 cucchiaino olio extra",
+      "1 cucchiaino aceto",
+      "1 cucchiaino miele",
+      "1 cucchiaino farina",
+      "Sale e pepe"
+    ],
+    "pt": [
+      "1 limão",
+      "1 laranja",
+      "1 dente de alho",
+      "1 cebola roxa",
+      "10 g coentro",
+      "8 tacos",
+      "1 abacate",
+      "50 g queijo branco",
+      "1 mistura BBQ",
+      "300 g carne em tiras",
+      "1 mistura mexicana",
+      "2 tomates",
+      "1 colher sopa azeite",
+      "1 colher chá azeite",
+      "1 colher chá vinagre",
+      "1 colher chá mel",
+      "1 colher chá farinha",
+      "Sal e pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Preheat oven to 180°C.",
+      "Prepare lime zest, juice, and orange juice.",
+      "Chop onion, garlic, and cilantro.",
+      "Marinate steak with spices, citrus, and honey.",
+      "Prepare pico de gallo with tomato, onion, and lime.",
+      "Warm taco shells in oven.",
+      "Slice avocado and crumble cheese.",
+      "Cook steak in pan with marinade.",
+      "Serve all ingredients separately.",
+      "Assemble tacos and enjoy."
+    ],
+    "es": [
+      "Precalienta el horno.",
+      "Prepara jugos y ralladura.",
+      "Pica ingredientes.",
+      "Marina la carne.",
+      "Prepara pico de gallo.",
+      "Calienta tacos.",
+      "Corta aguacate.",
+      "Cocina la carne.",
+      "Sirve todo separado.",
+      "Arma los tacos."
+    ],
+    "nl": [
+      "Verwarm oven voor.",
+      "Bereid sap en rasp.",
+      "Snijd ingrediënten.",
+      "Marineer vlees.",
+      "Maak pico de gallo.",
+      "Verwarm taco’s.",
+      "Snijd avocado.",
+      "Bak vlees.",
+      "Serveer apart.",
+      "Stel taco’s samen."
+    ],
+    "de": [
+      "Ofen vorheizen.",
+      "Zitrus vorbereiten.",
+      "Zutaten schneiden.",
+      "Fleisch marinieren.",
+      "Pico de gallo machen.",
+      "Tacos erwärmen.",
+      "Avocado schneiden.",
+      "Fleisch braten.",
+      "Alles servieren.",
+      "Tacos zusammenstellen."
+    ],
+    "fr": [
+      "Préchauffer le four.",
+      "Préparer les jus.",
+      "Couper ingrédients.",
+      "Mariner la viande.",
+      "Préparer pico de gallo.",
+      "Chauffer tacos.",
+      "Couper avocat.",
+      "Cuire viande.",
+      "Servir séparément.",
+      "Assembler tacos."
+    ],
+    "it": [
+      "Preriscaldare forno.",
+      "Preparare succhi.",
+      "Tagliare ingredienti.",
+      "Marinare carne.",
+      "Preparare pico de gallo.",
+      "Scaldare tacos.",
+      "Tagliare avocado.",
+      "Cuocere carne.",
+      "Servire separatamente.",
+      "Assemblare tacos."
+    ],
+    "pt": [
+      "Pré-aquecer forno.",
+      "Preparar sucos.",
+      "Cortar ingredientes.",
+      "Marinar carne.",
+      "Preparar pico de gallo.",
+      "Aquecer tacos.",
+      "Cortar abacate.",
+      "Cozinhar carne.",
+      "Servir separado.",
+      "Montar tacos."
+    ]
+  }
+},
+{
+  "id": 9,
+  "title": {
+    "en": "Stuffed Bell Peppers",
+    "es": "Pimientos Rellenos",
+    "nl": "Gevulde Paprika's",
+    "de": "Gefüllte Paprika",
+    "fr": "Poivrons Farcis",
+    "it": "Peperoni Ripieni",
+    "pt": "Pimentões Recheados"
+  },
+  "ingredients": {
+    "en": [
+      "3 bell peppers",
+      "250 g ground meat",
+      "1 onion",
+      "1 garlic clove",
+      "100 g rice",
+      "1 tomato",
+      "Salt",
+      "Pepper"
+    ],
+    "es": [
+      "3 pimientos",
+      "250 g carne molida",
+      "1 cebolla",
+      "1 diente de ajo",
+      "100 g arroz",
+      "1 tomate",
+      "Sal",
+      "Pimienta"
+    ],
+    "nl": [
+      "3 paprika's",
+      "250 g gehakt",
+      "1 ui",
+      "1 teentje knoflook",
+      "100 g rijst",
+      "1 tomaat",
+      "Zout",
+      "Peper"
+    ],
+    "de": [
+      "3 Paprika",
+      "250 g Hackfleisch",
+      "1 Zwiebel",
+      "1 Knoblauchzehe",
+      "100 g Reis",
+      "1 Tomate",
+      "Salz",
+      "Pfeffer"
+    ],
+    "fr": [
+      "3 poivrons",
+      "250 g viande hachée",
+      "1 oignon",
+      "1 gousse d'ail",
+      "100 g riz",
+      "1 tomate",
+      "Sel",
+      "Poivre"
+    ],
+    "it": [
+      "3 peperoni",
+      "250 g carne macinata",
+      "1 cipolla",
+      "1 spicchio d'aglio",
+      "100 g riso",
+      "1 pomodoro",
+      "Sale",
+      "Pepe"
+    ],
+    "pt": [
+      "3 pimentões",
+      "250 g carne moída",
+      "1 cebola",
+      "1 dente de alho",
+      "100 g arroz",
+      "1 tomate",
+      "Sal",
+      "Pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Cook the rice.",
+      "Chop onion, garlic, and tomato.",
+      "Mix everything with the meat.",
+      "Cut tops off peppers and remove seeds.",
+      "Stuff peppers with mixture.",
+      "Bake at 180°C for 30 minutes."
+    ],
+    "es": [
+      "Cocer el arroz.",
+      "Picar cebolla, ajo y tomate.",
+      "Mezclar todo con la carne.",
+      "Cortar la parte superior de los pimientos y quitar semillas.",
+      "Rellenar los pimientos.",
+      "Hornear a 180°C por 30 minutos."
+    ],
+    "nl": [
+      "Kook de rijst.",
+      "Snijd ui, knoflook en tomaat.",
+      "Meng alles met het gehakt.",
+      "Snijd de bovenkant van de paprika's en verwijder zaden.",
+      "Vul de paprika's.",
+      "Bak op 180°C gedurende 30 minuten."
+    ],
+    "de": [
+      "Reis kochen.",
+      "Zwiebel, Knoblauch und Tomate schneiden.",
+      "Alles mit dem Fleisch mischen.",
+      "Paprika oben abschneiden und Kerne entfernen.",
+      "Paprika füllen.",
+      "Bei 180°C 30 Minuten backen."
+    ],
+    "fr": [
+      "Cuire le riz.",
+      "Couper l'oignon, l'ail et la tomate.",
+      "Mélanger avec la viande.",
+      "Couper le haut des poivrons et enlever les graines.",
+      "Farcir les poivrons.",
+      "Cuire au four à 180°C pendant 30 minutes."
+    ],
+    "it": [
+      "Cuocere il riso.",
+      "Tagliare cipolla, aglio e pomodoro.",
+      "Mescolare con la carne.",
+      "Tagliare la parte superiore dei peperoni e rimuovere i semi.",
+      "Riempire i peperoni.",
+      "Cuocere in forno a 180°C per 30 minuti."
+    ],
+    "pt": [
+      "Cozinhar o arroz.",
+      "Cortar cebola, alho e tomate.",
+      "Misturar com a carne.",
+      "Cortar o topo dos pimentões e remover sementes.",
+      "Rechear os pimentões.",
+      "Assar a 180°C por 30 minutos."
+    ]
+  }
+},
+{
+  "id": 10,
+  "title": {
+    "en": "Pasta with Tomato Sauce",
+    "es": "Pasta con Salsa de Tomate",
+    "nl": "Pasta met Tomatensaus",
+    "de": "Pasta mit Tomatensauce",
+    "fr": "Pâtes à la Sauce Tomate",
+    "it": "Pasta al Pomodoro",
+    "pt": "Macarrão com Molho de Tomate"
+  },
+  "ingredients": {
+    "en": [
+      "200 g pasta",
+      "2 tomatoes",
+      "1 garlic clove",
+      "Olive oil",
+      "Salt",
+      "Pepper"
+    ],
+    "es": [
+      "200 g pasta",
+      "2 tomates",
+      "1 diente de ajo",
+      "Aceite de oliva",
+      "Sal",
+      "Pimienta"
+    ],
+    "nl": [
+      "200 g pasta",
+      "2 tomaten",
+      "1 teentje knoflook",
+      "Olijfolie",
+      "Zout",
+      "Peper"
+    ],
+    "de": [
+      "200 g Pasta",
+      "2 Tomaten",
+      "1 Knoblauchzehe",
+      "Olivenöl",
+      "Salz",
+      "Pfeffer"
+    ],
+    "fr": [
+      "200 g pâtes",
+      "2 tomates",
+      "1 gousse d'ail",
+      "Huile d'olive",
+      "Sel",
+      "Poivre"
+    ],
+    "it": [
+      "200 g pasta",
+      "2 pomodori",
+      "1 spicchio d'aglio",
+      "Olio d'oliva",
+      "Sale",
+      "Pepe"
+    ],
+    "pt": [
+      "200 g macarrão",
+      "2 tomates",
+      "1 dente de alho",
+      "Azeite de oliva",
+      "Sal",
+      "Pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Cook pasta according to package instructions.",
+      "Chop tomatoes and garlic.",
+      "Heat olive oil and sauté garlic.",
+      "Add tomatoes and cook until soft.",
+      "Mix sauce with pasta.",
+      "Season with salt and pepper."
+    ],
+    "es": [
+      "Cocer la pasta según las instrucciones.",
+      "Picar tomate y ajo.",
+      "Calentar aceite de oliva y sofreír el ajo.",
+      "Añadir el tomate y cocinar hasta que esté suave.",
+      "Mezclar con la pasta.",
+      "Agregar sal y pimienta."
+    ],
+    "nl": [
+      "Kook de pasta volgens de instructies.",
+      "Snijd tomaten en knoflook.",
+      "Verhit olijfolie en bak knoflook.",
+      "Voeg tomaten toe en kook tot zacht.",
+      "Meng met de pasta.",
+      "Breng op smaak met zout en peper."
+    ],
+    "de": [
+      "Pasta nach Anleitung kochen.",
+      "Tomaten und Knoblauch schneiden.",
+      "Olivenöl erhitzen und Knoblauch anbraten.",
+      "Tomaten hinzufügen und weich kochen.",
+      "Mit Pasta mischen.",
+      "Mit Salz und Pfeffer würzen."
+    ],
+    "fr": [
+      "Cuire les pâtes selon les instructions.",
+      "Couper tomates et ail.",
+      "Chauffer l'huile d'olive et faire revenir l'ail.",
+      "Ajouter les tomates et cuire jusqu'à tendreté.",
+      "Mélanger avec les pâtes.",
+      "Assaisonner avec sel et poivre."
+    ],
+    "it": [
+      "Cuocere la pasta secondo le istruzioni.",
+      "Tagliare pomodori e aglio.",
+      "Scaldare olio d'oliva e soffriggere l'aglio.",
+      "Aggiungere i pomodori e cuocere finché morbidi.",
+      "Mescolare con la pasta.",
+      "Aggiungere sale e pepe."
+    ],
+    "pt": [
+      "Cozinhar o macarrão conforme instruções.",
+      "Cortar tomate e alho.",
+      "Aquecer azeite e refogar o alho.",
+      "Adicionar tomate e cozinhar até ficar macio.",
+      "Misturar com o macarrão.",
+      "Temperar com sal e pimenta."
+    ]
+  }
 }
 ]
