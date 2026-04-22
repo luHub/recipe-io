@@ -1857,5 +1857,296 @@
       "Temperar com sal e pimenta."
     ]
   }
+},
+{
+  "id": 11,
+  "title": {
+    "en": "Chicken Salad",
+    "es": "Ensalada de Pollo",
+    "nl": "Kipsalade",
+    "de": "Hähnchensalat",
+    "fr": "Salade de Poulet",
+    "it": "Insalata di Pollo",
+    "pt": "Salada de Frango"
+  },
+  "ingredients": {
+    "en": [
+      "200 g chicken breast",
+      "Lettuce",
+      "1 tomato",
+      "1 cucumber",
+      "Olive oil",
+      "Salt",
+      "Pepper"
+    ],
+    "es": [
+      "200 g pechuga de pollo",
+      "Lechuga",
+      "1 tomate",
+      "1 pepino",
+      "Aceite de oliva",
+      "Sal",
+      "Pimienta"
+    ],
+    "nl": [
+      "200 g kipfilet",
+      "Sla",
+      "1 tomaat",
+      "1 komkommer",
+      "Olijfolie",
+      "Zout",
+      "Peper"
+    ],
+    "de": [
+      "200 g Hähnchenbrust",
+      "Salat",
+      "1 Tomate",
+      "1 Gurke",
+      "Olivenöl",
+      "Salz",
+      "Pfeffer"
+    ],
+    "fr": [
+      "200 g poitrine de poulet",
+      "Laitue",
+      "1 tomate",
+      "1 concombre",
+      "Huile d'olive",
+      "Sel",
+      "Poivre"
+    ],
+    "it": [
+      "200 g petto di pollo",
+      "Lattuga",
+      "1 pomodoro",
+      "1 cetriolo",
+      "Olio d'oliva",
+      "Sale",
+      "Pepe"
+    ],
+    "pt": [
+      "200 g peito de frango",
+      "Alface",
+      "1 tomate",
+      "1 pepino",
+      "Azeite de oliva",
+      "Sal",
+      "Pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Cook the chicken breast and let it cool.",
+      "Cut chicken into small pieces.",
+      "Wash and chop lettuce, tomato, and cucumber.",
+      "Mix all ingredients in a bowl.",
+      "Add olive oil, salt, and pepper.",
+      "Serve fresh."
+    ],
+    "es": [
+      "Cocinar la pechuga de pollo y dejar enfriar.",
+      "Cortar el pollo en trozos pequeños.",
+      "Lavar y cortar lechuga, tomate y pepino.",
+      "Mezclar todos los ingredientes en un bol.",
+      "Añadir aceite de oliva, sal y pimienta.",
+      "Servir fresco."
+    ],
+    "nl": [
+      "Bak de kipfilet en laat afkoelen.",
+      "Snijd de kip in stukjes.",
+      "Was en snijd sla, tomaat en komkommer.",
+      "Meng alles in een kom.",
+      "Voeg olijfolie, zout en peper toe.",
+      "Serveer vers."
+    ],
+    "de": [
+      "Hähnchenbrust kochen und abkühlen lassen.",
+      "Hähnchen in kleine Stücke schneiden.",
+      "Salat, Tomate und Gurke waschen und schneiden.",
+      "Alles in einer Schüssel mischen.",
+      "Olivenöl, Salz und Pfeffer hinzufügen.",
+      "Frisch servieren."
+    ],
+    "fr": [
+      "Cuire la poitrine de poulet et laisser refroidir.",
+      "Couper le poulet en petits morceaux.",
+      "Laver et couper laitue, tomate et concombre.",
+      "Mélanger tous les ingrédients dans un bol.",
+      "Ajouter huile d'olive, sel et poivre.",
+      "Servir frais."
+    ],
+    "it": [
+      "Cuocere il petto di pollo e lasciarlo raffreddare.",
+      "Tagliare il pollo a pezzi piccoli.",
+      "Lavare e tagliare lattuga, pomodoro e cetriolo.",
+      "Mescolare tutto in una ciotola.",
+      "Aggiungere olio d'oliva, sale e pepe.",
+      "Servire fresco."
+    ],
+    "pt": [
+      "Cozinhar o peito de frango e deixar esfriar.",
+      "Cortar o frango em pedaços pequenos.",
+      "Lavar e cortar alface, tomate e pepino.",
+      "Misturar tudo em uma tigela.",
+      "Adicionar azeite, sal e pimenta.",
+      "Servir fresco."
+    ]
+  }
+},
+{
+  "id": 12,
+  "title": {
+    "en": "Vegetable Stir Fry",
+    "es": "Salteado de Verduras",
+    "nl": "Roerbakgroenten",
+    "de": "Gemüsepfanne",
+    "fr": "Sauté de Légumes",
+    "it": "Verdure Saltate",
+    "pt": "Legumes Salteados"
+  },
+  "ingredients": {
+    "en": [
+      "1 bell pepper",
+      "1 zucchini",
+      "1 carrot",
+      "1 onion",
+      "2 garlic cloves",
+      "Soy sauce",
+      "Olive oil",
+      "Salt",
+      "Pepper"
+    ],
+    "es": [
+      "1 pimiento",
+      "1 calabacín",
+      "1 zanahoria",
+      "1 cebolla",
+      "2 dientes de ajo",
+      "Salsa de soja",
+      "Aceite de oliva",
+      "Sal",
+      "Pimienta"
+    ],
+    "nl": [
+      "1 paprika",
+      "1 courgette",
+      "1 wortel",
+      "1 ui",
+      "2 teentjes knoflook",
+      "Sojasaus",
+      "Olijfolie",
+      "Zout",
+      "Peper"
+    ],
+    "de": [
+      "1 Paprika",
+      "1 Zucchini",
+      "1 Karotte",
+      "1 Zwiebel",
+      "2 Knoblauchzehen",
+      "Sojasauce",
+      "Olivenöl",
+      "Salz",
+      "Pfeffer"
+    ],
+    "fr": [
+      "1 poivron",
+      "1 courgette",
+      "1 carotte",
+      "1 oignon",
+      "2 gousses d'ail",
+      "Sauce soja",
+      "Huile d'olive",
+      "Sel",
+      "Poivre"
+    ],
+    "it": [
+      "1 peperone",
+      "1 zucchina",
+      "1 carota",
+      "1 cipolla",
+      "2 spicchi d'aglio",
+      "Salsa di soia",
+      "Olio d'oliva",
+      "Sale",
+      "Pepe"
+    ],
+    "pt": [
+      "1 pimentão",
+      "1 abobrinha",
+      "1 cenoura",
+      "1 cebola",
+      "2 dentes de alho",
+      "Molho de soja",
+      "Azeite de oliva",
+      "Sal",
+      "Pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Wash and cut all vegetables into strips.",
+      "Chop garlic and onion.",
+      "Heat oil in a pan.",
+      "Cook garlic and onion first.",
+      "Add remaining vegetables and stir fry.",
+      "Add soy sauce, salt, and pepper.",
+      "Cook until vegetables are tender but still crisp."
+    ],
+    "es": [
+      "Lavar y cortar todas las verduras en tiras.",
+      "Picar el ajo y la cebolla.",
+      "Calentar aceite en una sartén.",
+      "Cocinar primero el ajo y la cebolla.",
+      "Agregar el resto de las verduras y saltear.",
+      "Añadir salsa de soja, sal y pimienta.",
+      "Cocinar hasta que estén tiernas pero crujientes."
+    ],
+    "nl": [
+      "Was en snijd alle groenten in reepjes.",
+      "Snijd knoflook en ui fijn.",
+      "Verhit olie in een pan.",
+      "Bak eerst knoflook en ui.",
+      "Voeg de rest van de groenten toe en roerbak.",
+      "Voeg sojasaus, zout en peper toe.",
+      "Bak tot de groenten gaar maar knapperig zijn."
+    ],
+    "de": [
+      "Gemüse waschen und in Streifen schneiden.",
+      "Knoblauch und Zwiebel hacken.",
+      "Öl in einer Pfanne erhitzen.",
+      "Zuerst Knoblauch und Zwiebel anbraten.",
+      "Restliches Gemüse hinzufügen und braten.",
+      "Sojasauce, Salz und Pfeffer hinzufügen.",
+      "Kochen, bis das Gemüse weich, aber noch knackig ist."
+    ],
+    "fr": [
+      "Laver et couper tous les légumes en bandes.",
+      "Hacher l'ail et l'oignon.",
+      "Chauffer l'huile dans une poêle.",
+      "Cuire d'abord l'ail et l'oignon.",
+      "Ajouter le reste des légumes et faire sauter.",
+      "Ajouter sauce soja, sel et poivre.",
+      "Cuire jusqu'à ce que les légumes soient tendres mais croquants."
+    ],
+    "it": [
+      "Lavare e tagliare tutte le verdure a strisce.",
+      "Tritare aglio e cipolla.",
+      "Scaldare l'olio in una padella.",
+      "Cuocere prima aglio e cipolla.",
+      "Aggiungere le altre verdure e saltare.",
+      "Aggiungere salsa di soia, sale e pepe.",
+      "Cuocere finché le verdure sono tenere ma croccanti."
+    ],
+    "pt": [
+      "Lavar e cortar todos os legumes em tiras.",
+      "Picar alho e cebola.",
+      "Aquecer o óleo em uma panela.",
+      "Cozinhar primeiro o alho e a cebola.",
+      "Adicionar os outros legumes e saltear.",
+      "Adicionar molho de soja, sal e pimenta.",
+      "Cozinhar até ficarem macios, mas ainda crocantes."
+    ]
+  }
 }
 ]
