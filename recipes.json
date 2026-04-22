@@ -620,5 +620,169 @@
       "Montar tacos"
     ]
   }
+},
+{
+  "title": {
+    "en": "Chicken Curry with Rice",
+    "es": "Curry de Pollo con Arroz",
+    "nl": "Kip Curry met Rijst",
+    "de": "Hähnchen-Curry mit Reis",
+    "fr": "Curry de Poulet avec Riz",
+    "it": "Curry di Pollo con Riso",
+    "pt": "Caril de Frango com Arroz"
+  },
+  "time": "30–40 min",
+  "servings": 2,
+  "ingredients": {
+    "en": [
+      "200 g chicken breast",
+      "1 onion",
+      "2 garlic cloves",
+      "1 tbsp curry powder",
+      "200 ml coconut milk",
+      "150 g rice",
+      "1 tbsp olive oil",
+      "Salt and pepper"
+    ],
+    "es": [
+      "200 g pechuga de pollo",
+      "1 cebolla",
+      "2 dientes de ajo",
+      "1 cucharada de curry en polvo",
+      "200 ml leche de coco",
+      "150 g arroz",
+      "1 cucharada de aceite de oliva",
+      "Sal y pimienta"
+    ],
+    "nl": [
+      "200 g kipfilet",
+      "1 ui",
+      "2 teentjes knoflook",
+      "1 eetlepel kerriepoeder",
+      "200 ml kokosmelk",
+      "150 g rijst",
+      "1 eetlepel olijfolie",
+      "Zout en peper"
+    ],
+    "de": [
+      "200 g Hähnchenbrust",
+      "1 Zwiebel",
+      "2 Knoblauchzehen",
+      "1 EL Currypulver",
+      "200 ml Kokosmilch",
+      "150 g Reis",
+      "1 EL Olivenöl",
+      "Salz und Pfeffer"
+    ],
+    "fr": [
+      "200 g blanc de poulet",
+      "1 oignon",
+      "2 gousses d’ail",
+      "1 cuillère à soupe de curry",
+      "200 ml lait de coco",
+      "150 g riz",
+      "1 cuillère à soupe d’huile d’olive",
+      "Sel et poivre"
+    ],
+    "it": [
+      "200 g petto di pollo",
+      "1 cipolla",
+      "2 spicchi d’aglio",
+      "1 cucchiaio di curry in polvere",
+      "200 ml latte di cocco",
+      "150 g riso",
+      "1 cucchiaio di olio d’oliva",
+      "Sale e pepe"
+    ],
+    "pt": [
+      "200 g peito de frango",
+      "1 cebola",
+      "2 dentes de alho",
+      "1 colher de sopa de curry",
+      "200 ml leite de coco",
+      "150 g arroz",
+      "1 colher de sopa de azeite",
+      "Sal e pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Cook the rice according to package instructions.",
+      "Cut the chicken into cubes.",
+      "Chop onion and garlic.",
+      "Heat oil in a pan and cook onion and garlic.",
+      "Add chicken and cook until browned.",
+      "Add curry powder and stir well.",
+      "Pour in coconut milk and simmer for 10–15 minutes.",
+      "Season with salt and pepper.",
+      "Serve with rice."
+    ],
+    "es": [
+      "Cocina el arroz según las instrucciones.",
+      "Corta el pollo en cubos.",
+      "Pica la cebolla y el ajo.",
+      "Calienta aceite y sofríe cebolla y ajo.",
+      "Añade el pollo y cocina hasta dorar.",
+      "Agrega el curry y mezcla bien.",
+      "Añade la leche de coco y cocina 10–15 minutos.",
+      "Sazona con sal y pimienta.",
+      "Sirve con arroz."
+    ],
+    "nl": [
+      "Kook de rijst volgens de instructies.",
+      "Snijd de kip in blokjes.",
+      "Snipper ui en knoflook.",
+      "Verhit olie en bak ui en knoflook.",
+      "Voeg kip toe en bak goudbruin.",
+      "Voeg kerrie toe en roer goed.",
+      "Voeg kokosmelk toe en laat 10–15 min sudderen.",
+      "Breng op smaak met zout en peper.",
+      "Serveer met rijst."
+    ],
+    "de": [
+      "Reis nach Packungsanweisung kochen.",
+      "Hähnchen in Würfel schneiden.",
+      "Zwiebel und Knoblauch hacken.",
+      "Öl erhitzen und Zwiebel und Knoblauch anbraten.",
+      "Hähnchen hinzufügen und anbraten.",
+      "Currypulver hinzufügen und gut umrühren.",
+      "Kokosmilch hinzufügen und 10–15 Minuten köcheln lassen.",
+      "Mit Salz und Pfeffer abschmecken.",
+      "Mit Reis servieren."
+    ],
+    "fr": [
+      "Cuire le riz selon les instructions.",
+      "Couper le poulet en dés.",
+      "Hacher l’oignon et l’ail.",
+      "Chauffer l’huile et faire revenir l’oignon et l’ail.",
+      "Ajouter le poulet et cuire jusqu’à doré.",
+      "Ajouter le curry et mélanger.",
+      "Verser le lait de coco et mijoter 10–15 minutes.",
+      "Saler et poivrer.",
+      "Servir avec le riz."
+    ],
+    "it": [
+      "Cuocere il riso secondo le istruzioni.",
+      "Tagliare il pollo a cubetti.",
+      "Tritare cipolla e aglio.",
+      "Scaldare l’olio e soffriggere cipolla e aglio.",
+      "Aggiungere il pollo e rosolare.",
+      "Aggiungere il curry e mescolare.",
+      "Versare il latte di cocco e cuocere per 10–15 minuti.",
+      "Aggiungere sale e pepe.",
+      "Servire con il riso."
+    ],
+    "pt": [
+      "Cozinhar o arroz conforme instruções.",
+      "Cortar o frango em cubos.",
+      "Picar cebola e alho.",
+      "Aquecer azeite e refogar cebola e alho.",
+      "Adicionar frango e dourar.",
+      "Adicionar curry e misturar.",
+      "Adicionar leite de coco e cozinhar por 10–15 minutos.",
+      "Temperar com sal e pimenta.",
+      "Servir com arroz."
+    ]
+  }
 }
 ]
