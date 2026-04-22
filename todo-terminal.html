@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Grocery TO-DO Terminal</title>
+
+<style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
+
+.container{
+  padding:16px;
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:16px;
+}
+
+/* header */
+h1{
+  margin:0;
+  font-size:18px;
+  letter-spacing:1px;
+  color:var(--accent);
+}
+
+/* terminal */
+.terminal{
+  background:#000;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:10px;
+  font-family: monospace;
+}
+
+#cmdInput{
+  width:100%;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#00ffcc;
+  font-family: monospace;
+  font-size:14px;
+}
+
+.log{
+  max-height:160px;
+  overflow:auto;
+  font-size:12px;
+  color:#aaa;
+  margin-top:8px;
+}
+
+/* todo */
+.todo-item{
+  display:flex;
+  gap:10px;
+  padding:6px 0;
+  align-items:center;
+  font-family: monospace;
+}
+
+.todo-item input{
+  transform:scale(1.2);
+}
+
+.done{
+  text-decoration: line-through;
+  opacity:0.5;
+}
+
+.output{
+  background:#000;
+  border:1px solid var(--accent);
+  padding:12px;
+  border-radius:10px;
+  font-size:13px;
+  white-space:pre-wrap;
+  font-family: monospace;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h1>Grocery TO-DO Terminal</h1>
+  </div>
+
+  <div class="card">
+    <h3>Terminal</h3>
+
+    <div class="terminal">
+      <div>> grocery terminal online</div>
+      <div>> type help</div>
+
+      <input id="cmdInput" placeholder="add milk / done 1 / list ..." />
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Grocery List</h3>
+    <div id="todoList"></div>
+  </div>
+
+  <div class="card">
+    <h3>Export Output</h3>
+    <div id="output" class="output"></div>
+  </div>
+
+</div>
+
+<script>
+const KEY = "grocery_todo_terminal";
+let todos = [];
+
+function log(msg){
+  const logBox = document.getElementById("log");
+  logBox.innerHTML += msg + "<br>";
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(todos));
+  update();
+}
+
+function load(){
+  const data = localStorage.getItem(KEY);
+  if(data) todos = JSON.parse(data);
+  update();
+}
+
+function update(){
+  render();
+  renderOutput();
+}
+
+function render(){
+  const box = document.getElementById("todoList");
+  box.innerHTML = "";
+
+  todos.forEach((t, i) => {
+    const div = document.createElement("div");
+    div.className = "todo-item";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = t.done;
+
+    cb.onchange = () => {
+      todos[i].done = cb.checked;
+      save();
+    };
+
+    const label = document.createElement("span");
+    label.textContent = (i+1) + ". " + t.text;
+    if(t.done) label.classList.add("done");
+
+    div.appendChild(cb);
+    div.appendChild(label);
+    box.appendChild(div);
+  });
+}
+
+function renderOutput(){
+  let out = "";
+  todos.forEach((t,i)=>{
+    out += (t.done ? "[x] " : "[ ] ") + (i+1) + " " + t.text + "\n";
+  });
+  document.getElementById("output").innerText = out;
+}
+
+function runCommand(cmd){
+  const parts = cmd.trim().split(" ");
+  const action = parts[0];
+
+  if(action === "help"){
+    log("Commands: add, done, undone, clear, list");
+  }
+
+  else if(action === "add"){
+    const text = cmd.replace("add ","");
+    todos.push({text, done:false});
+    log("Added: " + text);
+    save();
+  }
+
+  else if(action === "done"){
+    const i = parseInt(parts[1]) - 1;
+    if(todos[i]) todos[i].done = true;
+    log("Done: " + parts[1]);
+    save();
+  }
+
+  else if(action === "undone"){
+    const i = parseInt(parts[1]) - 1;
+    if(todos[i]) todos[i].done = false;
+    log("Undone: " + parts[1]);
+    save();
+  }
+
+  else if(action === "clear"){
+    todos = [];
+    log("All groceries cleared");
+    save();
+  }
+
+  else if(action === "list"){
+    todos.forEach((t,i)=>{
+      log((i+1)+". "+(t.done?"[x] ":"[ ] ")+t.text);
+    });
+  }
+
+  else{
+    log("Unknown command");
+  }
+}
+
+document.getElementById("cmdInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter"){
+    runCommand(e.target.value);
+    e.target.value = "";
+  }
+});
+
+load();
+</script>
+
+</body>
+</html>
