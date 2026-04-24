@@ -2290,5 +2290,210 @@
       "Mexer ocasionalmente e virar a carne do fundo para evitar que queime e cozinhe uniformemente."
     ]
   }
+},
+{
+  "id": 15,
+  "title": {
+    "en": "Tomato Risotto with Shrimp",
+    "es": "Risotto de Tomate con Camarones",
+    "nl": "Tomatenrisotto met Garnalen",
+    "de": "Tomatenrisotto mit Garnelen",
+    "fr": "Risotto à la Tomate avec Crevettes",
+    "it": "Risotto al Pomodoro con Gamberi",
+    "pt": "Risoto de Tomate com Camarões"
+  },
+  "ingredients": {
+    "en": [
+      "2 garlic cloves",
+      "1 onion",
+      "½ lemon",
+      "1 tomato paste tub",
+      "½ can cherry tomatoes",
+      "160 g shrimp",
+      "5 g fresh basil",
+      "40 g arugula",
+      "150 g risotto rice",
+      "2 tbsp olive oil",
+      "1 tsp extra virgin olive oil",
+      "500 ml vegetable broth",
+      "1 tbsp butter",
+      "1 tbsp balsamic vinegar",
+      "Salt",
+      "Pepper"
+    ],
+    "es": [
+      "2 dientes de ajo",
+      "1 cebolla",
+      "½ limón",
+      "1 bote de pasta de tomate",
+      "½ lata de tomates cherry",
+      "160 g camarones",
+      "5 g albahaca fresca",
+      "40 g rúcula",
+      "150 g arroz para risotto",
+      "2 cucharadas aceite de oliva",
+      "1 cucharadita aceite de oliva virgen extra",
+      "500 ml caldo vegetal",
+      "1 cucharada mantequilla",
+      "1 cucharada vinagre balsámico",
+      "Sal",
+      "Pimienta"
+    ],
+    "nl": [
+      "2 teentjes knoflook",
+      "1 ui",
+      "½ citroen",
+      "1 bakje tomatenpuree",
+      "½ blik cherrytomaten",
+      "160 g garnalen",
+      "5 g verse basilicum",
+      "40 g rucola",
+      "150 g risottorijst",
+      "2 el olijfolie",
+      "1 tl extra vierge olijfolie",
+      "500 ml groentebouillon",
+      "1 el boter",
+      "1 el balsamicoazijn",
+      "Zout",
+      "Peper"
+    ],
+    "de": [
+      "2 Knoblauchzehen",
+      "1 Zwiebel",
+      "½ Zitrone",
+      "1 Dose Tomatenmark",
+      "½ Dose Kirschtomaten",
+      "160 g Garnelen",
+      "5 g Basilikum",
+      "40 g Rucola",
+      "150 g Risottoreis",
+      "2 EL Olivenöl",
+      "1 TL Olivenöl extra",
+      "500 ml Gemüsebrühe",
+      "1 EL Butter",
+      "1 EL Balsamico",
+      "Salz",
+      "Pfeffer"
+    ],
+    "fr": [
+      "2 gousses d'ail",
+      "1 oignon",
+      "½ citron",
+      "1 pot de concentré de tomate",
+      "½ boîte de tomates cerises",
+      "160 g crevettes",
+      "5 g basilic",
+      "40 g roquette",
+      "150 g riz risotto",
+      "2 c. à soupe huile d'olive",
+      "1 c. à café huile d'olive extra",
+      "500 ml bouillon de légumes",
+      "1 c. à soupe beurre",
+      "1 c. à soupe vinaigre balsamique",
+      "Sel",
+      "Poivre"
+    ],
+    "it": [
+      "2 spicchi d'aglio",
+      "1 cipolla",
+      "½ limone",
+      "1 tubetto concentrato di pomodoro",
+      "½ lattina pomodorini",
+      "160 g gamberi",
+      "5 g basilico",
+      "40 g rucola",
+      "150 g riso per risotto",
+      "2 cucchiai olio d'oliva",
+      "1 cucchiaino olio extravergine",
+      "500 ml brodo vegetale",
+      "1 cucchiaio burro",
+      "1 cucchiaio aceto balsamico",
+      "Sale",
+      "Pepe"
+    ],
+    "pt": [
+      "2 dentes de alho",
+      "1 cebola",
+      "½ limão",
+      "1 pasta de tomate",
+      "½ lata de tomate cereja",
+      "160 g camarões",
+      "5 g manjericão",
+      "40 g rúcula",
+      "150 g arroz de risoto",
+      "2 colheres sopa azeite",
+      "1 colher chá azeite extra",
+      "500 ml caldo de legumes",
+      "1 colher sopa manteiga",
+      "1 colher sopa vinagre balsâmico",
+      "Sal",
+      "Pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Preheat oven to 200°C. Chop garlic and onion. Zest and juice lemon.",
+      "Sauté onion and garlic in butter. Add rice and tomato paste.",
+      "Gradually add broth while stirring for 20–25 minutes.",
+      "Roast cherry tomatoes with olive oil and vinegar for 15 minutes.",
+      "Cook shrimp in a pan for about 3 minutes.",
+      "Mix roasted tomatoes and half of basil into risotto.",
+      "Serve with shrimp, salad, and remaining basil."
+    ],
+    "es": [
+      "Precalentar horno a 200°C. Picar ajo y cebolla.",
+      "Sofreír ajo y cebolla con mantequilla. Añadir arroz y tomate.",
+      "Agregar caldo poco a poco durante 20–25 minutos.",
+      "Hornear tomates 15 minutos con aceite y vinagre.",
+      "Cocinar camarones 3 minutos.",
+      "Mezclar tomates y albahaca en el risotto.",
+      "Servir con camarones y ensalada."
+    ],
+    "nl": [
+      "Verwarm oven op 200°C. Snijd ui en knoflook.",
+      "Bak ui en knoflook in boter. Voeg rijst en tomatenpuree toe.",
+      "Voeg bouillon geleidelijk toe en roer 20–25 minuten.",
+      "Rooster tomaten 15 minuten.",
+      "Bak garnalen 3 minuten.",
+      "Meng tomaten en basilicum door risotto.",
+      "Serveer met garnalen en salade."
+    ],
+    "de": [
+      "Backofen auf 200°C vorheizen. Zwiebel und Knoblauch schneiden.",
+      "Zwiebel und Knoblauch anbraten. Reis und Tomatenmark zugeben.",
+      "Brühe nach und nach zugeben, 20–25 Minuten rühren.",
+      "Tomaten 15 Minuten rösten.",
+      "Garnelen 3 Minuten braten.",
+      "Tomaten und Basilikum unterheben.",
+      "Mit Garnelen servieren."
+    ],
+    "fr": [
+      "Préchauffer à 200°C. Couper les légumes.",
+      "Faire revenir avec beurre. Ajouter riz et tomate.",
+      "Ajouter bouillon progressivement 20–25 min.",
+      "Rôtir tomates 15 min.",
+      "Cuire crevettes 3 min.",
+      "Mélanger au risotto.",
+      "Servir avec salade."
+    ],
+    "it": [
+      "Preriscaldare a 200°C. Tagliare ingredienti.",
+      "Rosolare cipolla e aglio. Aggiungere riso e pomodoro.",
+      "Aggiungere brodo gradualmente 20–25 min.",
+      "Cuocere pomodori 15 min.",
+      "Cuocere gamberi 3 min.",
+      "Unire al risotto.",
+      "Servire."
+    ],
+    "pt": [
+      "Pré-aquecer a 200°C. Cortar ingredientes.",
+      "Refogar alho e cebola. Adicionar arroz e tomate.",
+      "Adicionar caldo aos poucos por 20–25 min.",
+      "Assar tomates 15 min.",
+      "Cozinhar camarões 3 min.",
+      "Misturar no risoto.",
+      "Servir."
+    ]
+  }
 }
 ]
