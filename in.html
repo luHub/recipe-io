@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Panel</title>
+
+<style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
+/* base */
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
+
+/* top bar */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 16px;
+}
+
+.title{
+  font-size:14px;
+  letter-spacing:2px;
+  opacity:0.8;
+}
+
+/* layout */
+.container{
+  padding:16px;
+  max-width:600px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* cards */
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:18px;
+}
+
+/* headings */
+h2{
+  margin-top:0;
+  font-size:16px;
+  letter-spacing:1px;
+}
+
+/* buttons */
+button{
+  width:100%;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  padding:14px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:10px;
+  font-weight:bold;
+
+  box-shadow:
+    0 0 6px rgba(0,170,255,0.4),
+    0 0 12px rgba(0,170,255,0.2);
+
+  transition:all 0.12s ease;
+}
+
+/* hover */
+button:hover{
+  box-shadow:
+    0 0 10px rgba(0,170,255,0.6),
+    0 0 18px rgba(0,170,255,0.3);
+}
+
+/* active */
+button:active{
+  transform:scale(0.96);
+  box-shadow:
+    0 0 16px rgba(0,170,255,0.9),
+    0 0 28px rgba(0,170,255,0.5);
+}
+
+/* accessibility focus */
+button:focus{
+  outline:2px solid #fff;
+  outline-offset:2px;
+}
+
+/* description text */
+.desc{
+  font-size:13px;
+  opacity:0.75;
+  margin-bottom:10px;
+}
+
+/* footer retro vibe */
+.footer{
+  text-align:center;
+  font-size:11px;
+  opacity:0.4;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div class="title">SYSTEM INTERFACE</div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Terminal Mode</h2>
+    <div class="desc">Access minimal command-style interface</div>
+    <button onclick="openLink('https://luhub.github.io/recipe-io/todo-terminal.html')">
+      OPEN TERMINAL
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>Main Interface</h2>
+    <div class="desc">Standard visual control panel</div>
+    <button onclick="openLink('https://luhub.github.io/recipe-io/main.html')">
+      OPEN MAIN UI
+    </button>
+  </div>
+
+</div>
+
+<div class="footer">
+  v1.0 • secure interface • ready
+</div>
+
+<script>
+function openLink(url){
+  window.open(url, "_blank");
+}
+</script>
+
+</body>
+</html>
