@@ -119,8 +119,11 @@ h1{
     <div class="terminal">
       <div>> load recipes</div>
       <div>> recipes</div>
-      <div>> 1 3  (Monday + Recipe 3)</div>
+      <div>> 1 3 (Monday + Recipe 3)</div>
+      <div>> 6 2 (Saturday + Recipe 2)</div>
       <div>> plan monday pasta</div>
+      <div>> delete monday</div>
+      <div>> clear</div>
 
       <input id="cmdInput" placeholder="Enter command..." />
       <div class="log" id="log"></div>
@@ -140,10 +143,10 @@ h1{
 </div>
 
 <script>
-const KEY = "meal_planner_v3";
+const KEY = "meal_planner_v4";
 
 const days = [
-  "monday","tuesday","wednesday","thursday","friday","sunday"
+  "monday","tuesday","wednesday","thursday","friday","saturday","sunday"
 ];
 
 let plan = {};
@@ -221,7 +224,6 @@ function handleShortcut(cmd){
 /* COMMAND */
 function runCommand(cmd){
 
-  /* shortcut first */
   if(handleShortcut(cmd)) return;
 
   const parts = cmd.split(" ");
@@ -257,13 +259,22 @@ function runCommand(cmd){
 
   if(action === "delete"){
     delete plan[parts[1]];
+    log("Deleted "+parts[1]);
     save();
     return;
   }
 
   if(action === "clear"){
     plan = {};
+    log("Cleared full plan");
     save();
+    return;
+  }
+
+  if(action === "show"){
+    days.forEach((d,i)=>{
+      log((i+1)+" "+d+": "+(plan[d] || "-"));
+    });
     return;
   }
 
