@@ -43,7 +43,6 @@ h1{
   color:var(--accent);
 }
 
-/* terminal */
 .terminal{
   background:#000;
   border:1px solid var(--accent);
@@ -64,14 +63,13 @@ h1{
 }
 
 .log{
-  max-height:140px;
+  max-height:160px;
   overflow:auto;
   font-size:12px;
   color:#aaa;
   margin-top:8px;
 }
 
-/* planner */
 .planner{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -96,7 +94,6 @@ h1{
   color:#00ffcc;
 }
 
-/* output */
 .output{
   background:#000;
   border:1px solid var(--accent);
@@ -122,10 +119,8 @@ h1{
     <div class="terminal">
       <div>> load recipes</div>
       <div>> recipes</div>
+      <div>> 1 3  (Monday + Recipe 3)</div>
       <div>> plan monday pasta</div>
-      <div>> edit monday pizza</div>
-      <div>> delete monday</div>
-      <div>> clear / show</div>
 
       <input id="cmdInput" placeholder="Enter command..." />
       <div class="log" id="log"></div>
@@ -145,7 +140,7 @@ h1{
 </div>
 
 <script>
-const KEY = "meal_planner_v2";
+const KEY = "meal_planner_v3";
 
 const days = [
   "monday","tuesday","wednesday","thursday","friday","sunday"
@@ -179,27 +174,56 @@ async function loadRecipes(){
     const res = await fetch("recipes.json");
     const data = await res.json();
 
-    recipes = data.map(r => {
-      if(r.title?.en) return r.title.en;
-      return Object.values(r.title || {})[0];
+    recipes = data.map(r => r.title?.en || Object.values(r.title || {})[0]);
+
+    log("Recipes loaded:");
+    recipes.forEach((r,i)=>{
+      log((i+1)+". "+r);
     });
 
-    log("Loaded "+recipes.length+" recipes");
-    log("Use: plan monday <recipe>");
   }catch(e){
     log("Error loading recipes.json");
   }
 }
 
-/* FIND RECIPE */
+/* FIND */
 function findRecipe(name){
   return recipes.find(r =>
     r.toLowerCase().includes(name.toLowerCase())
   );
 }
 
-/* COMMAND HANDLER */
+/* SHORTCUT HANDLER */
+function handleShortcut(cmd){
+  const parts = cmd.split(" ");
+
+  if(parts.length !== 2) return false;
+
+  const dayIndex = parseInt(parts[0]) - 1;
+  const recipeIndex = parseInt(parts[1]) - 1;
+
+  if(isNaN(dayIndex) || isNaN(recipeIndex)) return false;
+
+  const day = days[dayIndex];
+  const recipe = recipes[recipeIndex];
+
+  if(!day || !recipe){
+    log("Invalid shortcut");
+    return true;
+  }
+
+  plan[day] = recipe;
+  log("Planned "+day+" -> "+recipe);
+  save();
+  return true;
+}
+
+/* COMMAND */
 function runCommand(cmd){
+
+  /* shortcut first */
+  if(handleShortcut(cmd)) return;
+
   const parts = cmd.split(" ");
   const action = parts[0];
 
@@ -209,8 +233,9 @@ function runCommand(cmd){
   }
 
   if(action === "recipes"){
-    recipes.slice(0,20).forEach(r => log(r));
-    if(recipes.length > 20) log("...");
+    recipes.forEach((r,i)=>{
+      log((i+1)+". "+r);
+    });
     return;
   }
 
@@ -218,59 +243,27 @@ function runCommand(cmd){
     const day = parts[1];
     const inputName = parts.slice(2).join(" ");
 
-    if(!days.includes(day)){
-      log("Invalid day");
-      return;
-    }
-
     const match = findRecipe(inputName);
 
-    if(!match){
-      log("Recipe not found");
-      return;
-    }
-
-    plan[day] = match;
-    log("Planned "+day+" -> "+match);
-    save();
-    return;
-  }
-
-  if(action === "edit"){
-    const day = parts[1];
-    const inputName = parts.slice(2).join(" ");
-
-    const match = findRecipe(inputName);
-
-    if(match && plan[day]){
+    if(match){
       plan[day] = match;
-      log("Updated "+day+" -> "+match);
+      log("Planned "+day+" -> "+match);
       save();
     } else {
-      log("Edit failed");
+      log("Recipe not found");
     }
     return;
   }
 
   if(action === "delete"){
-    const day = parts[1];
-    delete plan[day];
-    log("Deleted "+day);
+    delete plan[parts[1]];
     save();
     return;
   }
 
   if(action === "clear"){
     plan = {};
-    log("Cleared full plan");
     save();
-    return;
-  }
-
-  if(action === "show"){
-    days.forEach(d=>{
-      log(d+": "+(plan[d] || "-"));
-    });
     return;
   }
 
@@ -282,12 +275,12 @@ function render(){
   const box = document.getElementById("planner");
   box.innerHTML = "";
 
-  days.forEach(day=>{
+  days.forEach((day,i)=>{
     const div = document.createElement("div");
     div.className = "day";
 
     const title = document.createElement("h4");
-    title.textContent = day.toUpperCase();
+    title.textContent = (i+1)+" "+day.toUpperCase();
 
     const recipe = document.createElement("div");
     recipe.className = "recipe";
@@ -304,8 +297,8 @@ function render(){
 /* EXPORT */
 function renderOutput(){
   let out = "";
-  days.forEach(d=>{
-    out += d.toUpperCase()+": "+(plan[d]||"-")+"\n";
+  days.forEach((d,i)=>{
+    out += (i+1)+" "+d.toUpperCase()+": "+(plan[d]||"-")+"\n";
   });
   document.getElementById("output").innerText = out;
 }
