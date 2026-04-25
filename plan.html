@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Planner Terminal</title>
+
+<style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
+
+.container{
+  padding:12px;
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:14px;
+}
+
+h1{
+  margin:0;
+  font-size:18px;
+  color:var(--accent);
+}
+
+/* terminal */
+.terminal{
+  background:#000;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:10px;
+  font-family: monospace;
+}
+
+#cmdInput{
+  width:100%;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#00ffcc;
+  font-family: monospace;
+  font-size:16px;
+  padding:10px 0;
+}
+
+.log{
+  max-height:140px;
+  overflow:auto;
+  font-size:12px;
+  color:#aaa;
+  margin-top:8px;
+}
+
+/* planner */
+.planner{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.day{
+  background:#000;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:10px;
+  font-family: monospace;
+}
+
+.day h4{
+  margin:0 0 6px 0;
+  color:var(--accent);
+}
+
+.recipe{
+  font-size:14px;
+  color:#00ffcc;
+}
+
+/* output */
+.output{
+  background:#000;
+  border:1px solid var(--accent);
+  padding:12px;
+  border-radius:10px;
+  font-size:13px;
+  white-space:pre-wrap;
+  font-family: monospace;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h1>Meal Planner Terminal</h1>
+  </div>
+
+  <div class="card">
+    <h3>Terminal</h3>
+    <div class="terminal">
+      <div>> load recipes</div>
+      <div>> recipes</div>
+      <div>> plan monday pasta</div>
+      <div>> edit monday pizza</div>
+      <div>> delete monday</div>
+      <div>> clear / show</div>
+
+      <input id="cmdInput" placeholder="Enter command..." />
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Weekly Plan</h3>
+    <div id="planner" class="planner"></div>
+  </div>
+
+  <div class="card">
+    <h3>Export</h3>
+    <div id="output" class="output"></div>
+  </div>
+
+</div>
+
+<script>
+const KEY = "meal_planner_v2";
+
+const days = [
+  "monday","tuesday","wednesday","thursday","friday","sunday"
+];
+
+let plan = {};
+let recipes = [];
+
+/* LOG */
+function log(msg){
+  const box = document.getElementById("log");
+  box.innerHTML += msg + "<br>";
+  box.scrollTop = box.scrollHeight;
+}
+
+/* STORAGE */
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(plan));
+  render();
+}
+
+function load(){
+  const data = localStorage.getItem(KEY);
+  if(data) plan = JSON.parse(data);
+  render();
+}
+
+/* LOAD RECIPES */
+async function loadRecipes(){
+  try{
+    const res = await fetch("recipes.json");
+    const data = await res.json();
+
+    recipes = data.map(r => {
+      if(r.title?.en) return r.title.en;
+      return Object.values(r.title || {})[0];
+    });
+
+    log("Loaded "+recipes.length+" recipes");
+    log("Use: plan monday <recipe>");
+  }catch(e){
+    log("Error loading recipes.json");
+  }
+}
+
+/* FIND RECIPE */
+function findRecipe(name){
+  return recipes.find(r =>
+    r.toLowerCase().includes(name.toLowerCase())
+  );
+}
+
+/* COMMAND HANDLER */
+function runCommand(cmd){
+  const parts = cmd.split(" ");
+  const action = parts[0];
+
+  if(action === "load"){
+    loadRecipes();
+    return;
+  }
+
+  if(action === "recipes"){
+    recipes.slice(0,20).forEach(r => log(r));
+    if(recipes.length > 20) log("...");
+    return;
+  }
+
+  if(action === "plan"){
+    const day = parts[1];
+    const inputName = parts.slice(2).join(" ");
+
+    if(!days.includes(day)){
+      log("Invalid day");
+      return;
+    }
+
+    const match = findRecipe(inputName);
+
+    if(!match){
+      log("Recipe not found");
+      return;
+    }
+
+    plan[day] = match;
+    log("Planned "+day+" -> "+match);
+    save();
+    return;
+  }
+
+  if(action === "edit"){
+    const day = parts[1];
+    const inputName = parts.slice(2).join(" ");
+
+    const match = findRecipe(inputName);
+
+    if(match && plan[day]){
+      plan[day] = match;
+      log("Updated "+day+" -> "+match);
+      save();
+    } else {
+      log("Edit failed");
+    }
+    return;
+  }
+
+  if(action === "delete"){
+    const day = parts[1];
+    delete plan[day];
+    log("Deleted "+day);
+    save();
+    return;
+  }
+
+  if(action === "clear"){
+    plan = {};
+    log("Cleared full plan");
+    save();
+    return;
+  }
+
+  if(action === "show"){
+    days.forEach(d=>{
+      log(d+": "+(plan[d] || "-"));
+    });
+    return;
+  }
+
+  log("Unknown command");
+}
+
+/* RENDER */
+function render(){
+  const box = document.getElementById("planner");
+  box.innerHTML = "";
+
+  days.forEach(day=>{
+    const div = document.createElement("div");
+    div.className = "day";
+
+    const title = document.createElement("h4");
+    title.textContent = day.toUpperCase();
+
+    const recipe = document.createElement("div");
+    recipe.className = "recipe";
+    recipe.textContent = plan[day] || "-";
+
+    div.appendChild(title);
+    div.appendChild(recipe);
+    box.appendChild(div);
+  });
+
+  renderOutput();
+}
+
+/* EXPORT */
+function renderOutput(){
+  let out = "";
+  days.forEach(d=>{
+    out += d.toUpperCase()+": "+(plan[d]||"-")+"\n";
+  });
+  document.getElementById("output").innerText = out;
+}
+
+/* INPUT */
+const input = document.getElementById("cmdInput");
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){
+    runCommand(input.value.trim());
+    input.value = "";
+  }
+});
+
+load();
+</script>
+
+</body>
+</html>
