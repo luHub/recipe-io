@@ -1,180 +1,46 @@
-
 <!doctype html>
 
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WebGL + Phone Camera + Overlay</title>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: #000;
-      overflow: hidden;
-    }
-    canvas {
-      width: 100vw;
-      height: 100vh;
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #error {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: red;
-      font-family: monospace;
-      z-index: 10;
-    }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>html,body{margin:0;height:100%;background:#000}canvas{width:100vw;height:100vh;display:block}</style>
 </head>
 <body>
 <canvas id="gl"></canvas>
-<canvas id="overlay"></canvas>
-<div id="error"></div><script>
-const glCanvas = document.getElementById('gl');
-const overlayCanvas = document.getElementById('overlay');
-const overlayCtx = overlayCanvas.getContext('2d');
-const gl = glCanvas.getContext('webgl');
-const errorEl = document.getElementById('error');
+<script>
+const gl = document.getElementById('gl').getContext('webgl');function resize(){ gl.canvas.width = innerWidth; gl.canvas.height = innerHeight; gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight); } addEventListener('resize',resize);resize();
 
-if (!gl) {
-  errorEl.textContent = 'WebGL not supported';
-  throw new Error('WebGL not supported');
-}
+const vs=attribute vec2 p;varying vec2 uv;void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);} ;
 
-function resize() {
-  glCanvas.width = innerWidth;
-  glCanvas.height = innerHeight;
-  overlayCanvas.width = innerWidth;
-  overlayCanvas.height = innerHeight;
-  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-}
-window.addEventListener('resize', resize);
-resize();
+// signed distance box floatBox = float box(vec2 p, vec2 b){vec2 d=abs(p)-b;return length(max(d,0.))+min(max(d.x,d.y),0.);} ;
 
-// Vertex shader
-const vsSource = `
-attribute vec2 a_position;
-attribute vec2 a_texCoord;
-varying vec2 v_texCoord;
-void main() {
-  gl_Position = vec4(a_position, 0.0, 1.0);
-  v_texCoord = a_texCoord;
-}
-`;
+// simple SDF text (very minimal "TRACKING") const fs=`precision mediump float;uniform sampler2D cam;varying vec2 uv;${floatBox}
 
-// Fragment shader
-const fsSource = `
-precision mediump float;
-uniform sampler2D u_texture;
-varying vec2 v_texCoord;
-void main() {
-  gl_FragColor = texture2D(u_texture, v_texCoord);
-}
-`;
+float charT(vec2 p){return box(p-vec2(0.,0.3),vec2(0.5,0.1))+box(p-vec2(0.,-0.2),vec2(0.1,0.5));} float charR(vec2 p){return box(p,vec2(0.1,0.6))+box(p-vec2(0.2,0.4),vec2(0.3,0.2));} float charA(vec2 p){return box(p-vec2(0.,0.2),vec2(0.4,0.1))+box(p-vec2(0.,-0.2),vec2(0.1,0.5));}
 
-function createShader(type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  return shader;
-}
+float text(vec2 p){ float d=1e5; p*=5.; d=min(d,charT(p-vec2(-2.,0.))); d=min(d,charR(p-vec2(-1.,0.))); d=min(d,charA(p-vec2(0.,0.))); return d; }
 
-const program = gl.createProgram();
-gl.attachShader(program, createShader(gl.VERTEX_SHADER, vsSource));
-gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, fsSource));
-gl.linkProgram(program);
-gl.useProgram(program);
+void main(){ vec4 col=texture2D(cam,uv);
 
-const vertices = new Float32Array([
-  -1, -1,  0, 1,
-   1, -1,  1, 1,
-  -1,  1,  0, 0,
-   1,  1,  1, 0,
-]);
+// center box vec2 center=vec2(.5,.5); vec2 size=vec2(.2,.1); float d=box(uv-center,size);
 
-const buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+if(d<0.){ col=mix(col,vec4(0.,1.,0.,1.),0.2);
 
-const FSIZE = vertices.BYTES_PER_ELEMENT;
+vec2 local=(uv-center)/size; float td=text(local); float alpha=smoothstep(0.02,0.0,td); col=mix(col,vec4(0.,1.,0.,1.),alpha); }
 
-const a_position = gl.getAttribLocation(program, 'a_position');
-gl.enableVertexAttribArray(a_position);
-gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, FSIZE * 4, 0);
+gl_FragColor=col; }`;
 
-const a_texCoord = gl.getAttribLocation(program, 'a_texCoord');
-gl.enableVertexAttribArray(a_texCoord);
-gl.vertexAttribPointer(a_texCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+function sh(t,s){let x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);return x} let pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);
 
-// Video texture
-const texture = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, texture);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+let buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); let loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
-const video = document.createElement('video');
-video.autoplay = true;
-video.playsInline = true;
+let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 
-function drawOverlay() {
-  overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+let video=document.createElement('video');video.autoplay=true;video.playsInline=true;
 
-  const w = 200;
-  const h = 60;
-  const x = overlayCanvas.width / 2 - w / 2;
-  const y = overlayCanvas.height / 2 - h / 2;
+navigator.mediaDevices.getUserMedia({video:true}).then(s=>{ video.srcObject=s;video.play();requestAnimationFrame(draw); });
 
-  // transparent rectangle
-  overlayCtx.fillStyle = 'rgba(0, 255, 0, 0.15)';
-  overlayCtx.fillRect(x, y, w, h);
+function draw(){ if(video.readyState>=2){ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video); } gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(draw); } </script>
 
-  // border
-  overlayCtx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
-  overlayCtx.lineWidth = 2;
-  overlayCtx.strokeRect(x, y, w, h);
-
-  // text
-  overlayCtx.fillStyle = 'rgba(0, 255, 0, 0.9)';
-  overlayCtx.font = '20px monospace';
-  overlayCtx.textAlign = 'center';
-  overlayCtx.textBaseline = 'middle';
-  overlayCtx.fillText('tracking', overlayCanvas.width / 2, overlayCanvas.height / 2);
-}
-
-async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    video.srcObject = stream;
-    await video.play();
-    requestAnimationFrame(render);
-  } catch (err) {
-    errorEl.textContent = 'Camera error: ' + err.message;
-  }
-}
-
-function render() {
-  if (video.readyState >= 2) {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-  }
-
-  gl.clearColor(0, 0, 0, 1);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-  drawOverlay();
-
-  requestAnimationFrame(render);
-}
-
-document.body.addEventListener('click', () => startCamera(), { once: true });
-errorEl.textContent = "Tap to start camera";
-
-</script></body>
+</body>
 </html>
