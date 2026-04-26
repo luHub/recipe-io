@@ -1,46 +1,165 @@
 <!doctype html>
-
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>html,body{margin:0;height:100%;background:#000}canvas{width:100vw;height:100vh;display:block}</style>
+<style>
+html,body{margin:0;height:100%;background:#000}
+canvas{width:100vw;height:100vh;display:block}
+</style>
 </head>
 <body>
 <canvas id="gl"></canvas>
+
 <script>
-const gl = document.getElementById('gl').getContext('webgl');function resize(){ gl.canvas.width = innerWidth; gl.canvas.height = innerHeight; gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight); } addEventListener('resize',resize);resize();
+const gl = document.getElementById('gl').getContext('webgl');
 
-const vs=attribute vec2 p;varying vec2 uv;void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);} ;
+function resize(){
+  gl.canvas.width = innerWidth;
+  gl.canvas.height = innerHeight;
+  gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
+}
+addEventListener('resize',resize);
+resize();
 
-// signed distance box floatBox = float box(vec2 p, vec2 b){vec2 d=abs(p)-b;return length(max(d,0.))+min(max(d.x,d.y),0.);} ;
+// Vertex shader
+const vs = `
+attribute vec2 p;
+varying vec2 uv;
 
-// simple SDF text (very minimal "TRACKING") const fs=`precision mediump float;uniform sampler2D cam;varying vec2 uv;${floatBox}
+void main(){
+  uv = (p + 1.0) * 0.5;
+  gl_Position = vec4(p, 0.0, 1.0);
+}`;
 
-float charT(vec2 p){return box(p-vec2(0.,0.3),vec2(0.5,0.1))+box(p-vec2(0.,-0.2),vec2(0.1,0.5));} float charR(vec2 p){return box(p,vec2(0.1,0.6))+box(p-vec2(0.2,0.4),vec2(0.3,0.2));} float charA(vec2 p){return box(p-vec2(0.,0.2),vec2(0.4,0.1))+box(p-vec2(0.,-0.2),vec2(0.1,0.5));}
+// Fragment shader
+const fs = `
+precision mediump float;
 
-float text(vec2 p){ float d=1e5; p*=5.; d=min(d,charT(p-vec2(-2.,0.))); d=min(d,charR(p-vec2(-1.,0.))); d=min(d,charA(p-vec2(0.,0.))); return d; }
+uniform sampler2D cam;
+varying vec2 uv;
 
-void main(){ vec4 col=texture2D(cam,uv);
+// Signed distance box
+float box(vec2 p, vec2 b){
+  vec2 d = abs(p) - b;
+  return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
+}
 
-// center box vec2 center=vec2(.5,.5); vec2 size=vec2(.2,.1); float d=box(uv-center,size);
+// Very minimal "tracking" text SDF
+float charT(vec2 p){
+  return min(
+    box(p - vec2(0.0, 0.3), vec2(0.5, 0.1)),
+    box(p - vec2(0.0,-0.2), vec2(0.1, 0.5))
+  );
+}
 
-if(d<0.){ col=mix(col,vec4(0.,1.,0.,1.),0.2);
+float charR(vec2 p){
+  return min(
+    box(p, vec2(0.1,0.6)),
+    box(p - vec2(0.2,0.4), vec2(0.3,0.2))
+  );
+}
 
-vec2 local=(uv-center)/size; float td=text(local); float alpha=smoothstep(0.02,0.0,td); col=mix(col,vec4(0.,1.,0.,1.),alpha); }
+float charA(vec2 p){
+  return min(
+    box(p - vec2(0.0,0.2), vec2(0.4,0.1)),
+    box(p - vec2(0.0,-0.2), vec2(0.1,0.5))
+  );
+}
 
-gl_FragColor=col; }`;
+float text(vec2 p){
+  float d = 1e5;
+  p *= 5.0;
 
-function sh(t,s){let x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);return x} let pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);
+  d = min(d, charT(p - vec2(-2.0,0.0)));
+  d = min(d, charR(p - vec2(-1.0,0.0)));
+  d = min(d, charA(p - vec2( 0.0,0.0)));
 
-let buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); let loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  return d;
+}
 
-let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+void main(){
+  vec4 col = texture2D(cam, uv);
 
-let video=document.createElement('video');video.autoplay=true;video.playsInline=true;
+  vec2 center = vec2(0.5,0.5);
+  vec2 size = vec2(0.2,0.1);
 
-navigator.mediaDevices.getUserMedia({video:true}).then(s=>{ video.srcObject=s;video.play();requestAnimationFrame(draw); });
+  float d = box(uv - center, size);
 
-function draw(){ if(video.readyState>=2){ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video); } gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(draw); } </script>
+  if(d < 0.0){
+    col = mix(col, vec4(0.0,1.0,0.0,1.0), 0.2);
+
+    vec2 local = (uv - center) / size;
+    float td = text(local);
+    float alpha = smoothstep(0.02, 0.0, td);
+
+    col = mix(col, vec4(0.0,1.0,0.0,1.0), alpha);
+  }
+
+  gl_FragColor = col;
+}
+`;
+
+function sh(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error(gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+const pr = gl.createProgram();
+gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs));
+gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(pr);
+gl.useProgram(pr);
+
+// Fullscreen quad
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER,
+  new Float32Array([-1,-1, 1,-1, -1,1, 1,1]),
+  gl.STATIC_DRAW
+);
+
+const loc = gl.getAttribLocation(pr,'p');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+// Texture setup
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+// IMPORTANT: bind sampler
+const camLoc = gl.getUniformLocation(pr, "cam");
+gl.uniform1i(camLoc, 0);
+
+const video = document.createElement('video');
+video.autoplay = true;
+video.playsInline = true;
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream => {
+  video.srcObject = stream;
+  video.play();
+  requestAnimationFrame(draw);
+});
+
+function draw(){
+  if(video.readyState >= 2){
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
+  }
+
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  requestAnimationFrame(draw);
+}
+</script>
 
 </body>
 </html>
