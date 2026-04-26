@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,211 +9,40 @@ canvas{width:100vw;height:100vh;display:block}
 </style>
 </head>
 <body>
-
 <canvas id="gl"></canvas>
-
 <script>
-const gl = document.getElementById('gl').getContext('webgl');
+const gl = document.getElementById('gl').getContext('webgl');function resize(){ gl.canvas.width = innerWidth; gl.canvas.height = innerHeight; gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight); } addEventListener('resize',resize); resize();
 
-function resize(){
-  gl.canvas.width = innerWidth;
-  gl.canvas.height = innerHeight;
-  gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
-}
-addEventListener('resize',resize);
-resize();
+const vs=attribute vec2 p;varying vec2 uv;void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);} ;
 
-// Vertex shader
-const vs = `
-attribute vec2 p;
-varying vec2 uv;
+const fs=`precision mediump float; uniform sampler2D cam; varying vec2 uv;
 
-void main(){
-  uv = (p + 1.0) * 0.5;
-  gl_Position = vec4(p, 0.0, 1.0);
-}`;
+float box(vec2 p, vec2 b){vec2 d=abs(p)-b;return length(max(d,0.))+min(max(d.x,d.y),0.);}
 
-// Fragment shader (FIXED readability + neon HUD)
-const fs = `
-precision mediump float;
+void main(){ vec4 col=texture2D(cam,uv);
 
-uniform sampler2D cam;
-varying vec2 uv;
+vec2 center=vec2(.5,.5); vec2 size=vec2(.2,.1); float d=box(uv-center,size);
 
-float box(vec2 p, vec2 b){
-  vec2 d = abs(p) - b;
-  return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
-}
+if(d<0.){ col=mix(col,vec4(0.,1.,0.,1.),0.25); }
 
-// ---------- LETTERS (thicker + readable) ----------
+gl_FragColor=col; }`;
 
-float T(vec2 p){
-  return min(
-    box(p-vec2(0.0,0.28), vec2(0.65,0.14)),
-    box(p-vec2(0.0,-0.05), vec2(0.14,0.65))
-  );
-}
+function sh(t,s){let x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);console.log(gl.getShaderInfoLog(x));return x} let pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(pr); console.log(gl.getProgramInfoLog(pr)); gl.useProgram(pr);
 
-float R(vec2 p){
-  float a = box(p-vec2(-0.22,0.0), vec2(0.14,0.65));
-  float b = box(p-vec2(0.12,0.28), vec2(0.35,0.14));
-  float c = box(p-vec2(0.12,0.0), vec2(0.28,0.14));
-  float d = box(p-vec2(0.18,-0.3), vec2(0.35,0.14));
-  return min(min(a,b),min(c,d));
-}
+let buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); let loc=gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
-float A(vec2 p){
-  float l = box(p-vec2(-0.22,0.0), vec2(0.14,0.65));
-  float r = box(p-vec2(0.22,0.0), vec2(0.14,0.65));
-  float m = box(p-vec2(0.0,0.12), vec2(0.4,0.14));
-  return min(min(l,r),m);
-}
+let tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 
-float C(vec2 p){
-  float o = box(p, vec2(0.55,0.65));
-  float i = box(p+vec2(0.18,0.0), vec2(0.38,0.45));
-  return max(o,-i);
-}
+const uCam = gl.getUniformLocation(pr,'cam'); gl.uniform1i(uCam,0);
 
-float K(vec2 p){
-  float s = box(p-vec2(-0.28,0.0), vec2(0.14,0.65));
-  float u = box(p-vec2(0.12,0.22), vec2(0.38,0.14));
-  float d = box(p-vec2(0.12,-0.22), vec2(0.38,0.14));
-  return min(s,min(u,d));
-}
+let video=document.createElement('video'); video.autoplay=true; video.muted=true; video.playsInline=true;
 
-float I(vec2 p){ return box(p, vec2(0.14,0.65)); }
+// IMPORTANT: use rear camera const constraints = { video: { facingMode: { exact: "environment" } } };
 
-float N(vec2 p){
-  float l = box(p-vec2(-0.28,0.0), vec2(0.14,0.65));
-  float r = box(p-vec2(0.28,0.0), vec2(0.14,0.65));
-  float d = box(p, vec2(0.55,0.14));
-  return min(min(l,r),d);
-}
+navigator.mediaDevices.getUserMedia(constraints).then(stream=>{ video.srcObject=stream; video.play(); requestAnimationFrame(draw); }).catch(err=>{ console.error("Camera error:", err); });
 
-float G(vec2 p){
-  return min(C(p), box(p-vec2(0.12,0.0), vec2(0.28,0.14)));
-}
+function draw(){ if(video.readyState>=2){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video); } gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(draw); }
 
-// ---------- TEXT ----------
-float letter(int id, vec2 p){
-  if(id==0) return T(p);
-  if(id==1) return R(p);
-  if(id==2) return A(p);
-  if(id==3) return C(p);
-  if(id==4) return K(p);
-  if(id==5) return I(p);
-  if(id==6) return N(p);
-  if(id==7) return G(p);
-  return 1e5;
-}
-
-float text(vec2 p){
-  float d = 1e5;
-  p *= 4.2;
-
-  for(int i=0;i<8;i++){
-    vec2 off = vec2(float(i)-3.5, 0.0);
-    d = min(d, letter(i, p-off));
-  }
-
-  return d;
-}
-
-// ---------- MAIN ----------
-void main(){
-  vec4 cam = texture2D(cam, uv);
-
-  vec2 center = vec2(0.5,0.5);
-  vec2 size = vec2(0.30,0.13);
-
-  vec2 local = (uv-center)/size;
-  float d = text(local);
-
-  // sharp readable core
-  float core = smoothstep(0.015, 0.0, d);
-
-  // controlled glow (no washout)
-  float glow1 = smoothstep(0.12, 0.02, d);
-  float glow2 = smoothstep(0.25, 0.12, d) * 0.35;
-  float glow = clamp(glow1 + glow2, 0.0, 1.0);
-
-  vec3 neon = vec3(0.0, 1.0, 0.75);
-
-  vec3 col = cam.rgb;
-
-  // slight HUD tint
-  col *= vec3(0.97, 1.03, 1.0);
-
-  // glow
-  col += neon * glow * 0.55;
-
-  // solid text layer (fix readability)
-  col = mix(col, neon, core);
-
-  gl_FragColor = vec4(col,1.0);
-}
-`;
-
-// compile helper
-function sh(type, src){
-  const s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-  return s;
-}
-
-const pr = gl.createProgram();
-gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs));
-gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
-gl.linkProgram(pr);
-gl.useProgram(pr);
-
-// quad
-const buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER,
-  new Float32Array([-1,-1, 1,-1, -1,1, 1,1]),
-  gl.STATIC_DRAW
-);
-
-const loc = gl.getAttribLocation(pr,'p');
-gl.enableVertexAttribArray(loc);
-gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-
-// texture
-const tex = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, tex);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-const camLoc = gl.getUniformLocation(pr,"cam");
-gl.uniform1i(camLoc,0);
-
-// camera
-const video = document.createElement('video');
-video.autoplay = true;
-video.playsInline = true;
-
-navigator.mediaDevices.getUserMedia({video:true})
-.then(stream=>{
-  video.srcObject = stream;
-  video.play();
-  requestAnimationFrame(draw);
-});
-
-function draw(){
-  if(video.readyState>=2){
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D,tex);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
-  }
-
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-  requestAnimationFrame(draw);
-}
 </script>
-
 </body>
 </html>
