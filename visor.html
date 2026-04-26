@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,107 +10,48 @@ canvas{width:100vw;height:100vh;display:block}
 </head>
 <body>
 <canvas id="gl"></canvas>
-
 <script>
-const canvas = document.getElementById('gl');
-const gl = canvas.getContext('webgl');
+const gl = document.getElementById('gl').getContext('webgl');function resize(){ gl.canvas.width = innerWidth; gl.canvas.height = innerHeight; gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight); } addEventListener('resize',resize); resize();
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-gl.viewport(0,0,canvas.width,canvas.height);
+const vs=attribute vec2 p;varying vec2 uv;void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);} ;
 
-// ---- SHADERS ----
-const vs = `
-attribute vec2 p;
-varying vec2 uv;
-void main(){
-  uv = (p+1.0)*0.5;
-  gl_Position = vec4(p,0.0,1.0);
-}
-`;
+const fs=`precision mediump float; uniform sampler2D cam; varying vec2 uv;
 
-const fs = `
-precision mediump float;
-uniform sampler2D cam;
-varying vec2 uv;
+float box(vec2 p, vec2 b){ vec2 d = abs(p) - b; return length(max(d,0.0)) + min(max(d.x,d.y),0.0); }
 
-void main(){
-  gl_FragColor = texture2D(cam, uv);
-}
-`;
+void main(){ vec4 col = texture2D(cam, uv);
 
-function shader(type,src){
-  const s = gl.createShader(type);
-  gl.shaderSource(s,src);
-  gl.compileShader(s);
-  console.log(gl.getShaderInfoLog(s));
-  return s;
+vec2 center = vec2(0.5, 0.5); vec2 size = vec2(0.25, 0.12);
+
+float d = box(uv - center, size);
+
+if(d < 0.0){ col = mix(col, vec4(0.0,1.0,0.0,1.0), 0.25);
+
+// simple "tracking" indicator line
+if(abs(uv.y - center.y) < 0.01){
+  col = vec4(0.0,1.0,0.0,1.0);
 }
 
-const prog = gl.createProgram();
-gl.attachShader(prog, shader(gl.VERTEX_SHADER,vs));
-gl.attachShader(prog, shader(gl.FRAGMENT_SHADER,fs));
-gl.linkProgram(prog);
-console.log(gl.getProgramInfoLog(prog));
-gl.useProgram(prog);
-
-// ---- QUAD ----
-const buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1,-1, 1,-1, -1,1, 1,1
-]), gl.STATIC_DRAW);
-
-const loc = gl.getAttribLocation(prog,'p');
-gl.enableVertexAttribArray(loc);
-gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-
-// ---- TEXTURE ----
-const tex = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, tex);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-// 🔥 CRITICAL FIX (mobile)
-gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-const uCam = gl.getUniformLocation(prog,'cam');
-gl.uniform1i(uCam, 0);
-
-// ---- VIDEO ----
-const video = document.createElement('video');
-video.autoplay = true;
-video.muted = true;
-video.playsInline = true;
-
-// rear camera (safe version)
-navigator.mediaDevices.getUserMedia({
-  video: { facingMode: "environment" }
-}).then(stream=>{
-  video.srcObject = stream;
-
-  video.onloadedmetadata = () => {
-    video.play();
-    requestAnimationFrame(draw);
-  };
-
-}).catch(err=>{
-  alert("Camera error: " + err.message);
-});
-
-// ---- RENDER ----
-function draw(){
-  if(video.readyState >= 2){
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
-                  gl.RGBA, gl.UNSIGNED_BYTE, video);
-  }
-
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  requestAnimationFrame(draw);
 }
+
+gl_FragColor = col; }`;
+
+function sh(t,s){let x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);console.log(gl.getShaderInfoLog(x));return x} let pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(pr); console.log(gl.getProgramInfoLog(pr)); gl.useProgram(pr);
+
+let buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); let loc=gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+let tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+
+const uCam = gl.getUniformLocation(pr,'cam'); gl.uniform1i(uCam,0);
+
+let video=document.createElement('video'); video.autoplay=true; video.muted=true; video.playsInline=true;
+
+// IMPORTANT: use rear camera const constraints = { video: { facingMode: { exact: "environment" } } };
+
+navigator.mediaDevices.getUserMedia(constraints).then(stream=>{ video.srcObject=stream; video.play(); requestAnimationFrame(draw); }).catch(err=>{ console.error("Camera error:", err); });
+
+function draw(){ if(video.readyState>=2){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video); } gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(draw); }
+
 </script>
 </body>
 </html>
