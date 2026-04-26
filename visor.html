@@ -22,17 +22,17 @@ function resize(){
 addEventListener('resize',resize);
 resize();
 
-// Vertex
+// Vertex shader
 const vs = `
 attribute vec2 p;
 varying vec2 uv;
 
 void main(){
   uv = (p + 1.0) * 0.5;
-  gl_Position = vec4(p,0.0,1.0);
+  gl_Position = vec4(p, 0.0, 1.0);
 }`;
 
-// Fragment (NEON HUD)
+// Fragment shader (FIXED readability + neon HUD)
 const fs = `
 precision mediump float;
 
@@ -44,55 +44,57 @@ float box(vec2 p, vec2 b){
   return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
 }
 
-// --- Letters ---
+// ---------- LETTERS (thicker + readable) ----------
+
 float T(vec2 p){
   return min(
-    box(p-vec2(0.0,0.3), vec2(0.6,0.12)),
-    box(p-vec2(0.0,-0.1), vec2(0.12,0.6))
+    box(p-vec2(0.0,0.28), vec2(0.65,0.14)),
+    box(p-vec2(0.0,-0.05), vec2(0.14,0.65))
   );
 }
 
 float R(vec2 p){
-  float a = box(p-vec2(-0.2,0.0), vec2(0.12,0.6));
-  float b = box(p-vec2(0.1,0.3), vec2(0.3,0.12));
-  float c = box(p-vec2(0.1,0.0), vec2(0.25,0.12));
-  float d = box(p-vec2(0.15,-0.3), vec2(0.3,0.12));
+  float a = box(p-vec2(-0.22,0.0), vec2(0.14,0.65));
+  float b = box(p-vec2(0.12,0.28), vec2(0.35,0.14));
+  float c = box(p-vec2(0.12,0.0), vec2(0.28,0.14));
+  float d = box(p-vec2(0.18,-0.3), vec2(0.35,0.14));
   return min(min(a,b),min(c,d));
 }
 
 float A(vec2 p){
-  float l = box(p-vec2(-0.2,0.0), vec2(0.12,0.6));
-  float r = box(p-vec2(0.2,0.0), vec2(0.12,0.6));
-  float m = box(p-vec2(0.0,0.1), vec2(0.35,0.12));
+  float l = box(p-vec2(-0.22,0.0), vec2(0.14,0.65));
+  float r = box(p-vec2(0.22,0.0), vec2(0.14,0.65));
+  float m = box(p-vec2(0.0,0.12), vec2(0.4,0.14));
   return min(min(l,r),m);
 }
 
 float C(vec2 p){
-  float o = box(p, vec2(0.5,0.6));
-  float i = box(p+vec2(0.15,0.0), vec2(0.35,0.4));
+  float o = box(p, vec2(0.55,0.65));
+  float i = box(p+vec2(0.18,0.0), vec2(0.38,0.45));
   return max(o,-i);
 }
 
 float K(vec2 p){
-  float s = box(p-vec2(-0.25,0.0), vec2(0.12,0.6));
-  float u = box(p-vec2(0.1,0.2), vec2(0.35,0.12));
-  float d = box(p-vec2(0.1,-0.2), vec2(0.35,0.12));
+  float s = box(p-vec2(-0.28,0.0), vec2(0.14,0.65));
+  float u = box(p-vec2(0.12,0.22), vec2(0.38,0.14));
+  float d = box(p-vec2(0.12,-0.22), vec2(0.38,0.14));
   return min(s,min(u,d));
 }
 
-float I(vec2 p){ return box(p, vec2(0.12,0.6)); }
+float I(vec2 p){ return box(p, vec2(0.14,0.65)); }
 
 float N(vec2 p){
-  float l = box(p-vec2(-0.25,0.0), vec2(0.12,0.6));
-  float r = box(p-vec2(0.25,0.0), vec2(0.12,0.6));
-  float d = box(p, vec2(0.5,0.12));
+  float l = box(p-vec2(-0.28,0.0), vec2(0.14,0.65));
+  float r = box(p-vec2(0.28,0.0), vec2(0.14,0.65));
+  float d = box(p, vec2(0.55,0.14));
   return min(min(l,r),d);
 }
 
 float G(vec2 p){
-  return min(C(p), box(p-vec2(0.1,0.0), vec2(0.25,0.12)));
+  return min(C(p), box(p-vec2(0.12,0.0), vec2(0.28,0.14)));
 }
 
+// ---------- TEXT ----------
 float letter(int id, vec2 p){
   if(id==0) return T(p);
   if(id==1) return R(p);
@@ -107,7 +109,7 @@ float letter(int id, vec2 p){
 
 float text(vec2 p){
   float d = 1e5;
-  p *= 4.5;
+  p *= 4.2;
 
   for(int i=0;i<8;i++){
     vec2 off = vec2(float(i)-3.5, 0.0);
@@ -117,52 +119,52 @@ float text(vec2 p){
   return d;
 }
 
+// ---------- MAIN ----------
 void main(){
   vec4 cam = texture2D(cam, uv);
 
   vec2 center = vec2(0.5,0.5);
-  vec2 size = vec2(0.28,0.12);
+  vec2 size = vec2(0.30,0.13);
 
   vec2 local = (uv-center)/size;
   float d = text(local);
 
-  // --- NEON GLOW CORE ---
-  float core = smoothstep(0.02, 0.0, d);
+  // sharp readable core
+  float core = smoothstep(0.015, 0.0, d);
 
-  // outer glow layers
-  float glow1 = smoothstep(0.15, 0.0, d);
-  float glow2 = smoothstep(0.30, 0.15, d) * 0.5;
+  // controlled glow (no washout)
+  float glow1 = smoothstep(0.12, 0.02, d);
+  float glow2 = smoothstep(0.25, 0.12, d) * 0.35;
+  float glow = clamp(glow1 + glow2, 0.0, 1.0);
 
-  float glow = glow1 + glow2;
-
-  vec3 neon = vec3(0.0, 1.0, 0.7);
+  vec3 neon = vec3(0.0, 1.0, 0.75);
 
   vec3 col = cam.rgb;
 
-  // subtle HUD tint
-  col *= vec3(0.95,1.05,1.0);
+  // slight HUD tint
+  col *= vec3(0.97, 1.03, 1.0);
 
-  // glow overlay
-  col += neon * glow * 0.6;
+  // glow
+  col += neon * glow * 0.55;
 
-  // bright core
+  // solid text layer (fix readability)
   col = mix(col, neon, core);
 
   gl_FragColor = vec4(col,1.0);
 }
 `;
 
-// compile
-function sh(t,s){
-  const x=gl.createShader(t);
-  gl.shaderSource(x,s);
-  gl.compileShader(x);
-  return x;
+// compile helper
+function sh(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  return s;
 }
 
 const pr = gl.createProgram();
-gl.attachShader(pr, sh(gl.VERTEX_SHADER,vs));
-gl.attachShader(pr, sh(gl.FRAGMENT_SHADER,fs));
+gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs));
+gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(pr);
 gl.useProgram(pr);
 
