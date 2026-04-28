@@ -1,20 +1,11 @@
 <!DOCTYPE html><html>
 <head>
 <meta charset="utf-8" />
-<title>AR Scanner - fixed orientation + guidance</title>
+<title>AR Scanner - small-step-c</title>
 <style>
   html, body { margin:0; padding:0; overflow:hidden; background:#000; color:white; font-family:sans-serif; }
   canvas { width:100vw; height:100vh; display:block; }
-  #label {
-    position:absolute;
-    top:10px;
-    left:50%;
-    transform:translateX(-50%);
-    background:rgba(0,0,0,0.5);
-    padding:6px 12px;
-    border-radius:6px;
-    font-size:18px;
-  }
+  #label { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:6px; }
 </style>
 </head>
 <body>
@@ -39,6 +30,7 @@ video.muted = true;
 video.autoplay = true;
 
 let started = false;
+let mode = "capture";
 
 async function start(){
   const stream = await navigator.mediaDevices.getUserMedia({
@@ -54,6 +46,7 @@ async function start(){
 const faces = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
 let face = 0;
 let captures = {};
+let textures = {};
 
 function captureFrame(){
   const off = document.createElement('canvas');
@@ -64,64 +57,54 @@ function captureFrame(){
 
   off.toBlob(blob => {
     captures[faces[face]] = blob;
-    console.log("Captured", faces[face]);
+
+    const img = new Image();
+    img.onload = () => {
+      const tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+      textures[faces[face]] = tex;
+    };
+    img.src = URL.createObjectURL(blob);
+
   }, "image/png");
 }
 
 window.addEventListener('click', () => {
   if(!started){
     start();
-  } else if(face < 6){
+  } else if(mode === "capture"){
     captureFrame();
     face++;
-    if(face < 6) label.textContent = "Capture " + faces[face];
-    else label.textContent = "Done";
+    if(face < 6){
+      label.textContent = "Capture " + faces[face];
+    } else {
+      label.textContent = "3D View";
+      mode = "view";
+    }
   }
 });
 
-// ---------- SHADERS ----------
+// ---------- BASIC SHADER ----------
 const vs = `
-attribute vec2 position;
-varying vec2 uv;
+attribute vec3 position;
+attribute vec2 uv;
+varying vec2 vUV;
+uniform mat4 mvp;
 void main(){
-  uv = (position + 1.0) * 0.5;
-  uv.y = 1.0 - uv.y; // FIX vertical flip
-  gl_Position = vec4(position, 0.0, 1.0);
+  vUV = uv;
+  gl_Position = mvp * vec4(position,1.0);
 }`;
 
 const fs = `
 precision mediump float;
-varying vec2 uv;
+varying vec2 vUV;
 uniform sampler2D tex;
-uniform int uFace;
-uniform float uProgress;
-
-float rect(vec2 uv, vec2 center, vec2 size){
-    vec2 d = abs(uv - center) - size;
-    return step(max(d.x, d.y), 0.0);
-}
-
 void main(){
-    vec3 color = texture2D(tex, uv).rgb;
-
-    // centered box FIXED
-    float box = rect(uv, vec2(0.5,0.5), vec2(0.25,0.25));
-
-    vec3 guideColor = vec3(0.0,1.0,0.0);
-
-    if(uFace == 0) guideColor = vec3(1.0,0.0,0.0);
-    if(uFace == 1) guideColor = vec3(0.0,1.0,0.0);
-    if(uFace == 2) guideColor = vec3(0.0,0.0,1.0);
-    if(uFace == 3) guideColor = vec3(1.0,1.0,0.0);
-    if(uFace == 4) guideColor = vec3(1.0,0.0,1.0);
-    if(uFace == 5) guideColor = vec3(0.0,1.0,1.0);
-
-    color = mix(color, guideColor, box * 0.3);
-
-    float bar = step(uv.y, 0.05) * step(uv.x, uProgress);
-    color = mix(color, vec3(0.0,1.0,0.0), bar);
-
-    gl_FragColor = vec4(color,1.0);
+  gl_FragColor = texture2D(tex, vUV);
 }`;
 
 function shader(type, src){
@@ -137,41 +120,64 @@ gl.attachShader(program, shader(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(program);
 gl.useProgram(program);
 
-// ---------- QUAD ----------
-const buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1,-1,  1,-1, -1,1,
-  -1,1,   1,-1,  1,1
-]), gl.STATIC_DRAW);
+// ---------- SIMPLE CUBE ----------
+const positions = new Float32Array([
+// front
+-1,-1,1, 1,-1,1, -1,1,1, 1,1,1,
+// back
+1,-1,-1, -1,-1,-1, 1,1,-1, -1,1,-1,
+]);
 
-const pos = gl.getAttribLocation(program, "position");
-gl.enableVertexAttribArray(pos);
-gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+// simplified: only front face for demo
+const uv = new Float32Array([
+0,0, 1,0, 0,1, 1,1,
+0,0, 1,0, 0,1, 1,1
+]);
 
-// ---------- TEXTURE ----------
-const texture = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, texture);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+const posBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,posBuf);
+gl.bufferData(gl.ARRAY_BUFFER,positions,gl.STATIC_DRAW);
 
-gl.uniform1i(gl.getUniformLocation(program, "tex"), 0);
+const uvBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,uvBuf);
+gl.bufferData(gl.ARRAY_BUFFER,uv,gl.STATIC_DRAW);
 
-// ---------- UNIFORMS ----------
-const faceLoc = gl.getUniformLocation(program, "uFace");
-const progressLoc = gl.getUniformLocation(program, "uProgress");
+const posLoc = gl.getAttribLocation(program,"position");
+const uvLoc = gl.getAttribLocation(program,"uv");
+
+// ---------- MATRIX ----------
+function mat4(){return new Float32Array(16);} 
+function identity(m){for(let i=0;i<16;i++)m[i]=i%5==0?1:0;}
+function rotateY(m,a){m[0]=Math.cos(a);m[2]=Math.sin(a);m[8]=-Math.sin(a);m[10]=Math.cos(a);} 
+
+let angle = 0;
 
 // ---------- RENDER ----------
 function render(){
-  if(started && video.readyState >= 2){
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+
+  if(mode === "view" && textures["FRONT"]){
+    angle += 0.01;
+
+    const m = mat4();
+    identity(m);
+    rotateY(m,angle);
+
+    gl.uniformMatrix4fv(gl.getUniformLocation(program,"mvp"),false,m);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER,posBuf);
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc,3,gl.FLOAT,false,0,0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER,uvBuf);
+    gl.enableVertexAttribArray(uvLoc);
+    gl.vertexAttribPointer(uvLoc,2,gl.FLOAT,false,0,0);
+
+    gl.bindTexture(gl.TEXTURE_2D, textures["FRONT"]);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   }
 
-  gl.uniform1i(faceLoc, face);
-  gl.uniform1f(progressLoc, face / 6.0);
-
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
   requestAnimationFrame(render);
 }
 
