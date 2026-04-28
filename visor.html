@@ -1,16 +1,28 @@
 <!DOCTYPE html><html>
 <head>
 <meta charset="utf-8" />
-<title>AR Scanner - small-step-b</title>
+<title>AR Scanner - fixed orientation + guidance</title>
 <style>
-  html, body { margin:0; padding:0; overflow:hidden; background:#000; }
+  html, body { margin:0; padding:0; overflow:hidden; background:#000; color:white; font-family:sans-serif; }
   canvas { width:100vw; height:100vh; display:block; }
+  #label {
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.5);
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:18px;
+  }
 </style>
 </head>
 <body>
+<div id="label">Tap to start</div>
 <canvas id="glcanvas"></canvas><script>
 const canvas = document.getElementById('glcanvas');
 const gl = canvas.getContext('webgl');
+const label = document.getElementById('label');
 
 function resize(){
   canvas.width = window.innerWidth;
@@ -35,10 +47,11 @@ async function start(){
   video.srcObject = stream;
   await video.play();
   started = true;
+  label.textContent = "Capture FRONT";
 }
 
-// ---------- CAPTURE STORAGE ----------
-const faces = ["front","right","back","left","top","bottom"];
+// ---------- CAPTURE ----------
+const faces = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
 let face = 0;
 let captures = {};
 
@@ -61,6 +74,8 @@ window.addEventListener('click', () => {
   } else if(face < 6){
     captureFrame();
     face++;
+    if(face < 6) label.textContent = "Capture " + faces[face];
+    else label.textContent = "Done";
   }
 });
 
@@ -70,6 +85,7 @@ attribute vec2 position;
 varying vec2 uv;
 void main(){
   uv = (position + 1.0) * 0.5;
+  uv.y = 1.0 - uv.y; // FIX vertical flip
   gl_Position = vec4(position, 0.0, 1.0);
 }`;
 
@@ -88,7 +104,8 @@ float rect(vec2 uv, vec2 center, vec2 size){
 void main(){
     vec3 color = texture2D(tex, uv).rgb;
 
-    float box = rect(uv, vec2(0.5), vec2(0.25));
+    // centered box FIXED
+    float box = rect(uv, vec2(0.5,0.5), vec2(0.25,0.25));
 
     vec3 guideColor = vec3(0.0,1.0,0.0);
 
