@@ -1,100 +1,121 @@
 <!DOCTYPE html><html>
 <head>
 <meta charset="utf-8" />
-<title>AR Scanner (Fixed)</title>
+<title>AR Camera Debug (Robust)</title>
 <style>
   html, body { margin:0; padding:0; overflow:hidden; background:#000; }
   canvas { position:absolute; top:0; left:0; }
+  #hint { position:fixed; bottom:10px; left:10px; color:#0f0; font:14px monospace; }
 </style>
 </head>
 <body>
-<canvas id="glcanvas"></canvas><script>
+<canvas id="glcanvas"></canvas>
+<div id="hint">Tap to start camera</div><script>
 const canvas = document.getElementById('glcanvas');
 const gl = canvas.getContext('webgl');
+const hint = document.getElementById('hint');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-gl.viewport(0,0,canvas.width,canvas.height);
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+resize();
+window.addEventListener('resize', resize);
 
-// CAMERA
+// --- VIDEO SETUP ---
 const video = document.createElement('video');
-video.autoplay = true;
-video.playsInline = true;
+video.setAttribute('playsinline',''); // iOS
 video.muted = true;
+video.autoplay = true;
+video.style.display = 'none';
+document.body.appendChild(video);
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-.then(stream => video.srcObject = stream)
-.catch(err => console.error(err));
+let streamStarted = false;
 
-// SHADERS
-const vs = `
-attribute vec2 position;
-varying vec2 vUV;
-void main(){
- vUV=(position+1.0)*0.5;
- gl_Position=vec4(position,0.0,1.0);
-}`;
-
-const fs = `
-precision mediump float;
-varying vec2 vUV;
-uniform sampler2D tex;
-
-void main(){
- vec3 color = texture2D(tex, vUV).rgb;
- gl_FragColor = vec4(color,1.0);
-}`;
-
-function shader(type,src){
- const s=gl.createShader(type);
- gl.shaderSource(s,src);
- gl.compileShader(s);
- if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
- return s;
+async function startCamera(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+    video.srcObject = stream;
+    await video.play(); // REQUIRED on many devices after gesture
+    streamStarted = true;
+    hint.textContent = 'Camera running';
+  }catch(e){
+    console.error(e);
+    hint.textContent = 'Camera error: ' + e.message;
+  }
 }
 
-const prog=gl.createProgram();
-gl.attachShader(prog,shader(gl.VERTEX_SHADER,vs));
-gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fs));
+// Require user gesture for iOS/Safari
+window.addEventListener('click', () => {
+  if(!streamStarted) startCamera();
+});
+
+// --- SHADERS (minimal, safe) ---
+const vs = `attribute vec2 p; varying vec2 uv; void main(){ uv=(p+1.0)*0.5; gl_Position=vec4(p,0.0,1.0); }`;
+const fs = `precision mediump float; varying vec2 uv; uniform sampler2D t; void main(){ gl_FragColor = texture2D(t, uv); }`;
+
+function makeShader(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error('SHADER ERROR:', gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, makeShader(gl.VERTEX_SHADER, vs));
+gl.attachShader(prog, makeShader(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(prog);
-if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(prog));
+if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+  console.error('LINK ERROR:', gl.getProgramInfoLog(prog));
+}
 
 gl.useProgram(prog);
 
-// QUAD
-const buf=gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
- -1,-1,1,-1,-1,1,
- -1,1,1,-1,1,1
-]),gl.STATIC_DRAW);
+// quad
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1,-1,  1,-1, -1, 1,
+  -1, 1,  1,-1,  1, 1
+]), gl.STATIC_DRAW);
 
-const pos=gl.getAttribLocation(prog,'position');
-gl.enableVertexAttribArray(pos);
-gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+const loc = gl.getAttribLocation(prog, 'p');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-// TEXTURE
-const tex=gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D,tex);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-
-const texLoc = gl.getUniformLocation(prog, 'tex');
-gl.uniform1i(texLoc, 0);
-
+// texture
+const tex = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
-function render(){
- if(video.readyState >= 2){
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,video);
- }
+const tLoc = gl.getUniformLocation(prog, 't');
+gl.uniform1i(tLoc, 0);
 
- gl.drawArrays(gl.TRIANGLES,0,6);
- requestAnimationFrame(render);
+// render loop
+function draw(){
+  gl.clearColor(0,0,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  if(streamStarted && video.readyState >= 2){
+    try{
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+    }catch(e){
+      // Some browsers need RGBA only; ignore transient errors
+    }
+  }
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  requestAnimationFrame(draw);
 }
 
-render();
+draw();
 </script></body>
 </html>
