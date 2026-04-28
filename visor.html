@@ -1,7 +1,7 @@
 <!DOCTYPE html><html>
 <head>
 <meta charset="utf-8" />
-<title>AR Scanner - small-step-c</title>
+<title>AR Scanner - small-step-c FIXED</title>
 <style>
   html, body { margin:0; padding:0; overflow:hidden; background:#000; color:white; font-family:sans-serif; }
   canvas { width:100vw; height:100vh; display:block; }
@@ -82,29 +82,28 @@ window.addEventListener('click', () => {
     if(face < 6){
       label.textContent = "Capture " + faces[face];
     } else {
-      label.textContent = "3D View";
+      label.textContent = "Preview";
       mode = "view";
     }
   }
 });
 
-// ---------- BASIC SHADER ----------
+// ---------- SIMPLE SHADER (2D SAFE) ----------
 const vs = `
-attribute vec3 position;
-attribute vec2 uv;
-varying vec2 vUV;
-uniform mat4 mvp;
+attribute vec2 position;
+varying vec2 uv;
 void main(){
-  vUV = uv;
-  gl_Position = mvp * vec4(position,1.0);
+  uv = (position + 1.0) * 0.5;
+  uv.y = 1.0 - uv.y;
+  gl_Position = vec4(position,0.0,1.0);
 }`;
 
 const fs = `
 precision mediump float;
-varying vec2 vUV;
+varying vec2 uv;
 uniform sampler2D tex;
 void main(){
-  gl_FragColor = texture2D(tex, vUV);
+  gl_FragColor = texture2D(tex, uv);
 }`;
 
 function shader(type, src){
@@ -120,64 +119,38 @@ gl.attachShader(program, shader(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(program);
 gl.useProgram(program);
 
-// ---------- SIMPLE CUBE ----------
-const positions = new Float32Array([
-// front
--1,-1,1, 1,-1,1, -1,1,1, 1,1,1,
-// back
-1,-1,-1, -1,-1,-1, 1,1,-1, -1,1,-1,
-]);
+// ---------- QUAD ----------
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1,-1,  1,-1, -1,1,
+  -1,1,   1,-1,  1,1
+]), gl.STATIC_DRAW);
 
-// simplified: only front face for demo
-const uv = new Float32Array([
-0,0, 1,0, 0,1, 1,1,
-0,0, 1,0, 0,1, 1,1
-]);
+const pos = gl.getAttribLocation(program, "position");
+gl.enableVertexAttribArray(pos);
+gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
-const posBuf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER,posBuf);
-gl.bufferData(gl.ARRAY_BUFFER,positions,gl.STATIC_DRAW);
-
-const uvBuf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER,uvBuf);
-gl.bufferData(gl.ARRAY_BUFFER,uv,gl.STATIC_DRAW);
-
-const posLoc = gl.getAttribLocation(program,"position");
-const uvLoc = gl.getAttribLocation(program,"uv");
-
-// ---------- MATRIX ----------
-function mat4(){return new Float32Array(16);} 
-function identity(m){for(let i=0;i<16;i++)m[i]=i%5==0?1:0;}
-function rotateY(m,a){m[0]=Math.cos(a);m[2]=Math.sin(a);m[8]=-Math.sin(a);m[10]=Math.cos(a);} 
-
-let angle = 0;
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
 // ---------- RENDER ----------
 function render(){
-  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.clearColor(0,0,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
-  if(mode === "view" && textures["FRONT"]){
-    angle += 0.01;
-
-    const m = mat4();
-    identity(m);
-    rotateY(m,angle);
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(program,"mvp"),false,m);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER,posBuf);
-    gl.enableVertexAttribArray(posLoc);
-    gl.vertexAttribPointer(posLoc,3,gl.FLOAT,false,0,0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER,uvBuf);
-    gl.enableVertexAttribArray(uvLoc);
-    gl.vertexAttribPointer(uvLoc,2,gl.FLOAT,false,0,0);
-
-    gl.bindTexture(gl.TEXTURE_2D, textures["FRONT"]);
-
-    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  if(mode === "capture" && started && video.readyState >= 2){
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
   }
 
+  if(mode === "view" && textures["FRONT"]){
+    gl.bindTexture(gl.TEXTURE_2D, textures["FRONT"]);
+  }
+
+  gl.drawArrays(gl.TRIANGLES,0,6);
   requestAnimationFrame(render);
 }
 
