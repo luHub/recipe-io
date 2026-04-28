@@ -57,8 +57,25 @@ const fs = `
 precision mediump float;
 varying vec2 uv;
 uniform sampler2D tex;
+
+float rect(vec2 uv, vec2 center, vec2 size){
+    vec2 d = abs(uv - center) - size;
+    return step(max(d.x, d.y), 0.0);
+}
+
 void main(){
-  gl_FragColor = texture2D(tex, uv);
+    vec3 color = texture2D(tex, uv).rgb;
+
+    // center box
+    float box = rect(uv, vec2(0.5), vec2(0.25));
+
+    // green overlay
+    vec3 overlay = vec3(0.0, 1.0, 0.0);
+
+    // mix (safe transparency)
+    color = mix(color, overlay, box * 0.3);
+
+    gl_FragColor = vec4(color, 1.0);
 }`;
 
 // ---------- SHADER COMPILE ----------
