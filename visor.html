@@ -2,44 +2,51 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Step G FIXED</title>
+<title>WebGL Debug</title>
 <style>
-body { margin:0; overflow:hidden; background:black; }
+body { margin:0; background:black; overflow:hidden; }
 canvas { width:100vw; height:100vh; display:block; }
-#guide {
+#log {
   position:fixed;
-  top:20px;
+  bottom:0;
   width:100%;
-  text-align:center;
-  color:white;
-  font:20px sans-serif;
+  background:rgba(0,255,0,0.2);
+  color:#0f0;
+  font:12px monospace;
+  padding:5px;
 }
 </style>
 </head>
 <body>
 
-<div id="guide">Align FRONT and tap</div>
 <canvas id="gl"></canvas>
+<div id="log"></div>
 
 <script>
-// ===== STATE =====
-const steps = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
-let step = 0;
-let mode = "capture";
-const captures = {};
+const logDiv = document.getElementById("log");
+function log(msg){
+  console.log(msg);
+  logDiv.innerText += msg + "\n";
+}
 
-const guide = document.getElementById("guide");
-
-// ===== WEBGL =====
+// ===== CANVAS =====
 const canvas = document.getElementById("gl");
-const gl = canvas.getContext("webgl");
-
 canvas.width = innerWidth;
 canvas.height = innerHeight;
+
+// ===== WEBGL =====
+const gl = canvas.getContext("webgl");
+
+if(!gl){
+  log("❌ WebGL not supported");
+} else {
+  log("✅ WebGL OK");
+}
+
 gl.viewport(0,0,canvas.width,canvas.height);
 gl.clearColor(0,0,0,1);
 
-// ===== SIMPLE SHADER =====
+// ===== SHADERS =====
 const vs = `
 attribute vec2 pos;
 attribute vec2 uv;
@@ -55,8 +62,9 @@ precision mediump float;
 uniform sampler2D tex;
 varying vec2 vUV;
 void main(){
-  vec2 uv = vec2(vUV.x,1.0-vUV.y);
-  gl_FragColor = texture2D(tex, uv);
+  vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
+  vec4 c = texture2D(tex, uv);
+  gl_FragColor = vec4(c.rgb,1.0);
 }
 `;
 
@@ -64,6 +72,11 @@ function compile(type, src){
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
   gl.compileShader(s);
+
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    log("❌ Shader error: " + gl.getShaderInfoLog(s));
+  }
+
   return s;
 }
 
@@ -71,11 +84,17 @@ const prog = gl.createProgram();
 gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
 gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(prog);
+
+if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+  log("❌ Program error: " + gl.getProgramInfoLog(prog));
+}
+
 gl.useProgram(prog);
 
 // ===== QUAD =====
 const buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
   -1,-1,0,0,
    1,-1,1,0,
@@ -95,6 +114,7 @@ gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);
 // ===== TEXTURE =====
 const tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
+
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -103,7 +123,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 
-// ===== CAMERA =====
+// ===== VIDEO =====
 const video = document.createElement("video");
 video.autoplay = true;
 video.playsInline = true;
@@ -112,56 +132,42 @@ navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
   video.srcObject = stream;
+  log("✅ Camera stream OK");
+}).catch(e=>{
+  log("❌ Camera error: " + e);
 });
 
-// ===== CAPTURE =====
-function capture(){
-  const c = document.createElement("canvas");
-  c.width = video.videoWidth;
-  c.height = video.videoHeight;
-  c.getContext("2d").drawImage(video,0,0);
+video.onloadedmetadata = ()=>{
+  log("📷 Video metadata: " + video.videoWidth + "x" + video.videoHeight);
+};
 
-  const img = new Image();
-  img.src = c.toDataURL();
-
-  captures[steps[step]] = img;
-
-  step++;
-
-  if(step >= steps.length){
-    guide.innerText = "3D MODE";
-    mode = "view";
-  } else {
-    guide.innerText = "Align " + steps[step];
-  }
-}
-
-canvas.onclick = ()=>{
-  if(mode==="capture") capture();
+video.onplaying = ()=>{
+  log("▶ Video playing");
 };
 
 // ===== LOOP =====
-let t = 0;
-
 function loop(){
+
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  if(mode==="capture"){
-    if(video.readyState >= 2){
+  if(video.readyState >= 2){
+    try {
       gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
+      log("✔ Frame uploaded");
+    } catch(e){
+      log("❌ texImage error: " + e);
     }
-  }
-
-  if(mode==="view"){
-    t += 0.01;
-
-    // rotate UV as fake 3D preview
-    if(captures.FRONT){
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,captures.FRONT);
-    }
+  } else {
+    log("⚠ Video not ready: " + video.readyState);
   }
 
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  const err = gl.getError();
+  if(err !== 0){
+    log("⚠ GL error: " + err);
+  }
+
   requestAnimationFrame(loop);
 }
 
