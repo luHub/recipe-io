@@ -2,14 +2,13 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Step E - ROI Capture</title>
+<title>Step F - Direction Capture</title>
 <style>
   body { margin:0; overflow:hidden; background:black; }
   canvas { width:100vw; height:100vh; display:block; }
   #log {
     position:fixed;
     bottom:0;
-    left:0;
     width:100%;
     max-height:30%;
     overflow:auto;
@@ -18,30 +17,45 @@
     font:12px monospace;
     padding:5px;
   }
+  #guide {
+    position:fixed;
+    top:20px;
+    width:100%;
+    text-align:center;
+    color:white;
+    font:20px sans-serif;
+  }
 </style>
 </head>
 <body>
 
+<div id="guide">Align FRONT and tap</div>
 <canvas id="gl"></canvas>
 <div id="log"></div>
 
 <script>
+const guide = document.getElementById("guide");
 const logBox = document.getElementById("log");
+
 function log(msg){
   console.log(msg);
   logBox.innerHTML += msg + "<br>";
   logBox.scrollTop = logBox.scrollHeight;
 }
 
+const steps = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
+let currentStep = 0;
+
+const captures = {};
+
+// ===== WEBGL =====
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
+
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 gl.viewport(0,0,canvas.width,canvas.height);
 gl.clearColor(0,0,0,1);
-
-// ===== STORAGE =====
-const captures = [];
 
 // ===== SHADERS =====
 const vs = `
@@ -63,7 +77,7 @@ void main(){
   vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
   vec4 cam = texture2D(tex, uv);
 
-  // GREEN GUIDE BOX
+  // green capture box
   if(uv.x > 0.3 && uv.x < 0.7 && uv.y > 0.3 && uv.y < 0.7){
     cam = mix(cam, vec4(0.0,1.0,0.0,1.0), 0.3);
   }
@@ -110,7 +124,6 @@ gl.bindTexture(gl.TEXTURE_2D, tex);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
 gl.activeTexture(gl.TEXTURE0);
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
@@ -126,24 +139,17 @@ navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
   video.srcObject = stream;
-  log("📷 camera started");
+  log("camera started");
 }).catch(err=>{
-  log("❌ camera error: " + err);
+  log("camera error: " + err);
 });
 
-// ===== ROI CAPTURE =====
-function captureFrame(){
-  if(video.readyState < 2){
-    log("⚠️ video not ready");
-    return;
-  }
-
+// ===== CAPTURE ROI =====
+function capture(){
   const vw = video.videoWidth;
   const vh = video.videoHeight;
 
-  // square size (center crop)
   const size = Math.min(vw, vh) * 0.4;
-
   const sx = vw/2 - size/2;
   const sy = vh/2 - size/2;
 
@@ -152,22 +158,29 @@ function captureFrame(){
   c.height = size;
 
   const ctx = c.getContext("2d");
-
-  ctx.drawImage(
-    video,
-    sx, sy, size, size,   // source (ROI)
-    0, 0, size, size      // dest
-  );
+  ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
 
   const img = c.toDataURL("image/png");
-  captures.push(img);
 
-  log("📸 ROI captured #" + captures.length);
+  const dir = steps[currentStep];
+  captures[dir] = img;
+
+  log("captured " + dir);
+
+  currentStep++;
+
+  if(currentStep < steps.length){
+    guide.innerText = "Align " + steps[currentStep] + " and tap";
+  } else {
+    guide.innerText = "✅ All faces captured";
+    log("DONE. Ready for 3D build");
+  }
 }
 
 // ===== INPUT =====
-canvas.addEventListener("click", captureFrame);
-canvas.addEventListener("touchstart", captureFrame);
+canvas.addEventListener("click", ()=>{
+  if(currentStep < steps.length) capture();
+});
 
 // ===== LOOP =====
 function loop(){
