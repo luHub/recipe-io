@@ -1,38 +1,47 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{margin:0;background:black;overflow:hidden}
-canvas{width:100vw;height:100vh;display:block}
+body { margin:0; background:black; }
+canvas { width:100vw; height:100vh; display:block; }
+video { display:none; }
 </style>
 </head>
 <body>
+
+<video id="v" autoplay playsinline muted></video>
 <canvas id="gl"></canvas>
+
 <script>
-const canvas=document.getElementById('gl');
-const gl=canvas.getContext('webgl');
-canvas.width=innerWidth; canvas.height=innerHeight;
-gl.viewport(0,0,canvas.width,canvas.height);// VIDEO const video=document.createElement('video'); video.autoplay=true; video.playsInline=true; video.muted=true;
+const video = document.getElementById("v");
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl");
 
-navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}}) .then(s=>{video.srcObject=s;}) .catch(e=>alert(e));
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+gl.viewport(0,0,canvas.width,canvas.height);
 
-// SHADERS (simple fullscreen) const vs=gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs,attribute vec2 p; varying vec2 uv; void main(){uv=(p+1.0)/2.0; gl_Position=vec4(p,0,1);}); gl.compileShader(vs);
+// FORCE CAMERA
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: "environment" }
+}).then(stream => {
+  video.srcObject = stream;
 
-const fs=gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs,precision mediump float; varying vec2 uv; uniform sampler2D t; void main(){ gl_FragColor=texture2D(t,vec2(uv.x,1.0-uv.y)); }); gl.compileShader(fs);
+  // 🔥 CRITICAL: force play loop
+  video.onloadedmetadata = () => {
+    video.play();
+  };
+});
 
-const prog=gl.createProgram(); gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog); gl.useProgram(prog);
+// BRIDGE CANVAS
+const bridge = document.createElement("canvas");
+const ctx = bridge.getContext("2d");
 
-// QUAD const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-
-const loc=gl.getAttribLocation(prog,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-
-// TEXTURE const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-
-// CRITICAL FIX gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
-
-canvas.onclick=()=>video.play();
-
-function loop(){ if(video.readyState>=2){ gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video); } gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(loop); } loop(); </script>
-
-</body>
-</html>
+// SHADERS
+const vs = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vs, `
+attribute vec2 p;
+varying vec2 uv;
+void main(){
+  uv = (p+1.0)/2
