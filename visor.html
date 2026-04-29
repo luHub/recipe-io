@@ -39,7 +39,7 @@ function log(msg){
 // ===== INIT =====
 const video = document.getElementById("v");
 const canvas = document.getElementById("gl");
-const gl = canvas.getContext("webgl");
+let gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 
 if(!gl){
   log("❌ WebGL NOT supported");
@@ -47,11 +47,19 @@ if(!gl){
   log("✅ WebGL OK");
 }
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-gl.viewport(0,0,canvas.width,canvas.height);
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  canvas.style.width = innerWidth + "px";
+  canvas.style.height = innerHeight + "px";
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+resize();
+window.addEventListener("resize", resize);
 
 gl.clearColor(0,0,0,1);
+gl.disable(gl.DEPTH_TEST);
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
 // ===== CAMERA =====
@@ -65,13 +73,11 @@ navigator.mediaDevices.getUserMedia({
   video.srcObject = stream;
 
   video.onloadedmetadata = () => {
-    log("📦 Metadata loaded: " + video.videoWidth + "x" + video.videoHeight);
+    log("📦 Metadata: " + video.videoWidth + "x" + video.videoHeight);
 
-    video.play().then(() => {
-      log("▶️ Video playing");
-    }).catch(e => {
-      log("❌ play() error: " + e);
-    });
+    video.play()
+      .then(()=>log("▶️ Video playing"))
+      .catch(e=>log("❌ play() error: "+e));
   };
 })
 .catch(e => log("❌ Camera error: " + e));
@@ -80,7 +86,7 @@ navigator.mediaDevices.getUserMedia({
 const bridge = document.createElement("canvas");
 const ctx = bridge.getContext("2d");
 
-// ===== SHADERS =====
+// ===== SHADER HELPERS =====
 function compile(type, src){
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
@@ -92,6 +98,7 @@ function compile(type, src){
   return s;
 }
 
+// ===== SHADERS =====
 const vs = compile(gl.VERTEX_SHADER, `
 attribute vec2 p;
 varying vec2 uv;
@@ -110,6 +117,7 @@ void main(){
 }
 `);
 
+// ===== PROGRAM =====
 const prog = gl.createProgram();
 gl.attachShader(prog, vs);
 gl.attachShader(prog, fs);
@@ -145,17 +153,19 @@ gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, tex);
 gl.uniform1i(texLoc, 0);
 
+// REQUIRED for camera textures
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-// ===== USER TAP (mobile fix) =====
+// ===== USER TAP (mobile autoplay fix) =====
 window.addEventListener("click", () => {
   video.play();
   log("👆 User tap → play()");
 });
 
-// ===== RENDER LOOP =====
+// ===== LOOP =====
 function loop(){
   gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -175,10 +185,9 @@ function loop(){
         gl.UNSIGNED_BYTE,
         bridge
       );
-    } catch(e){
+    }catch(e){
       log("❌ texImage2D error: " + e);
     }
-
   } else {
     log("⏳ Video not ready: " + video.readyState);
   }
