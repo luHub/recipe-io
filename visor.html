@@ -8,7 +8,6 @@ canvas { width:100vw; height:100vh; display:block; }
 #log {
   position:fixed;
   bottom:0;
-  left:0;
   width:100%;
   max-height:40%;
   overflow:auto;
@@ -29,175 +28,127 @@ video { display:none; }
 
 <script>
 const logBox = document.getElementById("log");
-
 function log(msg){
   console.log(msg);
   logBox.innerHTML += msg + "<br>";
   logBox.scrollTop = logBox.scrollHeight;
 }
 
-// ===== INIT =====
 const video = document.getElementById("v");
 const canvas = document.getElementById("gl");
-let gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+const gl = canvas.getContext("webgl");
 
-if(!gl){
-  log("❌ WebGL NOT supported");
-} else {
-  log("✅ WebGL OK");
-}
-
-function resize(){
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = innerWidth * dpr;
-  canvas.height = innerHeight * dpr;
-  canvas.style.width = innerWidth + "px";
-  canvas.style.height = innerHeight + "px";
-  gl.viewport(0,0,canvas.width,canvas.height);
-}
-resize();
-window.addEventListener("resize", resize);
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+gl.viewport(0,0,canvas.width,canvas.height);
 
 gl.clearColor(0,0,0,1);
 gl.disable(gl.DEPTH_TEST);
+gl.disable(gl.BLEND);
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-// ===== CAMERA =====
 log("📷 Requesting camera...");
 
-navigator.mediaDevices.getUserMedia({
-  video: { facingMode: "environment" }
-})
-.then(stream => {
-  log("✅ Camera stream OK");
+navigator.mediaDevices.getUserMedia({ video: { facingMode:"environment" } })
+.then(stream=>{
+  log("✅ Camera OK");
   video.srcObject = stream;
 
-  video.onloadedmetadata = () => {
-    log("📦 Metadata: " + video.videoWidth + "x" + video.videoHeight);
-
-    video.play()
-      .then(()=>log("▶️ Video playing"))
-      .catch(e=>log("❌ play() error: "+e));
+  video.onloadedmetadata = ()=>{
+    log("📦 Video size: "+video.videoWidth+"x"+video.videoHeight);
+    video.play().then(()=>log("▶️ playing"));
   };
 })
-.catch(e => log("❌ Camera error: " + e));
+.catch(e=>log("❌ Camera error: "+e));
 
-// ===== BRIDGE CANVAS =====
-const bridge = document.createElement("canvas");
-const ctx = bridge.getContext("2d");
-
-// ===== SHADER HELPERS =====
+// ===== SHADERS =====
 function compile(type, src){
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
   gl.compileShader(s);
-
-  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-    log("❌ Shader error: " + gl.getShaderInfoLog(s));
-  }
   return s;
 }
 
-// ===== SHADERS =====
 const vs = compile(gl.VERTEX_SHADER, `
 attribute vec2 p;
 varying vec2 uv;
 void main(){
-  uv = (p + 1.0) * 0.5;
-  gl_Position = vec4(p,0.0,1.0);
-}
-`);
+  uv = (p+1.0)*0.5;
+  gl_Position = vec4(p,0,1);
+}`);
 
 const fs = compile(gl.FRAGMENT_SHADER, `
 precision mediump float;
 varying vec2 uv;
 uniform sampler2D tex;
 void main(){
-  gl_FragColor = texture2D(tex, uv);
-}
-`);
+  vec4 c = texture2D(tex, uv);
+  gl_FragColor = vec4(c.rgb, 1.0); // force visible
+}`);
 
-// ===== PROGRAM =====
 const prog = gl.createProgram();
 gl.attachShader(prog, vs);
 gl.attachShader(prog, fs);
 gl.linkProgram(prog);
-
-if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
-  log("❌ Program link error: " + gl.getProgramInfoLog(prog));
-}
-
 gl.useProgram(prog);
 
-// ===== FULLSCREEN QUAD =====
-const quad = new Float32Array([
-  -1,-1,
-   1,-1,
-  -1, 1,
-   1, 1
-]);
-
+// ===== QUAD =====
 const buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1,-1, 1,-1, -1,1, 1,1
+]), gl.STATIC_DRAW);
 
-const loc = gl.getAttribLocation(prog, "p");
+const loc = gl.getAttribLocation(prog,"p");
 gl.enableVertexAttribArray(loc);
-gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
 // ===== TEXTURE =====
 const tex = gl.createTexture();
-const texLoc = gl.getUniformLocation(prog, "tex");
+const texLoc = gl.getUniformLocation(prog,"tex");
 
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, tex);
 gl.uniform1i(texLoc, 0);
 
-// REQUIRED for camera textures
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-// ===== USER TAP (mobile autoplay fix) =====
-window.addEventListener("click", () => {
-  video.play();
-  log("👆 User tap → play()");
-});
+// ===== FALLBACK CANVAS =====
+const bridge = document.createElement("canvas");
+const ctx = bridge.getContext("2d");
 
 // ===== LOOP =====
 function loop(){
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   if(video.readyState >= 2){
-    bridge.width = video.videoWidth;
-    bridge.height = video.videoHeight;
 
-    ctx.drawImage(video, 0, 0);
+    try {
+      // TRY DIRECT VIDEO FIRST
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
+      log("🎥 direct video upload OK");
 
-    try{
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        bridge
-      );
-    }catch(e){
-      log("❌ texImage2D error: " + e);
+    } catch(e){
+
+      log("⚠️ fallback to canvas");
+
+      bridge.width = video.videoWidth;
+      bridge.height = video.videoHeight;
+      ctx.drawImage(video,0,0);
+
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bridge);
     }
-  } else {
-    log("⏳ Video not ready: " + video.readyState);
+
   }
 
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   requestAnimationFrame(loop);
 }
 
 loop();
-
 </script>
 
 </body>
