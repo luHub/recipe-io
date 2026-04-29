@@ -2,183 +2,135 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Stable Camera Fix</title>
+<title>6-View 3D Scanner Capture</title>
 <style>
-body { margin:0; background:black; overflow:hidden; }
+body { margin:0; background:black; overflow:hidden; font-family:sans-serif; }
 canvas { width:100vw; height:100vh; display:block; }
 
-#guide {
+#ui {
   position:fixed;
   top:20px;
   width:100%;
   text-align:center;
   color:white;
-  font:20px sans-serif;
-  pointer-events:none;
+  font-size:20px;
+}
+
+button {
+  margin-top:10px;
+  font-size:18px;
+  padding:10px 20px;
 }
 </style>
 </head>
 <body>
 
-<div id="guide">Tap to start camera</div>
+<div id="ui">
+  <div id="step">Tap to start scanner</div>
+  <button id="btn">Start</button>
+</div>
+
 <canvas id="gl"></canvas>
 
 <script>
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
-function resize() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  gl.viewport(0, 0, canvas.width, canvas.height);
-}
-window.addEventListener("resize", resize);
-resize();
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+gl.viewport(0,0,canvas.width,canvas.height);
 
 gl.clearColor(0,0,0,1);
 
-// ===== SHADERS =====
-const vs = `
-attribute vec2 pos;
-attribute vec2 uv;
-varying vec2 vUV;
-void main(){
-  vUV = uv;
-  gl_Position = vec4(pos,0.0,1.0);
-}
-`;
-
-const fs = `
-precision mediump float;
-uniform sampler2D tex;
-varying vec2 vUV;
-
-void main(){
-  vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
-  vec4 c = texture2D(tex, uv);
-
-  float border =
-    step(abs(uv.x - 0.3), 0.01) +
-    step(abs(uv.x - 0.7), 0.01) +
-    step(abs(uv.y - 0.3), 0.01) +
-    step(abs(uv.y - 0.7), 0.01);
-
-  vec3 col = c.rgb;
-
-  if(border > 0.0){
-    col = mix(col, vec3(0.0,1.0,0.0), 0.8);
-  }
-
-  gl_FragColor = vec4(col,1.0);
-}
-`;
-
-function compile(type, src){
-  const s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-
-  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-    console.error(gl.getShaderInfoLog(s));
-  }
-  return s;
-}
-
-const prog = gl.createProgram();
-gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
-gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
-gl.linkProgram(prog);
-
-if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
-  console.error(gl.getProgramInfoLog(prog));
-}
-
-gl.useProgram(prog);
-
-// ===== QUAD =====
-const buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1,-1, 0,0,
-   1,-1, 1,0,
-  -1, 1, 0,1,
-   1, 1, 1,1
-]), gl.STATIC_DRAW);
-
-const stride = 16;
-
-const pos = gl.getAttribLocation(prog,"pos");
-gl.enableVertexAttribArray(pos);
-gl.vertexAttribPointer(pos,2,gl.FLOAT,false,stride,0);
-
-const uv = gl.getAttribLocation(prog,"uv");
-gl.enableVertexAttribArray(uv);
-gl.vertexAttribPointer(uv,2,gl.FLOAT,false,stride,8);
-
-// ===== TEXTURE =====
-const tex = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, tex);
-
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
-
-// ===== CAMERA =====
+// ===== VIDEO =====
 const video = document.createElement("video");
 video.autoplay = true;
 video.playsInline = true;
 video.muted = true;
 
-let streamReady = false;
+// ===== CAPTURE STEPS =====
+const steps = ["FRONT", "BACK", "LEFT", "RIGHT", "UP", "DOWN"];
+let index = 0;
+let images = [];
 
+// ===== UI =====
+const stepText = document.getElementById("step");
+const btn = document.getElementById("btn");
+
+function updateUI(){
+  stepText.innerText = index < steps.length
+    ? `Point camera: ${steps[index]}`
+    : "Done! Download images";
+}
+
+// ===== CAMERA START =====
 async function startCamera(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
-    });
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" }
+  });
 
-    video.srcObject = stream;
-    await video.play();
+  video.srcObject = stream;
+  await video.play();
 
-    streamReady = true;
-    document.getElementById("guide").style.display = "none";
-    loop();
+  document.getElementById("btn").innerText = "Capture";
+  updateUI();
+}
 
-  } catch(e){
-    alert("Camera error: " + e);
+// ===== CAPTURE FRAME =====
+function capture(){
+  const temp = document.createElement("canvas");
+  temp.width = video.videoWidth;
+  temp.height = video.videoHeight;
+
+  const ctx = temp.getContext("2d");
+  ctx.drawImage(video,0,0);
+
+  const data = temp.toDataURL("image/png");
+  images.push({ name: steps[index] + ".png", data });
+
+  index++;
+
+  if(index >= steps.length){
+    stepText.innerText = "All views captured ✔";
+    btn.innerText = "Download";
+  } else {
+    updateUI();
   }
 }
 
-// REQUIRED: user gesture to start camera reliably
-document.body.addEventListener("click", startCamera, { once:true });
+// ===== DOWNLOAD =====
+function downloadAll(){
+  images.forEach(img=>{
+    const a = document.createElement("a");
+    a.href = img.data;
+    a.download = img.name;
+    a.click();
+  });
+}
 
-// ===== RENDER LOOP =====
-function loop(){
-  if(!streamReady) return;
-
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  if(video.videoWidth > 0 && video.videoHeight > 0){
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      video
-    );
+// ===== BUTTON LOGIC =====
+btn.onclick = async () => {
+  if(!video.srcObject){
+    await startCamera();
+  } else if(index < steps.length){
+    capture();
+  } else {
+    downloadAll();
   }
+};
 
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+// ===== SIMPLE VIEW RENDER (optional preview) =====
+function loop(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
   requestAnimationFrame(loop);
 }
+loop();
+
+window.addEventListener("resize", ()=>{
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  gl.viewport(0,0,canvas.width,canvas.height);
+});
 </script>
 
 </body>
