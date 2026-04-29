@@ -2,21 +2,11 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Step F - Direction Capture</title>
+<title>Step F + Status</title>
 <style>
   body { margin:0; overflow:hidden; background:black; }
   canvas { width:100vw; height:100vh; display:block; }
-  #log {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    max-height:30%;
-    overflow:auto;
-    background:rgba(0,0,0,0.8);
-    color:#0f0;
-    font:12px monospace;
-    padding:5px;
-  }
+
   #guide {
     position:fixed;
     top:20px;
@@ -24,6 +14,18 @@
     text-align:center;
     color:white;
     font:20px sans-serif;
+  }
+
+  #log {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    max-height:35%;
+    overflow:auto;
+    background:rgba(0,0,0,0.85);
+    color:#0f0;
+    font:12px monospace;
+    padding:6px;
   }
 </style>
 </head>
@@ -37,16 +39,29 @@
 const guide = document.getElementById("guide");
 const logBox = document.getElementById("log");
 
-function log(msg){
-  console.log(msg);
-  logBox.innerHTML += msg + "<br>";
-  logBox.scrollTop = logBox.scrollHeight;
-}
-
+// ===== STATE =====
 const steps = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
 let currentStep = 0;
-
 const captures = {};
+logBox.dataset.logs = "";
+
+// ===== STATUS UI =====
+function renderStatus(){
+  let html = "<b>CAPTURE STATUS</b><br>";
+
+  for(let s of steps){
+    html += (captures[s] ? "✅ " : "❌ ") + s + "<br>";
+  }
+
+  html += "<br><b>Logs</b><br>" + logBox.dataset.logs;
+  logBox.innerHTML = html;
+}
+
+function log(msg){
+  console.log(msg);
+  logBox.dataset.logs += msg + "<br>";
+  renderStatus();
+}
 
 // ===== WEBGL =====
 const canvas = document.getElementById("gl");
@@ -54,6 +69,7 @@ const gl = canvas.getContext("webgl");
 
 canvas.width = innerWidth;
 canvas.height = innerHeight;
+
 gl.viewport(0,0,canvas.width,canvas.height);
 gl.clearColor(0,0,0,1);
 
@@ -77,7 +93,7 @@ void main(){
   vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
   vec4 cam = texture2D(tex, uv);
 
-  // green capture box
+  // guide box
   if(uv.x > 0.3 && uv.x < 0.7 && uv.y > 0.3 && uv.y < 0.7){
     cam = mix(cam, vec4(0.0,1.0,0.0,1.0), 0.3);
   }
@@ -121,9 +137,11 @@ gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);
 // ===== TEXTURE =====
 const tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
+
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
 gl.activeTexture(gl.TEXTURE0);
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
@@ -139,13 +157,18 @@ navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
   video.srcObject = stream;
-  log("camera started");
+  log("📷 camera started");
 }).catch(err=>{
-  log("camera error: " + err);
+  log("❌ camera error: " + err);
 });
 
-// ===== CAPTURE ROI =====
+// ===== CAPTURE =====
 function capture(){
+  if(video.readyState < 2){
+    log("⚠️ video not ready");
+    return;
+  }
+
   const vw = video.videoWidth;
   const vh = video.videoHeight;
 
@@ -165,7 +188,7 @@ function capture(){
   const dir = steps[currentStep];
   captures[dir] = img;
 
-  log("captured " + dir);
+  log("📸 captured " + dir);
 
   currentStep++;
 
@@ -173,12 +196,16 @@ function capture(){
     guide.innerText = "Align " + steps[currentStep] + " and tap";
   } else {
     guide.innerText = "✅ All faces captured";
-    log("DONE. Ready for 3D build");
+    log("🎉 READY FOR 3D");
   }
 }
 
 // ===== INPUT =====
 canvas.addEventListener("click", ()=>{
+  if(currentStep < steps.length) capture();
+});
+
+canvas.addEventListener("touchstart", ()=>{
   if(currentStep < steps.length) capture();
 });
 
@@ -194,6 +221,9 @@ function loop(){
   requestAnimationFrame(loop);
 }
 loop();
+
+// init UI
+renderStatus();
 
 </script>
 
