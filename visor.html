@@ -2,24 +2,42 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>6-View 3D Scanner Capture</title>
+<title>3D Scanner Preview</title>
 <style>
-body { margin:0; background:black; overflow:hidden; font-family:sans-serif; }
-canvas { width:100vw; height:100vh; display:block; }
+body { margin:0; overflow:hidden; background:black; display:flex; }
+
+#left {
+  width:50%;
+  position:relative;
+}
+
+#right {
+  width:50%;
+  background:#111;
+}
+
+video {
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 
 #ui {
   position:fixed;
-  top:20px;
+  top:10px;
   width:100%;
   text-align:center;
   color:white;
-  font-size:20px;
+  font-family:sans-serif;
+  font-size:18px;
+  z-index:10;
 }
 
 button {
-  margin-top:10px;
-  font-size:18px;
-  padding:10px 20px;
+  margin-top:8px;
+  font-size:16px;
+  padding:8px 16px;
 }
 </style>
 </head>
@@ -30,108 +48,114 @@ button {
   <button id="btn">Start</button>
 </div>
 
-<canvas id="gl"></canvas>
+<div id="left">
+  <video id="video" autoplay playsinline muted></video>
+</div>
+
+<div id="right">
+  <canvas id="gl"></canvas>
+</div>
 
 <script>
-const canvas = document.getElementById("gl");
-const gl = canvas.getContext("webgl");
-
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-gl.viewport(0,0,canvas.width,canvas.height);
-
-gl.clearColor(0,0,0,1);
-
-// ===== VIDEO =====
-const video = document.createElement("video");
-video.autoplay = true;
-video.playsInline = true;
-video.muted = true;
-
-// ===== CAPTURE STEPS =====
-const steps = ["FRONT", "BACK", "LEFT", "RIGHT", "UP", "DOWN"];
-let index = 0;
-let images = [];
-
-// ===== UI =====
+const video = document.getElementById("video");
 const stepText = document.getElementById("step");
 const btn = document.getElementById("btn");
 
-function updateUI(){
-  stepText.innerText = index < steps.length
-    ? `Point camera: ${steps[index]}`
-    : "Done! Download images";
-}
+const steps = ["FRONT","BACK","LEFT","RIGHT","UP","DOWN"];
+let index = 0;
+let images = [];
 
-// ===== CAMERA START =====
+// ===== CAMERA =====
 async function startCamera(){
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" }
+    video:{ facingMode:"environment" }
   });
 
   video.srcObject = stream;
   await video.play();
 
-  document.getElementById("btn").innerText = "Capture";
-  updateUI();
+  stepText.innerText = "Point camera: FRONT";
+  btn.innerText = "Capture";
 }
 
-// ===== CAPTURE FRAME =====
+// ===== CAPTURE =====
 function capture(){
-  const temp = document.createElement("canvas");
-  temp.width = video.videoWidth;
-  temp.height = video.videoHeight;
+  const c = document.createElement("canvas");
+  c.width = video.videoWidth;
+  c.height = video.videoHeight;
 
-  const ctx = temp.getContext("2d");
+  const ctx = c.getContext("2d");
   ctx.drawImage(video,0,0);
 
-  const data = temp.toDataURL("image/png");
-  images.push({ name: steps[index] + ".png", data });
+  images[index] = c.toDataURL("image/png");
 
   index++;
 
   if(index >= steps.length){
-    stepText.innerText = "All views captured ✔";
-    btn.innerText = "Download";
+    stepText.innerText = "Reconstructing 3D model...";
+    build3D();
+    btn.disabled = true;
   } else {
-    updateUI();
+    stepText.innerText = "Point camera: " + steps[index];
   }
 }
 
-// ===== DOWNLOAD =====
-function downloadAll(){
-  images.forEach(img=>{
-    const a = document.createElement("a");
-    a.href = img.data;
-    a.download = img.name;
-    a.click();
-  });
-}
-
-// ===== BUTTON LOGIC =====
+// ===== BUTTON =====
 btn.onclick = async () => {
   if(!video.srcObject){
     await startCamera();
-  } else if(index < steps.length){
-    capture();
   } else {
-    downloadAll();
+    capture();
   }
 };
 
-// ===== SIMPLE VIEW RENDER (optional preview) =====
-function loop(){
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  requestAnimationFrame(loop);
-}
-loop();
+// ===== THREE.JS (simple cube reconstruction) =====
+let scene, camera, renderer, cube;
 
+function build3D(){
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+  camera.position.z = 2;
+
+  const canvas = document.getElementById("gl");
+  renderer = new THREE.WebGLRenderer({ canvas });
+  renderer.setSize(window.innerWidth/2, window.innerHeight);
+
+  const loader = new THREE.TextureLoader();
+
+  const materials = steps.map((_,i)=>{
+    const tex = loader.load(images[i]);
+    return new THREE.MeshBasicMaterial({ map: tex });
+  });
+
+  const geometry = new THREE.BoxGeometry(1,1,1);
+  cube = new THREE.Mesh(geometry, materials);
+
+  scene.add(cube);
+
+  animate();
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  cube.rotation.y += 0.01;
+  cube.rotation.x += 0.005;
+
+  renderer.render(scene, camera);
+}
+
+// ===== INIT GL CANVAS SIZE =====
 window.addEventListener("resize", ()=>{
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  gl.viewport(0,0,canvas.width,canvas.height);
+  if(renderer){
+    renderer.setSize(window.innerWidth/2, window.innerHeight);
+  }
 });
 </script>
+
+<!-- THREE.JS -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 </body>
 </html>
