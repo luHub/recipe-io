@@ -1,4 +1,5 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -11,62 +12,103 @@ canvas { width:100vw; height:100vh; display:block; }
   width:100%;
   max-height:40%;
   overflow:auto;
-  background:rgba(0,0,0,0.7);
-  color:#0f0;
+  background:rgba(0,0,0,0.75);
+  color:#00ff00;
   font-size:12px;
   font-family:monospace;
-  padding:5px;
+  padding:6px;
 }
 video { display:none; }
 </style>
 </head>
-<body><video id="v" autoplay playsinline muted></video> <canvas id="gl"></canvas>
+<body>
 
-<div id="log"></div><script>
+<video id="v" autoplay playsinline muted></video>
+<canvas id="gl"></canvas>
+<div id="log"></div>
+
+<script>
 const logBox = document.getElementById("log");
+
 function log(msg){
   console.log(msg);
   logBox.innerHTML += msg + "<br>";
   logBox.scrollTop = logBox.scrollHeight;
 }
 
+// ===== INIT =====
 const video = document.getElementById("v");
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
-if(!gl){ log("WebGL NOT supported"); }
-else log("WebGL OK");
+if(!gl){
+  log("❌ WebGL NOT supported");
+} else {
+  log("✅ WebGL OK");
+}
 
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 gl.viewport(0,0,canvas.width,canvas.height);
 
-log("Requesting camera...");
+gl.clearColor(0,0,0,1);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+// ===== CAMERA =====
+log("📷 Requesting camera...");
+
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: "environment" }
+})
 .then(stream => {
-  log("Camera stream OK");
+  log("✅ Camera stream OK");
   video.srcObject = stream;
 
   video.onloadedmetadata = () => {
-    log("Video metadata loaded");
-    video.play().then(()=>log("Video playing"))
-    .catch(e=>log("Play error: "+e));
+    log("📦 Metadata loaded: " + video.videoWidth + "x" + video.videoHeight);
+
+    video.play().then(() => {
+      log("▶️ Video playing");
+    }).catch(e => {
+      log("❌ play() error: " + e);
+    });
   };
 })
-.catch(e => log("Camera error: "+e));
+.catch(e => log("❌ Camera error: " + e));
 
+// ===== BRIDGE CANVAS =====
 const bridge = document.createElement("canvas");
 const ctx = bridge.getContext("2d");
 
-// SHADERS
-const vs = gl.createShader(gl.VERTEX_SHADER);
-gl.shaderSource(vs, `attribute vec2 p; varying vec2 uv; void main(){uv=(p+1.0)/2.0; gl_Position=vec4(p,0,1);}`);
-gl.compileShader(vs);
+// ===== SHADERS =====
+function compile(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
 
-const fs = gl.createShader(gl.FRAGMENT_SHADER);
-gl.shaderSource(fs, `precision mediump float; varying vec2 uv; uniform sampler2D tex; void main(){ gl_FragColor=texture2D(tex, uv); }`);
-gl.compileShader(fs);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    log("❌ Shader error: " + gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+const vs = compile(gl.VERTEX_SHADER, `
+attribute vec2 p;
+varying vec2 uv;
+void main(){
+  uv = (p + 1.0) * 0.5;
+  gl_Position = vec4(p,0.0,1.0);
+}
+`);
+
+const fs = compile(gl.FRAGMENT_SHADER, `
+precision mediump float;
+varying vec2 uv;
+uniform sampler2D tex;
+void main(){
+  gl_FragColor = texture2D(tex, uv);
+}
+`);
 
 const prog = gl.createProgram();
 gl.attachShader(prog, vs);
@@ -74,49 +116,71 @@ gl.attachShader(prog, fs);
 gl.linkProgram(prog);
 
 if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
-  log("Shader link error: " + gl.getProgramInfoLog(prog));
+  log("❌ Program link error: " + gl.getProgramInfoLog(prog));
 }
 
 gl.useProgram(prog);
 
-// QUAD
+// ===== FULLSCREEN QUAD =====
+const quad = new Float32Array([
+  -1,-1,
+   1,-1,
+  -1, 1,
+   1, 1
+]);
+
 const buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
 
 const loc = gl.getAttribLocation(prog, "p");
 gl.enableVertexAttribArray(loc);
 gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-// TEXTURE
+// ===== TEXTURE =====
 const tex = gl.createTexture();
+const texLoc = gl.getUniformLocation(prog, "tex");
+
+gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.uniform1i(texLoc, 0);
+
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-// USER INTERACTION
+// ===== USER TAP (mobile fix) =====
 window.addEventListener("click", () => {
   video.play();
-  log("User tap → play()");
+  log("👆 User tap → play()");
 });
 
+// ===== RENDER LOOP =====
 function loop(){
-  if(video.readyState >= 2){
-    log("Frame OK: " + video.videoWidth + "x" + video.videoHeight);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
+  if(video.readyState >= 2){
     bridge.width = video.videoWidth;
     bridge.height = video.videoHeight;
+
     ctx.drawImage(video, 0, 0);
 
     try{
       gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bridge);
-    }catch(e){
-      log("texImage2D error: " + e);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        bridge
+      );
+    } catch(e){
+      log("❌ texImage2D error: " + e);
     }
+
   } else {
-    log("Video not ready: " + video.readyState);
+    log("⏳ Video not ready: " + video.readyState);
   }
 
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -124,5 +188,8 @@ function loop(){
 }
 
 loop();
-</script></body>
+
+</script>
+
+</body>
 </html>
