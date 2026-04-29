@@ -2,11 +2,10 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Step G - 3D Cube</title>
+<title>Step G FIXED</title>
 <style>
 body { margin:0; overflow:hidden; background:black; }
 canvas { width:100vw; height:100vh; display:block; }
-
 #guide {
   position:fixed;
   top:20px;
@@ -15,43 +14,21 @@ canvas { width:100vw; height:100vh; display:block; }
   color:white;
   font:20px sans-serif;
 }
-
-#log {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  max-height:35%;
-  overflow:auto;
-  background:rgba(0,0,0,0.85);
-  color:#0f0;
-  font:12px monospace;
-  padding:6px;
-}
 </style>
 </head>
 <body>
 
 <div id="guide">Align FRONT and tap</div>
 <canvas id="gl"></canvas>
-<div id="log"></div>
 
 <script>
-// ===== BASIC STATE =====
+// ===== STATE =====
 const steps = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
-let currentStep = 0;
-let mode = "capture"; // capture | view
-
+let step = 0;
+let mode = "capture";
 const captures = {};
-const textures = {};
 
 const guide = document.getElementById("guide");
-const logBox = document.getElementById("log");
-logBox.dataset.logs = "";
-
-function log(msg){
-  logBox.dataset.logs += msg + "<br>";
-  logBox.innerHTML = logBox.dataset.logs;
-}
 
 // ===== WEBGL =====
 const canvas = document.getElementById("gl");
@@ -62,8 +39,8 @@ canvas.height = innerHeight;
 gl.viewport(0,0,canvas.width,canvas.height);
 gl.clearColor(0,0,0,1);
 
-// ===== CAMERA SHADER =====
-const vs2D = `
+// ===== SIMPLE SHADER =====
+const vs = `
 attribute vec2 pos;
 attribute vec2 uv;
 varying vec2 vUV;
@@ -73,41 +50,13 @@ void main(){
 }
 `;
 
-const fs2D = `
-precision mediump float;
-uniform sampler2D tex;
-varying vec2 vUV;
-
-void main(){
-  vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
-  vec4 cam = texture2D(tex, uv);
-
-  if(uv.x > 0.3 && uv.x < 0.7 && uv.y > 0.3 && uv.y < 0.7){
-    cam = mix(cam, vec4(0.0,1.0,0.0,1.0), 0.3);
-  }
-
-  gl_FragColor = vec4(cam.rgb,1.0);
-}
-`;
-
-// ===== 3D SHADER =====
-const vs3D = `
-attribute vec3 pos;
-attribute vec2 uv;
-uniform mat4 mvp;
-varying vec2 vUV;
-void main(){
-  vUV = uv;
-  gl_Position = mvp * vec4(pos,1.0);
-}
-`;
-
-const fs3D = `
+const fs = `
 precision mediump float;
 uniform sampler2D tex;
 varying vec2 vUV;
 void main(){
-  gl_FragColor = texture2D(tex, vUV);
+  vec2 uv = vec2(vUV.x,1.0-vUV.y);
+  gl_FragColor = texture2D(tex, uv);
 }
 `;
 
@@ -118,16 +67,41 @@ function compile(type, src){
   return s;
 }
 
-function createProgram(vs, fs){
-  const p = gl.createProgram();
-  gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
-  gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
-  gl.linkProgram(p);
-  return p;
-}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(prog);
+gl.useProgram(prog);
 
-const prog2D = createProgram(vs2D, fs2D);
-const prog3D = createProgram(vs3D, fs3D);
+// ===== QUAD =====
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1,-1,0,0,
+   1,-1,1,0,
+  -1, 1,0,1,
+   1, 1,1,1
+]), gl.STATIC_DRAW);
+
+const pos = gl.getAttribLocation(prog,"pos");
+const uv = gl.getAttribLocation(prog,"uv");
+
+gl.enableVertexAttribArray(pos);
+gl.vertexAttribPointer(pos,2,gl.FLOAT,false,16,0);
+
+gl.enableVertexAttribArray(uv);
+gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);
+
+// ===== TEXTURE =====
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 
 // ===== CAMERA =====
 const video = document.createElement("video");
@@ -138,128 +112,60 @@ navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
   video.srcObject = stream;
-  log("camera started");
 });
 
 // ===== CAPTURE =====
 function capture(){
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-
-  const size = Math.min(vw, vh) * 0.4;
-  const sx = vw/2 - size/2;
-  const sy = vh/2 - size/2;
-
   const c = document.createElement("canvas");
-  c.width = size;
-  c.height = size;
-
-  const ctx = c.getContext("2d");
-  ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+  c.width = video.videoWidth;
+  c.height = video.videoHeight;
+  c.getContext("2d").drawImage(video,0,0);
 
   const img = new Image();
-  img.src = c.toDataURL("image/png");
+  img.src = c.toDataURL();
 
-  const dir = steps[currentStep];
-  captures[dir] = img;
+  captures[steps[step]] = img;
 
-  log("captured " + dir);
+  step++;
 
-  currentStep++;
-
-  if(currentStep >= steps.length){
-    guide.innerText = "3D VIEW";
-    buildTextures();
+  if(step >= steps.length){
+    guide.innerText = "3D MODE";
     mode = "view";
   } else {
-    guide.innerText = "Align " + steps[currentStep];
+    guide.innerText = "Align " + steps[step];
   }
 }
 
-// ===== BUILD TEXTURES =====
-function buildTextures(){
-  for(let k in captures){
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,captures[k]);
-    textures[k] = tex;
-  }
-}
-
-// ===== INPUT =====
-canvas.addEventListener("click", ()=>{
-  if(mode === "capture") capture();
-});
-
-// ===== SIMPLE ROTATION =====
-let angle = 0;
+canvas.onclick = ()=>{
+  if(mode==="capture") capture();
+};
 
 // ===== LOOP =====
+let t = 0;
+
 function loop(){
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
-  if(mode === "capture"){
-    gl.useProgram(prog2D);
-
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-
+  if(mode==="capture"){
     if(video.readyState >= 2){
       gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
     }
-
-    // draw quad
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
-      -1,-1,0,0, 1,-1,1,0, -1,1,0,1, 1,1,1,1
-    ]),gl.STATIC_DRAW);
-
-    const pos = gl.getAttribLocation(prog2D,"pos");
-    const uv = gl.getAttribLocation(prog2D,"uv");
-
-    gl.enableVertexAttribArray(pos);
-    gl.vertexAttribPointer(pos,2,gl.FLOAT,false,16,0);
-
-    gl.enableVertexAttribArray(uv);
-    gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);
-
-    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   }
 
-  if(mode === "view"){
-    gl.useProgram(prog3D);
-    angle += 0.01;
+  if(mode==="view"){
+    t += 0.01;
 
-    // (simplified cube rendering — front face only demo)
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
-      -0.5,-0.5,0, 0,0,
-       0.5,-0.5,0, 1,0,
-      -0.5, 0.5,0, 0,1,
-       0.5, 0.5,0, 1,1
-    ]),gl.STATIC_DRAW);
-
-    const pos = gl.getAttribLocation(prog3D,"pos");
-    const uv = gl.getAttribLocation(prog3D,"uv");
-
-    gl.enableVertexAttribArray(pos);
-    gl.vertexAttribPointer(pos,3,gl.FLOAT,false,20,0);
-
-    gl.enableVertexAttribArray(uv);
-    gl.vertexAttribPointer(uv,2,gl.FLOAT,false,20,12);
-
-    gl.bindTexture(gl.TEXTURE_2D, textures.FRONT);
-
-    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    // rotate UV as fake 3D preview
+    if(captures.FRONT){
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,captures.FRONT);
+    }
   }
 
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   requestAnimationFrame(loop);
 }
-loop();
 
+loop();
 </script>
 
 </body>
