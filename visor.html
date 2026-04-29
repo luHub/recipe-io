@@ -1,165 +1,152 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<title>Camera WebGL Fixed</title>
 <style>
-body { margin:0; background:black; }
-canvas { width:100vw; height:100vh; display:block; }
+  body { margin:0; overflow:hidden; background:black; }
+  canvas { width:100vw; height:100vh; display:block; }
+  #log {
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    max-height:30%;
+    overflow:auto;
+    background:rgba(0,0,0,0.8);
+    color:#0f0;
+    font:12px monospace;
+    padding:5px;
+  }
 </style>
 </head>
 <body>
 
-<video id="v" autoplay playsinline muted></video>
 <canvas id="gl"></canvas>
+<div id="log"></div>
 
 <script>
-const video = document.getElementById("v");
+const logBox = document.getElementById("log");
+function log(msg){
+  console.log(msg);
+  logBox.innerHTML += msg + "<br>";
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
-
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 gl.viewport(0,0,canvas.width,canvas.height);
-
 gl.clearColor(0,0,0,1);
-gl.disable(gl.DEPTH_TEST);
-gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-// ===== CAMERA =====
-navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } })
-.then(stream=>{
-  video.srcObject = stream;
-  video.play();
-});
+if(!gl) log("❌ WebGL failed");
 
-// ===== CAPTURE SYSTEM =====
-const faces = ["FRONT","RIGHT","LEFT","UP","DOWN","REAR"];
-let currentFace = 0;
-const captures = {};
+// shaders
+const vs = `
+attribute vec2 pos;
+attribute vec2 uv;
+varying vec2 vUV;
+void main(){
+  vUV = uv;
+  gl_Position = vec4(pos,0.0,1.0);
+}
+`;
 
-window.addEventListener("click", ()=>{
-  if(video.readyState >= 2){
-    const c = document.createElement("canvas");
-    c.width = video.videoWidth;
-    c.height = video.videoHeight;
-    const ctx = c.getContext("2d");
-    ctx.drawImage(video,0,0);
+const fs = `
+precision mediump float;
+uniform sampler2D tex;
+varying vec2 vUV;
 
-    captures[faces[currentFace]] = c;
+void main(){
+  vec2 uv = vec2(vUV.x, 1.0 - vUV.y); // flip Y
 
-    currentFace++;
+  vec4 cam = texture2D(tex, uv);
 
-    if(currentFace >= faces.length){
-      console.log("DONE", captures);
-      currentFace = faces.length - 1;
-    }
+  // overlay rectangle
+  if(uv.x > 0.3 && uv.x < 0.7 && uv.y > 0.3 && uv.y < 0.7){
+    cam = mix(cam, vec4(0.0,1.0,0.0,1.0), 0.3);
   }
-});
 
-// ===== SHADERS =====
+  gl_FragColor = vec4(cam.rgb, 1.0);
+}
+`;
+
 function compile(type, src){
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
   gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    log(gl.getShaderInfoLog(s));
+  }
   return s;
 }
 
-const vs = compile(gl.VERTEX_SHADER, `
-attribute vec2 p;
-varying vec2 uv;
-void main(){
-  uv = (p+1.0)*0.5;
-  gl_Position = vec4(p,0,1);
-}`);
-
-const fs = compile(gl.FRAGMENT_SHADER, `
-precision mediump float;
-varying vec2 uv;
-uniform sampler2D tex;
-uniform float progress;
-
-float rect(vec2 uv, vec2 pos, vec2 size){
-  vec2 d = abs(uv - pos) - size;
-  return step(max(d.x, d.y), 0.0);
-}
-
-float border(vec2 uv, vec2 pos, vec2 size, float thickness){
-  float outer = rect(uv, pos, size);
-  float inner = rect(uv, pos, size - vec2(thickness));
-  return outer - inner;
-}
-
-void main(){
-
-  vec4 cam = texture2D(tex, uv);
-  vec3 col = cam.rgb;
-
-  vec2 center = vec2(0.5,0.5);
-  vec2 size = vec2(0.25,0.2);
-
-  float fill = rect(uv, center, size);
-  float edge = border(uv, center, size, 0.01);
-
-  // progress color shift
-  vec3 color = mix(vec3(0.0,1.0,0.0), vec3(0.0,0.5,1.0), progress);
-
-  col = mix(col, color, fill * 0.15);
-  col = mix(col, color, edge);
-
-  // progress bar
-  float bar = rect(uv, vec2(0.5,0.1), vec2(progress * 0.4, 0.02));
-  col = mix(col, vec3(0.0,1.0,0.0), bar);
-
-  gl_FragColor = vec4(col,1.0);
-}
-`);
-
 const prog = gl.createProgram();
-gl.attachShader(prog, vs);
-gl.attachShader(prog, fs);
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
-// ===== QUAD =====
+// FULLSCREEN QUAD (correct UVs)
 const buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1,-1, 1,-1, -1,1, 1,1
+  // x, y,   u, v
+  -1,-1,   0,0,
+   1,-1,   1,0,
+  -1, 1,   0,1,
+   1, 1,   1,1,
 ]), gl.STATIC_DRAW);
 
-const loc = gl.getAttribLocation(prog,"p");
-gl.enableVertexAttribArray(loc);
-gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const pos = gl.getAttribLocation(prog,"pos");
+const uv = gl.getAttribLocation(prog,"uv");
 
-// ===== TEXTURE =====
+gl.enableVertexAttribArray(pos);
+gl.vertexAttribPointer(pos,2,gl.FLOAT,false,16,0);
+
+gl.enableVertexAttribArray(uv);
+gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);
+
+// texture
 const tex = gl.createTexture();
-const texLoc = gl.getUniformLocation(prog,"tex");
-const progLoc = gl.getUniformLocation(prog,"progress");
-
-gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, tex);
-gl.uniform1i(texLoc, 0);
-
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-// ===== LOOP =====
+gl.activeTexture(gl.TEXTURE0);
+gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
+
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+// camera
+const video = document.createElement("video");
+video.autoplay = true;
+video.playsInline = true;
+
+navigator.mediaDevices.getUserMedia({
+  video:{ facingMode:"environment" }
+}).then(stream=>{
+  video.srcObject = stream;
+  log("📷 camera started");
+}).catch(err=>{
+  log("❌ camera error: " + err);
+});
+
+// render loop
 function loop(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
   if(video.readyState >= 2){
-    gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
+    log("frame ok");
   }
-
-  // update progress
-  gl.uniform1f(progLoc, currentFace / float(6.0));
 
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   requestAnimationFrame(loop);
 }
-
 loop();
 </script>
 
