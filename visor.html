@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Step D Stable</title>
+<title>Step D Stable (Fixed)</title>
 <style>
 body { margin:0; background:black; overflow:hidden; }
 canvas { width:100vw; height:100vh; display:block; }
@@ -74,7 +74,7 @@ const progress = document.getElementById("progress");
 const thumbs = document.getElementById("thumbs");
 const flash = document.getElementById("flash");
 
-// ===== CREATE THUMBNAILS =====
+// ===== THUMBS =====
 const thumbEls = {};
 steps.forEach(s=>{
   const img = document.createElement("img");
@@ -121,6 +121,7 @@ void main(){
     abs(uv.y - 0.7) < 0.01;
 
   vec3 color = c.rgb;
+
   if(border){
     color = mix(color, vec3(0.0,1.0,0.0), 0.8);
   }
@@ -177,11 +178,13 @@ gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 const video = document.createElement("video");
 video.autoplay = true;
 video.playsInline = true;
+video.muted = true;
 
 navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
   video.srcObject = stream;
+  video.play().catch(()=>{});
 });
 
 // ===== CAPTURE =====
@@ -189,7 +192,6 @@ function capture(){
 
   if(video.readyState < 2) return;
 
-  // flash effect
   flash.style.opacity = 1;
   setTimeout(()=>flash.style.opacity=0,100);
 
@@ -204,7 +206,6 @@ function capture(){
   captures[step] = dataURL;
 
   thumbEls[step].src = dataURL;
-
   thumbEls[step].classList.remove("active");
 
   stepIndex++;
@@ -227,7 +228,19 @@ function loop(){
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   if(video.readyState >= 2){
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
+
+    // 🔥 FIX: always re-bind texture
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      video
+    );
   }
 
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
