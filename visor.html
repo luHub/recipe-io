@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Capture Step</title>
+<title>Step E - ROI Capture</title>
 <style>
   body { margin:0; overflow:hidden; background:black; }
   canvas { width:100vw; height:100vh; display:block; }
@@ -63,12 +63,12 @@ void main(){
   vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
   vec4 cam = texture2D(tex, uv);
 
-  // overlay
+  // GREEN GUIDE BOX
   if(uv.x > 0.3 && uv.x < 0.7 && uv.y > 0.3 && uv.y < 0.7){
     cam = mix(cam, vec4(0.0,1.0,0.0,1.0), 0.3);
   }
 
-  gl_FragColor = vec4(cam.rgb, 1.0);
+  gl_FragColor = vec4(cam.rgb,1.0);
 }
 `;
 
@@ -131,31 +131,45 @@ navigator.mediaDevices.getUserMedia({
   log("❌ camera error: " + err);
 });
 
-// ===== CAPTURE FUNCTION =====
+// ===== ROI CAPTURE =====
 function captureFrame(){
   if(video.readyState < 2){
     log("⚠️ video not ready");
     return;
   }
 
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+
+  // square size (center crop)
+  const size = Math.min(vw, vh) * 0.4;
+
+  const sx = vw/2 - size/2;
+  const sy = vh/2 - size/2;
+
   const c = document.createElement("canvas");
-  c.width = video.videoWidth;
-  c.height = video.videoHeight;
+  c.width = size;
+  c.height = size;
 
   const ctx = c.getContext("2d");
-  ctx.drawImage(video,0,0);
 
-  const dataURL = c.toDataURL("image/png");
-  captures.push(dataURL);
+  ctx.drawImage(
+    video,
+    sx, sy, size, size,   // source (ROI)
+    0, 0, size, size      // dest
+  );
 
-  log("📸 captured frame #" + captures.length);
+  const img = c.toDataURL("image/png");
+  captures.push(img);
+
+  log("📸 ROI captured #" + captures.length);
 }
 
-// ===== TAP TO CAPTURE =====
+// ===== INPUT =====
 canvas.addEventListener("click", captureFrame);
 canvas.addEventListener("touchstart", captureFrame);
 
-// ===== RENDER LOOP =====
+// ===== LOOP =====
 function loop(){
   gl.clear(gl.COLOR_BUFFER_BIT);
 
