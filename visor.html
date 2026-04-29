@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Step D Stable (Fixed)</title>
+<title>Stable Camera Fix</title>
 <style>
 body { margin:0; background:black; overflow:hidden; }
 canvas { width:100vw; height:100vh; display:block; }
@@ -15,75 +15,14 @@ canvas { width:100vw; height:100vh; display:block; }
   color:white;
   font:20px sans-serif;
 }
-
-#progress {
-  position:fixed;
-  bottom:80px;
-  width:100%;
-  text-align:center;
-  color:#0f0;
-  font:16px monospace;
-}
-
-#thumbs {
-  position:fixed;
-  bottom:10px;
-  width:100%;
-  display:flex;
-  justify-content:center;
-  gap:5px;
-}
-
-.thumb {
-  width:50px;
-  height:50px;
-  border:2px solid #444;
-  background:#111;
-}
-
-.active {
-  border-color:lime;
-}
-
-#flash {
-  position:fixed;
-  inset:0;
-  background:white;
-  opacity:0;
-  pointer-events:none;
-}
 </style>
 </head>
 <body>
 
-<div id="guide">Align FRONT and tap</div>
-<div id="progress">0 / 6</div>
-<div id="thumbs"></div>
-<div id="flash"></div>
-
+<div id="guide">Tap to capture</div>
 <canvas id="gl"></canvas>
 
 <script>
-// ===== STATE =====
-const steps = ["FRONT","RIGHT","BACK","LEFT","TOP","BOTTOM"];
-let stepIndex = 0;
-const captures = {};
-
-const guide = document.getElementById("guide");
-const progress = document.getElementById("progress");
-const thumbs = document.getElementById("thumbs");
-const flash = document.getElementById("flash");
-
-// ===== THUMBS =====
-const thumbEls = {};
-steps.forEach(s=>{
-  const img = document.createElement("img");
-  img.className = "thumb";
-  thumbs.appendChild(img);
-  thumbEls[s] = img;
-});
-thumbEls[steps[0]].classList.add("active");
-
 // ===== CANVAS =====
 const canvas = document.getElementById("gl");
 canvas.width = innerWidth;
@@ -109,24 +48,23 @@ const fs = `
 precision mediump float;
 uniform sampler2D tex;
 varying vec2 vUV;
-
 void main(){
   vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
   vec4 c = texture2D(tex, uv);
 
+  // simple overlay box
   float border =
     abs(uv.x - 0.3) < 0.01 ||
     abs(uv.x - 0.7) < 0.01 ||
     abs(uv.y - 0.3) < 0.01 ||
     abs(uv.y - 0.7) < 0.01;
 
-  vec3 color = c.rgb;
-
+  vec3 col = c.rgb;
   if(border){
-    color = mix(color, vec3(0.0,1.0,0.0), 0.8);
+    col = mix(col, vec3(0.0,1.0,0.0), 0.8);
   }
 
-  gl_FragColor = vec4(color,1.0);
+  gl_FragColor = vec4(col,1.0);
 }
 `;
 
@@ -184,71 +122,42 @@ navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
   video.srcObject = stream;
-  video.play().catch(()=>{});
+  return video.play();
+}).catch(e=>{
+  alert("Camera error: " + e);
 });
 
-// ===== CAPTURE =====
-function capture(){
+// ===== LOOP (START ONLY WHEN VIDEO READY) =====
+video.addEventListener("playing", () => {
 
-  if(video.readyState < 2) return;
+  console.log("Video started → rendering");
 
-  flash.style.opacity = 1;
-  setTimeout(()=>flash.style.opacity=0,100);
+  function loop(){
 
-  const c = document.createElement("canvas");
-  c.width = video.videoWidth;
-  c.height = video.videoHeight;
-  c.getContext("2d").drawImage(video,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-  const dataURL = c.toDataURL();
+    if(video.readyState >= 2){
 
-  const step = steps[stepIndex];
-  captures[step] = dataURL;
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
 
-  thumbEls[step].src = dataURL;
-  thumbEls[step].classList.remove("active");
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        video
+      );
+    }
 
-  stepIndex++;
-  progress.innerText = stepIndex + " / 6";
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
-  if(stepIndex < steps.length){
-    const next = steps[stepIndex];
-    guide.innerText = "Align " + next + " and tap";
-    thumbEls[next].classList.add("active");
-  } else {
-    guide.innerText = "Capture complete ✔";
-  }
-}
-
-canvas.addEventListener("click", capture);
-
-// ===== LOOP =====
-function loop(){
-
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  if(video.readyState >= 2){
-
-    // 🔥 FIX: always re-bind texture
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      video
-    );
+    requestAnimationFrame(loop);
   }
 
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-
-  requestAnimationFrame(loop);
-}
-
-loop();
+  loop();
+});
 </script>
 
 </body>
