@@ -12,7 +12,6 @@
   --accent:#00aaff;
 }
 
-/* base */
 body{
   margin:0;
   font-family: Arial, sans-serif;
@@ -20,11 +19,9 @@ body{
   color:var(--text);
 }
 
-/* top bar */
 .topbar{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:10px 16px;
 }
 
@@ -34,7 +31,6 @@ body{
   opacity:0.8;
 }
 
-/* layout */
 .container{
   padding:16px;
   max-width:600px;
@@ -44,7 +40,6 @@ body{
   gap:14px;
 }
 
-/* cards */
 .card{
   background: linear-gradient(180deg,var(--panel),var(--panel2));
   border:1px solid rgba(0,170,255,0.25);
@@ -52,14 +47,6 @@ body{
   padding:18px;
 }
 
-/* headings */
-h2{
-  margin-top:0;
-  font-size:16px;
-  letter-spacing:1px;
-}
-
-/* buttons */
 button{
   width:100%;
   background:#000;
@@ -70,33 +57,8 @@ button{
   cursor:pointer;
   margin-top:10px;
   font-weight:bold;
-
-  box-shadow:
-    0 0 6px rgba(0,170,255,0.4),
-    0 0 12px rgba(0,170,255,0.2);
-
-  transition:all 0.12s ease;
 }
 
-button:hover{
-  box-shadow:
-    0 0 10px rgba(0,170,255,0.6),
-    0 0 18px rgba(0,170,255,0.3);
-}
-
-button:active{
-  transform:scale(0.96);
-  box-shadow:
-    0 0 16px rgba(0,170,255,0.9),
-    0 0 28px rgba(0,170,255,0.5);
-}
-
-button:focus{
-  outline:2px solid #fff;
-  outline-offset:2px;
-}
-
-/* camera canvas */
 canvas{
   width:100%;
   height:300px;
@@ -104,7 +66,6 @@ canvas{
   border:1px solid rgba(0,170,255,0.3);
 }
 
-/* gallery */
 #gallery{
   display:flex;
   flex-wrap:wrap;
@@ -122,7 +83,6 @@ canvas{
   border-radius:6px;
 }
 
-/* logs */
 #log{
   height:80px;
   overflow:auto;
@@ -132,52 +92,35 @@ canvas{
   border-radius:8px;
   background:#000;
 }
-
-/* footer */
-.footer{
-  text-align:center;
-  font-size:11px;
-  opacity:0.4;
-  padding:10px;
-}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-  <div class="title">3D SCANNER v0.1</div>
+  <div class="title">3D SCANNER v0.2</div>
 </div>
 
 <div class="container">
 
-  <!-- CAMERA -->
   <div class="card">
-    <h2>Camera</h2>
     <canvas id="gl"></canvas>
 
     <button onclick="start()">▶ Start Camera</button>
     <button onclick="enableSensors()">📡 Enable Sensors</button>
+    <button onclick="toggleFlip()">🔄 Flip Camera</button>
     <button onclick="capture()">📸 Capture</button>
     <button onclick="downloadAll()">⬇️ Download</button>
   </div>
 
-  <!-- GALLERY -->
   <div class="card">
-    <h2>Captured Frames</h2>
     <div id="gallery"></div>
   </div>
 
-  <!-- LOG -->
   <div class="card">
-    <h2>Debug</h2>
     <div id="log"></div>
   </div>
 
-</div>
-
-<div class="footer">
-  experimental photogrammetry pipeline
 </div>
 
 <script>
@@ -208,12 +151,19 @@ void main(){
 const fs = `
 precision mediump float;
 uniform sampler2D tex;
+uniform float flipY;
 varying vec2 uv;
+
 void main(){
- vec2 t=vec2(uv.x,1.0-uv.y);
- vec4 c=texture2D(tex,t);
- float cross=step(abs(uv.x-0.5),0.002)+step(abs(uv.y-0.5),0.002);
- gl_FragColor=vec4(c.rgb+(cross>0.0?vec3(0,1,0):vec3(0)),1.0);
+ vec2 t = vec2(uv.x, mix(uv.y, 1.0 - uv.y, flipY));
+
+ vec4 c = texture2D(tex, t);
+
+ float cross =
+   step(abs(uv.x-0.5), 0.002) +
+   step(abs(uv.y-0.5), 0.002);
+
+ gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
 }`;
 
 // ---------- INIT ----------
@@ -251,6 +201,17 @@ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
+
+// ---------- FLIP CONTROL ----------
+let flipLoc = gl.getUniformLocation(prog,"flipY");
+let flip = 1.0;
+gl.uniform1f(flipLoc, flip);
+
+function toggleFlip(){
+ flip = flip === 1.0 ? 0.0 : 1.0;
+ gl.uniform1f(flipLoc, flip);
+ log("Flip = " + flip);
+}
 
 // ---------- VIDEO ----------
 let video=document.createElement("video");
