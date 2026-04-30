@@ -1,224 +1,164 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>WebGL Camera + Crosshair</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { margin:0; background:#000; overflow:hidden; font-family:sans-serif; }
-
-canvas {
-  width:100vw;
-  height:70vh;
-  display:block;
-}
-
-#overlay {
-  position:absolute;
-  top:10px;
-  width:100%;
-  text-align:center;
-  color:white;
-  font-size:18px;
-}
-
-#gallery {
-  height:30vh;
-  overflow-x:auto;
-  display:flex;
-  gap:10px;
-  padding:10px;
-  background:#111;
-}
-
-.item {
-  min-width:140px;
-  background:#222;
-  padding:5px;
-  border-radius:6px;
-}
-
-.item img {
-  width:100%;
-  height:80px;
-  object-fit:cover;
-}
-
-.meta {
-  font-size:11px;
-  color:#0f0;
-}
+body { margin:0; background:#000; color:#0f0; font-family:monospace; }
+canvas { width:100%; height:60vh; display:block; }
+#ui { padding:10px; }
+button { margin:5px; padding:10px; font-size:16px; }
+#gallery img { width:80px; margin:4px; border:1px solid #0f0; }
 </style>
 </head>
 <body>
 
-<div id="overlay">Align object at crosshair and tap</div>
 <canvas id="gl"></canvas>
-<div id="gallery"></div>
+
+<div id="ui">
+  <button onclick="capture()">📸 Capture</button>
+  <button onclick="downloadAll()">⬇️ Download All</button>
+  <div id="status">0 photos</div>
+  <div id="gallery"></div>
+</div>
 
 <script>
-// ===== VIDEO =====
-const video = document.createElement("video");
-video.autoplay = true;
-video.playsInline = true;
-video.muted = true;
-
-navigator.mediaDevices.getUserMedia({
-  video:{ facingMode:"environment" }
-}).then(stream=>{
-  video.srcObject = stream;
-  return video.play();
-}).catch(e=>alert(e));
-
-// ===== WEBGL =====
 const canvas = document.getElementById("gl");
-canvas.width = innerWidth;
-canvas.height = innerHeight * 0.7;
-
 const gl = canvas.getContext("webgl");
-gl.viewport(0,0,canvas.width,canvas.height);
 
-// ===== SHADERS =====
 const vs = `
-attribute vec2 pos;
-attribute vec2 uv;
-varying vec2 vUV;
+attribute vec2 p;
+varying vec2 uv;
 void main(){
-  vUV = uv;
-  gl_Position = vec4(pos,0.0,1.0);
-}
-`;
+  uv = (p+1.0)*0.5;
+  gl_Position = vec4(p,0,1);
+}`;
 
 const fs = `
 precision mediump float;
 uniform sampler2D tex;
-varying vec2 vUV;
+uniform float progress;
+varying vec2 uv;
 
 void main(){
-  vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
-  vec3 color = texture2D(tex, uv).rgb;
+  vec2 t = vec2(uv.x, 1.0-uv.y);
+  vec4 color = texture2D(tex, t);
 
-  // crosshair center
-  float cx = 0.5;
-  float cy = 0.5;
+  // --- CROSSHAIR ---
+  float line = step(abs(uv.x-0.5), 0.002) + step(abs(uv.y-0.5), 0.002);
 
-  float lineX = step(abs(uv.x - cx), 0.002);
-  float lineY = step(abs(uv.y - cy), 0.002);
+  // --- CENTER CIRCLE ---
+  float d = distance(uv, vec2(0.5));
+  float circle = smoothstep(0.25, 0.255, d) - smoothstep(0.255, 0.26, d);
 
-  float cross = max(lineX, lineY);
+  // --- PROGRESS RING ---
+  float angle = atan(uv.y-0.5, uv.x-0.5);
+  float normAngle = (angle + 3.1416) / (2.0*3.1416);
+  float ring = step(d, 0.35) * step(0.30, d);
+  float prog = step(normAngle, progress) * ring;
 
-  if(cross > 0.0){
-    color = mix(color, vec3(1.0,0.0,0.0), 0.9);
-  }
+  vec3 overlay = vec3(0.0);
 
-  gl_FragColor = vec4(color,1.0);
-}
-`;
+  if(line > 0.0) overlay = vec3(0.0,1.0,0.0);
+  if(circle > 0.0) overlay = vec3(0.0,1.0,0.0);
+  if(prog > 0.0) overlay = vec3(0.0,1.0,0.0);
+
+  gl_FragColor = vec4(color.rgb + overlay, 1.0);
+}`;
 
 function compile(type, src){
-  const s = gl.createShader(type);
+  let s = gl.createShader(type);
   gl.shaderSource(s, src);
   gl.compileShader(s);
   return s;
 }
 
-const prog = gl.createProgram();
+let prog = gl.createProgram();
 gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
 gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
-// ===== QUAD =====
-const buf = gl.createBuffer();
+let buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1,-1,0,0,
-   1,-1,1,0,
-  -1, 1,0,1,
-   1, 1,1,1
+  -1,-1, 1,-1, -1,1, 1,1
 ]), gl.STATIC_DRAW);
 
-const pos = gl.getAttribLocation(prog,"pos");
-const uv = gl.getAttribLocation(prog,"uv");
+let loc = gl.getAttribLocation(prog, "p");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-gl.enableVertexAttribArray(pos);
-gl.vertexAttribPointer(pos,2,gl.FLOAT,false,16,0);
-
-gl.enableVertexAttribArray(uv);
-gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);
-
-// ===== TEXTURE =====
-const tex = gl.createTexture();
+let tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
-
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
-gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+gl.uniform1i(gl.getUniformLocation(prog, "tex"), 0);
 
-// ===== RENDER LOOP =====
-video.addEventListener("playing", () => {
+let progressLoc = gl.getUniformLocation(prog, "progress");
 
-  function loop(){
-    if(video.readyState >= 2){
+let video = document.createElement("video");
+video.autoplay = true;
+video.playsInline = true;
 
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
+let captures = [];
+let MAX = 24;
 
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        video
-      );
-    }
+navigator.mediaDevices.getUserMedia({
+  video:{ facingMode:"environment" }
+}).then(stream=>{
+  video.srcObject = stream;
+});
 
-    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-    requestAnimationFrame(loop);
+video.addEventListener("playing", ()=>{
+  requestAnimationFrame(loop);
+});
+
+function loop(){
+  gl.viewport(0,0,canvas.width,canvas.height);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  if(video.readyState >= 2){
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
   }
 
-  loop();
-});
+  let progress = captures.length / MAX;
+  gl.uniform1f(progressLoc, progress);
 
-// ===== CAPTURE =====
-const gallery = document.getElementById("gallery");
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-document.body.addEventListener("click", () => {
+  requestAnimationFrame(loop);
+}
 
+function capture(){
   if(video.readyState < 2) return;
 
-  const c = document.createElement("canvas");
+  let c = document.createElement("canvas");
   c.width = video.videoWidth;
   c.height = video.videoHeight;
-
-  const ctx = c.getContext("2d");
+  let ctx = c.getContext("2d");
   ctx.drawImage(video,0,0);
 
-  const dataURL = c.toDataURL("image/jpeg",0.9);
+  let data = c.toDataURL("image/png");
+  captures.push(data);
 
-  const now = new Date();
+  let img = document.createElement("img");
+  img.src = data;
+  document.getElementById("gallery").appendChild(img);
 
-  const item = document.createElement("div");
-  item.className = "item";
+  document.getElementById("status").innerText =
+    captures.length + " / " + MAX + " photos";
+}
 
-  const img = document.createElement("img");
-  img.src = dataURL;
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.innerHTML =
-    now.toLocaleTimeString() + "<br>" +
-    c.width + "x" + c.height;
-
-  item.appendChild(img);
-  item.appendChild(meta);
-
-  gallery.prepend(item);
-});
+function downloadAll(){
+  captures.forEach((img, i)=>{
+    let a = document.createElement("a");
+    a.href = img;
+    a.download = "capture_" + i + ".png";
+    a.click();
+  });
+}
 </script>
 
 </body>
