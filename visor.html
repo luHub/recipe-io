@@ -10,11 +10,9 @@ canvas { width:100%; height:60vh; display:block; }
 button { margin:5px; padding:10px; font-size:16px; }
 
 #gallery { display:flex; flex-wrap:wrap; margin-top:10px; }
-.item { margin:4px; text-align:center; font-size:10px; }
-.item img { width:70px; border:1px solid #0f0; }
-
-#progress { height:6px; background:#222; margin-top:6px; }
-#bar { height:100%; width:0%; background:#0f0; }
+.item { margin:4px; font-size:10px; width:80px; }
+.item img { width:100%; border:1px solid #0f0; }
+.meta { white-space:pre-wrap; }
 </style>
 </head>
 <body>
@@ -23,11 +21,8 @@ button { margin:5px; padding:10px; font-size:16px; }
 
 <div id="ui">
   <button onclick="start()">▶ Start</button>
-  <button onclick="enableMotion()">📡 Enable Motion</button>
+  <button onclick="enableSensors()">📡 Enable Sensors</button>
   <button onclick="downloadAll()">⬇️ Download</button>
-
-  <div id="guide">Press START</div>
-  <div id="progress"><div id="bar"></div></div>
 
   <div id="gallery"></div>
 </div>
@@ -36,6 +31,7 @@ button { margin:5px; padding:10px; font-size:16px; }
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
+// ---------- resize ----------
 function resize(){
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
@@ -43,7 +39,7 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ---------- WebGL (same as before) ----------
+// ---------- shaders ----------
 const vs = `attribute vec2 p; varying vec2 uv;
 void main(){ uv=(p+1.0)*0.5; gl_Position=vec4(p,0,1); }`;
 
@@ -56,6 +52,7 @@ void main(){
  gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
 }`;
 
+// ---------- compile ----------
 function compile(t,s){
  let sh=gl.createShader(t);
  gl.shaderSource(sh,s);
@@ -69,6 +66,7 @@ gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
+// ---------- quad ----------
 let buf=gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER,buf);
 gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
@@ -79,6 +77,7 @@ let loc=gl.getAttribLocation(prog,"p");
 gl.enableVertexAttribArray(loc);
 gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
+// ---------- texture ----------
 let tex=gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D,tex);
 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,
@@ -97,21 +96,33 @@ let video=document.createElement("video");
 video.playsInline=true;
 video.muted=true;
 
-// ---------- capture system ----------
-let captures=[];
-let lastAngle=null;
-let threshold=15; // degrees between captures
+// ---------- sensor state ----------
+let sensorData = {
+  orientation: {},
+  motion: {}
+};
 
-// ---------- motion ----------
-let currentAngle=0;
-
-async function enableMotion(){
+// ---------- enable sensors ----------
+async function enableSensors(){
  if(typeof DeviceOrientationEvent.requestPermission==="function"){
    await DeviceOrientationEvent.requestPermission();
+   await DeviceMotionEvent.requestPermission();
  }
 
  window.addEventListener("deviceorientation",(e)=>{
-   currentAngle = e.alpha || 0;
+   sensorData.orientation = {
+     alpha: e.alpha,
+     beta: e.beta,
+     gamma: e.gamma
+   };
+ });
+
+ window.addEventListener("devicemotion",(e)=>{
+   sensorData.motion = {
+     acc: e.acceleration,
+     accG: e.accelerationIncludingGravity,
+     rot: e.rotationRate
+   };
  });
 }
 
@@ -139,29 +150,12 @@ function render(){
      gl.RGBA,gl.UNSIGNED_BYTE,video);
  }
 
- autoCapture();
-
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
  requestAnimationFrame(render);
 }
 
-// ---------- auto capture ----------
-function autoCapture(){
- if(lastAngle===null){
-   lastAngle=currentAngle;
-   return;
- }
-
- let diff=Math.abs(currentAngle-lastAngle);
-
- if(diff>threshold){
-   takePhoto();
-   lastAngle=currentAngle;
- }
-}
-
-// ---------- take photo ----------
-function takePhoto(){
+// ---------- capture ----------
+function capture(){
  let c=document.createElement("canvas");
  c.width=video.videoWidth;
  c.height=video.videoHeight;
@@ -169,7 +163,11 @@ function takePhoto(){
 
  let data=c.toDataURL("image/png");
 
- captures.push(data);
+ let meta = {
+   time: new Date().toISOString(),
+   orientation: sensorData.orientation,
+   motion: sensorData.motion
+ };
 
  let div=document.createElement("div");
  div.className="item";
@@ -177,18 +175,26 @@ function takePhoto(){
  let img=document.createElement("img");
  img.src=data;
 
+ let info=document.createElement("div");
+ info.className="meta";
+ info.innerText = JSON.stringify(meta,null,1);
+
  div.appendChild(img);
+ div.appendChild(info);
+
  document.getElementById("gallery").appendChild(div);
 
- document.getElementById("guide").innerText =
-   "Captured: "+captures.length;
+ captures.push({data, meta});
 }
+
+// ---------- storage ----------
+let captures=[];
 
 // ---------- download ----------
 function downloadAll(){
- captures.forEach((img,i)=>{
+ captures.forEach((c,i)=>{
    let a=document.createElement("a");
-   a.href=img;
+   a.href=c.data;
    a.download="img_"+i+".png";
    a.click();
  });
