@@ -9,27 +9,12 @@ canvas { width:100%; height:60vh; display:block; }
 #ui { padding:10px; }
 button { margin:5px; padding:10px; font-size:16px; }
 
-#guide { font-size:14px; margin-top:5px; }
+#gallery { display:flex; flex-wrap:wrap; margin-top:10px; }
+.item { margin:4px; text-align:center; font-size:10px; }
+.item img { width:70px; border:1px solid #0f0; }
 
 #progress { height:6px; background:#222; margin-top:6px; }
 #bar { height:100%; width:0%; background:#0f0; }
-
-#gallery {
-  display:flex;
-  flex-wrap:wrap;
-  margin-top:10px;
-}
-
-.item {
-  margin:4px;
-  text-align:center;
-  font-size:10px;
-}
-
-.item img {
-  width:70px;
-  border:1px solid #0f0;
-}
 </style>
 </head>
 <body>
@@ -38,8 +23,8 @@ button { margin:5px; padding:10px; font-size:16px; }
 
 <div id="ui">
   <button onclick="start()">▶ Start</button>
-  <button onclick="capture()">📸 Capture</button>
-  <button onclick="downloadAll()">⬇️ Download All</button>
+  <button onclick="enableMotion()">📡 Enable Motion</button>
+  <button onclick="downloadAll()">⬇️ Download</button>
 
   <div id="guide">Press START</div>
   <div id="progress"><div id="bar"></div></div>
@@ -58,67 +43,46 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ---------- SHADERS ----------
-const vs = `
-attribute vec2 p;
-varying vec2 uv;
+// ---------- WebGL (same as before) ----------
+const vs = `attribute vec2 p; varying vec2 uv;
+void main(){ uv=(p+1.0)*0.5; gl_Position=vec4(p,0,1); }`;
+
+const fs = `precision mediump float;
+uniform sampler2D tex; varying vec2 uv;
 void main(){
-  uv = (p+1.0)*0.5;
-  gl_Position = vec4(p,0,1);
+ vec2 t=vec2(uv.x,1.0-uv.y);
+ vec4 c=texture2D(tex,t);
+ float cross = step(abs(uv.x-0.5),0.002)+step(abs(uv.y-0.5),0.002);
+ gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
 }`;
 
-const fs = `
-precision mediump float;
-uniform sampler2D tex;
-varying vec2 uv;
-
-void main(){
-  vec2 t = vec2(uv.x,1.0-uv.y);
-  vec4 c = texture2D(tex,t);
-
-  float cross =
-    step(abs(uv.x-0.5),0.002) +
-    step(abs(uv.y-0.5),0.002);
-
-  float d = distance(uv,vec2(0.5));
-  float circle = smoothstep(0.25,0.26,d)-smoothstep(0.26,0.27,d);
-
-  vec3 overlay = (cross+circle>0.0) ? vec3(0,1,0) : vec3(0);
-
-  gl_FragColor = vec4(c.rgb+overlay,1.0);
-}`;
-
-// ---------- compile ----------
-function compile(type,src){
-  let s = gl.createShader(type);
-  gl.shaderSource(s,src);
-  gl.compileShader(s);
-  return s;
+function compile(t,s){
+ let sh=gl.createShader(t);
+ gl.shaderSource(sh,s);
+ gl.compileShader(sh);
+ return sh;
 }
 
-let prog = gl.createProgram();
+let prog=gl.createProgram();
 gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
 gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
-// ---------- quad ----------
-let buf = gl.createBuffer();
+let buf=gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER,buf);
 gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
-  -1,-1,1,-1,-1,1,1,1
+ -1,-1,1,-1,-1,1,1,1
 ]),gl.STATIC_DRAW);
 
-let loc = gl.getAttribLocation(prog,"p");
+let loc=gl.getAttribLocation(prog,"p");
 gl.enableVertexAttribArray(loc);
 gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
-// ---------- texture ----------
-let tex = gl.createTexture();
+let tex=gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D,tex);
-
 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,
-  gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
+ gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
 
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -129,110 +93,105 @@ gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 
 // ---------- video ----------
-let video = document.createElement("video");
-video.playsInline = true;
-video.muted = true;
+let video=document.createElement("video");
+video.playsInline=true;
+video.muted=true;
 
-// ---------- state ----------
-let captures = [];
-let MAX = 24;
+// ---------- capture system ----------
+let captures=[];
+let lastAngle=null;
+let threshold=15; // degrees between captures
 
-// ---------- guidance ----------
-function updateGuide(){
-  let g = document.getElementById("guide");
+// ---------- motion ----------
+let currentAngle=0;
 
-  if(captures.length === 0){
-    g.innerText = "Center object and capture";
-  } else if(captures.length < MAX){
-    g.innerText = "Move around object ("+captures.length+"/"+MAX+")";
-  } else {
-    g.innerText = "Done ✅";
-  }
+async function enableMotion(){
+ if(typeof DeviceOrientationEvent.requestPermission==="function"){
+   await DeviceOrientationEvent.requestPermission();
+ }
 
-  document.getElementById("bar").style.width =
-    (captures.length/MAX*100)+"%";
+ window.addEventListener("deviceorientation",(e)=>{
+   currentAngle = e.alpha || 0;
+ });
 }
 
 // ---------- start ----------
 async function start(){
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video:{ facingMode:"environment" }
-  });
+ const stream=await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:"environment"}
+ });
 
-  video.srcObject = stream;
-  await video.play();
+ video.srcObject=stream;
+ await video.play();
 
-  startRendering();
-  updateGuide();
+ render();
 }
 
 // ---------- render ----------
-function startRendering(){
-  function loop(){
-    resize();
-    gl.viewport(0,0,canvas.width,canvas.height);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+function render(){
+ resize();
+ gl.viewport(0,0,canvas.width,canvas.height);
+ gl.clear(gl.COLOR_BUFFER_BIT);
 
-    if(video.readyState>=2){
-      gl.bindTexture(gl.TEXTURE_2D,tex);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
-        gl.RGBA,gl.UNSIGNED_BYTE,video);
-    }
+ if(video.readyState>=2){
+   gl.bindTexture(gl.TEXTURE_2D,tex);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
+     gl.RGBA,gl.UNSIGNED_BYTE,video);
+ }
 
-    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-    requestAnimationFrame(loop);
-  }
-  loop();
+ autoCapture();
+
+ gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ requestAnimationFrame(render);
 }
 
-// ---------- capture ----------
-function capture(){
-  if(video.readyState<2) return;
+// ---------- auto capture ----------
+function autoCapture(){
+ if(lastAngle===null){
+   lastAngle=currentAngle;
+   return;
+ }
 
-  let c = document.createElement("canvas");
-  c.width = video.videoWidth;
-  c.height = video.videoHeight;
-  c.getContext("2d").drawImage(video,0,0);
+ let diff=Math.abs(currentAngle-lastAngle);
 
-  let data = c.toDataURL("image/png");
+ if(diff>threshold){
+   takePhoto();
+   lastAngle=currentAngle;
+ }
+}
 
-  let meta = {
-    id: captures.length,
-    time: new Date().toLocaleTimeString(),
-    width: c.width,
-    height: c.height
-  };
+// ---------- take photo ----------
+function takePhoto(){
+ let c=document.createElement("canvas");
+ c.width=video.videoWidth;
+ c.height=video.videoHeight;
+ c.getContext("2d").drawImage(video,0,0);
 
-  captures.push({data, meta});
+ let data=c.toDataURL("image/png");
 
-  let div = document.createElement("div");
-  div.className = "item";
+ captures.push(data);
 
-  let img = document.createElement("img");
-  img.src = data;
+ let div=document.createElement("div");
+ div.className="item";
 
-  let info = document.createElement("div");
-  info.innerText =
-    "#" + meta.id +
-    " " + meta.time +
-    "\n" + meta.width + "x" + meta.height;
+ let img=document.createElement("img");
+ img.src=data;
 
-  div.appendChild(img);
-  div.appendChild(info);
+ div.appendChild(img);
+ document.getElementById("gallery").appendChild(div);
 
-  document.getElementById("gallery").appendChild(div);
-
-  updateGuide();
+ document.getElementById("guide").innerText =
+   "Captured: "+captures.length;
 }
 
 // ---------- download ----------
 function downloadAll(){
-  captures.forEach((c,i)=>{
-    let a = document.createElement("a");
-    a.href = c.data;
-    a.download = "capture_"+i+".png";
-    a.click();
-  });
+ captures.forEach((img,i)=>{
+   let a=document.createElement("a");
+   a.href=img;
+   a.download="img_"+i+".png";
+   a.click();
+ });
 }
 </script>
 
