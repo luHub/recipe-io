@@ -10,7 +10,7 @@ canvas { width:100%; height:60vh; display:block; }
 button { margin:5px; padding:10px; font-size:16px; }
 
 #gallery { display:flex; flex-wrap:wrap; margin-top:10px; }
-.item { margin:4px; font-size:10px; width:80px; }
+.item { margin:4px; width:100px; font-size:9px; }
 .item img { width:100%; border:1px solid #0f0; }
 .meta { white-space:pre-wrap; }
 </style>
@@ -20,8 +20,9 @@ button { margin:5px; padding:10px; font-size:16px; }
 <canvas id="gl"></canvas>
 
 <div id="ui">
-  <button onclick="start()">▶ Start</button>
+  <button onclick="start()">▶ Start Camera</button>
   <button onclick="enableSensors()">📡 Enable Sensors</button>
+  <button onclick="capture()">📸 Capture</button>
   <button onclick="downloadAll()">⬇️ Download</button>
 
   <div id="gallery"></div>
@@ -70,7 +71,7 @@ gl.useProgram(prog);
 let buf=gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER,buf);
 gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
- -1,-1,1,-1,-1,1,1,1
+ -1,-1, 1,-1, -1,1, 1,1
 ]),gl.STATIC_DRAW);
 
 let loc=gl.getAttribLocation(prog,"p");
@@ -80,15 +81,12 @@ gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 // ---------- texture ----------
 let tex=gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D,tex);
-gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,
- gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
-
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 
 // ---------- video ----------
@@ -96,7 +94,7 @@ let video=document.createElement("video");
 video.playsInline=true;
 video.muted=true;
 
-// ---------- sensor state ----------
+// ---------- sensor data ----------
 let sensorData = {
   orientation: {},
   motion: {}
@@ -104,29 +102,36 @@ let sensorData = {
 
 // ---------- enable sensors ----------
 async function enableSensors(){
- if(typeof DeviceOrientationEvent.requestPermission==="function"){
-   await DeviceOrientationEvent.requestPermission();
-   await DeviceMotionEvent.requestPermission();
+ try {
+   if(typeof DeviceOrientationEvent.requestPermission==="function"){
+     await DeviceOrientationEvent.requestPermission();
+     await DeviceMotionEvent.requestPermission();
+   }
+
+   window.addEventListener("deviceorientation",(e)=>{
+     sensorData.orientation = {
+       alpha: e.alpha,
+       beta: e.beta,
+       gamma: e.gamma
+     };
+   });
+
+   window.addEventListener("devicemotion",(e)=>{
+     sensorData.motion = {
+       acc: e.acceleration,
+       accG: e.accelerationIncludingGravity,
+       rot: e.rotationRate
+     };
+   });
+
+   alert("Sensors enabled");
+
+ } catch(e){
+   alert("Sensor permission denied");
  }
-
- window.addEventListener("deviceorientation",(e)=>{
-   sensorData.orientation = {
-     alpha: e.alpha,
-     beta: e.beta,
-     gamma: e.gamma
-   };
- });
-
- window.addEventListener("devicemotion",(e)=>{
-   sensorData.motion = {
-     acc: e.acceleration,
-     accG: e.accelerationIncludingGravity,
-     rot: e.rotationRate
-   };
- });
 }
 
-// ---------- start ----------
+// ---------- start camera ----------
 async function start(){
  const stream=await navigator.mediaDevices.getUserMedia({
    video:{facingMode:"environment"}
@@ -154,8 +159,16 @@ function render(){
  requestAnimationFrame(render);
 }
 
+// ---------- storage ----------
+let captures=[];
+
 // ---------- capture ----------
 function capture(){
+ if(video.readyState<2){
+   alert("Camera not ready");
+   return;
+ }
+
  let c=document.createElement("canvas");
  c.width=video.videoWidth;
  c.height=video.videoHeight;
@@ -169,6 +182,9 @@ function capture(){
    motion: sensorData.motion
  };
 
+ captures.push({data, meta});
+
+ // UI
  let div=document.createElement("div");
  div.className="item";
 
@@ -183,19 +199,19 @@ function capture(){
  div.appendChild(info);
 
  document.getElementById("gallery").appendChild(div);
-
- captures.push({data, meta});
 }
-
-// ---------- storage ----------
-let captures=[];
 
 // ---------- download ----------
 function downloadAll(){
+ if(captures.length===0){
+   alert("No images to download");
+   return;
+ }
+
  captures.forEach((c,i)=>{
    let a=document.createElement("a");
    a.href=c.data;
-   a.download="img_"+i+".png";
+   a.download="capture_"+i+".png";
    a.click();
  });
 }
