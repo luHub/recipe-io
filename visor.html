@@ -5,8 +5,38 @@
 <style>
 body { margin:0; background:#000; color:#0f0; font-family:monospace; }
 canvas { width:100%; height:60vh; display:block; }
+
 #ui { padding:10px; }
 button { margin:5px; padding:10px; font-size:16px; }
+
+#guide {
+  font-size:14px;
+  margin-top:5px;
+  color:#0f0;
+}
+
+#progress {
+  height:6px;
+  background:#222;
+  margin-top:6px;
+  position:relative;
+}
+#bar {
+  height:100%;
+  width:0%;
+  background:#0f0;
+}
+
+#gallery {
+  display:flex;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+#gallery img {
+  width:70px;
+  margin:4px;
+  border:1px solid #0f0;
+}
 </style>
 </head>
 <body>
@@ -14,16 +44,20 @@ button { margin:5px; padding:10px; font-size:16px; }
 <canvas id="gl"></canvas>
 
 <div id="ui">
-  <button onclick="start()">▶ Start Camera</button>
+  <button onclick="start()">▶ Start</button>
   <button onclick="capture()">📸 Capture</button>
-  <div id="status">idle</div>
+
+  <div id="guide">Press START to begin</div>
+
+  <div id="progress"><div id="bar"></div></div>
+
+  <div id="gallery"></div>
 </div>
 
 <script>
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
-// ---------- resize ----------
 function resize(){
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
@@ -31,7 +65,7 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ---------- shaders ----------
+// ---------- SHADERS ----------
 const vs = `
 attribute vec2 p;
 varying vec2 uv;
@@ -49,14 +83,18 @@ void main(){
   vec2 t = vec2(uv.x, 1.0-uv.y);
   vec4 c = texture2D(tex, t);
 
-  // crosshair
   float cross =
     step(abs(uv.x-0.5), 0.002) +
     step(abs(uv.y-0.5), 0.002);
 
-  vec3 overlay = cross > 0.0 ? vec3(0.0,1.0,0.0) : vec3(0.0);
+  float d = distance(uv, vec2(0.5));
+  float circle = smoothstep(0.25,0.26,d) - smoothstep(0.26,0.27,d);
 
-  gl_FragColor = vec4(c.rgb + overlay, 1.0);
+  vec3 overlay = (cross + circle > 0.0)
+    ? vec3(0.0,1.0,0.0)
+    : vec3(0.0);
+
+  gl_FragColor = vec4(c.rgb + overlay,1.0);
 }`;
 
 // ---------- compile ----------
@@ -88,13 +126,8 @@ gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 let tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
 
-// init texture (important)
-gl.texImage2D(
-  gl.TEXTURE_2D,0,gl.RGBA,
-  1,1,0,
-  gl.RGBA,gl.UNSIGNED_BYTE,
-  new Uint8Array([0,0,0,255])
-);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,
+  gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -102,22 +135,37 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-gl.uniform1i(gl.getUniformLocation(prog, "tex"), 0);
+gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 
 // ---------- video ----------
 let video = document.createElement("video");
 video.playsInline = true;
 video.muted = true;
 
-let started = false;
+// ---------- state ----------
+let captures = [];
+let MAX = 24;
 
-// ---------- START ----------
+// ---------- guidance ----------
+function updateGuide(){
+  let g = document.getElementById("guide");
+
+  if(captures.length === 0){
+    g.innerText = "Center object and take first photo";
+  }
+  else if(captures.length < MAX){
+    g.innerText = "Move slightly around object (" + captures.length + "/" + MAX + ")";
+  }
+  else{
+    g.innerText = "Capture complete ✅";
+  }
+
+  document.getElementById("bar").style.width =
+    (captures.length / MAX * 100) + "%";
+}
+
+// ---------- start ----------
 async function start(){
-  if(started) return;
-  started = true;
-
-  document.getElementById("status").innerText = "starting camera...";
-
   const stream = await navigator.mediaDevices.getUserMedia({
     video:{ facingMode:"environment" }
   });
@@ -125,24 +173,19 @@ async function start(){
   video.srcObject = stream;
   await video.play();
 
-  document.getElementById("status").innerText = "camera running";
-
   startRendering();
+  updateGuide();
 }
 
 // ---------- rendering ----------
 function startRendering(){
-
-  // 🔥 BEST: modern browsers
   if(video.requestVideoFrameCallback){
     const render = ()=>{
       draw();
       video.requestVideoFrameCallback(render);
     };
     video.requestVideoFrameCallback(render);
-  }
-  else{
-    // fallback
+  } else {
     function loop(){
       draw();
       requestAnimationFrame(loop);
@@ -154,17 +197,12 @@ function startRendering(){
 function draw(){
   resize();
   gl.viewport(0,0,canvas.width,canvas.height);
-
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   if(video.readyState >= 2){
     gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    gl.texImage2D(
-      gl.TEXTURE_2D,0,gl.RGBA,
-      gl.RGBA,gl.UNSIGNED_BYTE,
-      video
-    );
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
+      gl.RGBA,gl.UNSIGNED_BYTE,video);
   }
 
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
@@ -172,7 +210,21 @@ function draw(){
 
 // ---------- capture ----------
 function capture(){
-  document.getElementById("status").innerText = "captured";
+  if(video.readyState < 2) return;
+
+  let c = document.createElement("canvas");
+  c.width = video.videoWidth;
+  c.height = video.videoHeight;
+  c.getContext("2d").drawImage(video,0,0);
+
+  let data = c.toDataURL("image/png");
+  captures.push(data);
+
+  let img = document.createElement("img");
+  img.src = data;
+  document.getElementById("gallery").appendChild(img);
+
+  updateGuide();
 }
 </script>
 
