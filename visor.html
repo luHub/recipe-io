@@ -7,7 +7,6 @@ body { margin:0; background:#000; color:#0f0; font-family:monospace; }
 canvas { width:100%; height:60vh; display:block; }
 #ui { padding:10px; }
 button { margin:5px; padding:10px; font-size:16px; }
-#gallery img { width:80px; margin:4px; border:1px solid #0f0; }
 </style>
 </head>
 <body>
@@ -15,17 +14,16 @@ button { margin:5px; padding:10px; font-size:16px; }
 <canvas id="gl"></canvas>
 
 <div id="ui">
+  <button onclick="start()">▶ Start Camera</button>
   <button onclick="capture()">📸 Capture</button>
-  <button onclick="downloadAll()">⬇️ Download All</button>
-  <div id="status">0 photos</div>
-  <div id="gallery"></div>
+  <div id="status">idle</div>
 </div>
 
 <script>
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
-// 🔥 FIX: match real resolution
+// ---------- resize ----------
 function resize(){
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
@@ -33,7 +31,7 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ---------- SHADERS ----------
+// ---------- shaders ----------
 const vs = `
 attribute vec2 p;
 varying vec2 uv;
@@ -45,31 +43,23 @@ void main(){
 const fs = `
 precision mediump float;
 uniform sampler2D tex;
-uniform float progress;
 varying vec2 uv;
 
 void main(){
   vec2 t = vec2(uv.x, 1.0-uv.y);
-  vec4 color = texture2D(tex, t);
+  vec4 c = texture2D(tex, t);
 
-  float line = step(abs(uv.x-0.5), 0.002) + step(abs(uv.y-0.5), 0.002);
-  float d = distance(uv, vec2(0.5));
-  float circle = smoothstep(0.25, 0.255, d) - smoothstep(0.255, 0.26, d);
+  // crosshair
+  float cross =
+    step(abs(uv.x-0.5), 0.002) +
+    step(abs(uv.y-0.5), 0.002);
 
-  float angle = atan(uv.y-0.5, uv.x-0.5);
-  float normAngle = (angle + 3.1416) / (2.0*3.1416);
-  float ring = step(d, 0.35) * step(0.30, d);
-  float prog = step(normAngle, progress) * ring;
+  vec3 overlay = cross > 0.0 ? vec3(0.0,1.0,0.0) : vec3(0.0);
 
-  vec3 overlay = vec3(0.0);
-  if(line > 0.0 || circle > 0.0 || prog > 0.0){
-    overlay = vec3(0.0,1.0,0.0);
-  }
-
-  gl_FragColor = vec4(color.rgb + overlay, 1.0);
+  gl_FragColor = vec4(c.rgb + overlay, 1.0);
 }`;
 
-// ---------- COMPILE ----------
+// ---------- compile ----------
 function compile(type, src){
   let s = gl.createShader(type);
   gl.shaderSource(s, src);
@@ -83,7 +73,7 @@ gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
-// ---------- GEOMETRY ----------
+// ---------- quad ----------
 let buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -94,15 +84,15 @@ let loc = gl.getAttribLocation(prog, "p");
 gl.enableVertexAttribArray(loc);
 gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-// ---------- TEXTURE ----------
+// ---------- texture ----------
 let tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
 
-// 🔥 FIX: initialize texture (prevents black frame)
+// init texture (important)
 gl.texImage2D(
-  gl.TEXTURE_2D, 0, gl.RGBA,
-  1, 1, 0,
-  gl.RGBA, gl.UNSIGNED_BYTE,
+  gl.TEXTURE_2D,0,gl.RGBA,
+  1,1,0,
+  gl.RGBA,gl.UNSIGNED_BYTE,
   new Uint8Array([0,0,0,255])
 );
 
@@ -111,89 +101,78 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-// 🔥 FIX: flip camera correctly
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
 gl.uniform1i(gl.getUniformLocation(prog, "tex"), 0);
-let progressLoc = gl.getUniformLocation(prog, "progress");
 
-// ---------- VIDEO ----------
+// ---------- video ----------
 let video = document.createElement("video");
-video.autoplay = true;
 video.playsInline = true;
 video.muted = true;
 
-// 🔥 important on mobile
-video.setAttribute("playsinline", "");
-video.setAttribute("muted", "");
+let started = false;
 
-navigator.mediaDevices.getUserMedia({
-  video:{ facingMode:"environment" }
-}).then(stream=>{
-  video.srcObject = stream;
-});
+// ---------- START ----------
+async function start(){
+  if(started) return;
+  started = true;
 
-// ---------- CAPTURE ----------
-let captures = [];
-let MAX = 24;
+  document.getElementById("status").innerText = "starting camera...";
 
-function capture(){
-  if(video.readyState < 2) return;
-
-  let c = document.createElement("canvas");
-  c.width = video.videoWidth;
-  c.height = video.videoHeight;
-  c.getContext("2d").drawImage(video,0,0);
-
-  let data = c.toDataURL("image/png");
-  captures.push(data);
-
-  let img = document.createElement("img");
-  img.src = data;
-  document.getElementById("gallery").appendChild(img);
-
-  document.getElementById("status").innerText =
-    captures.length + " / " + MAX + " photos";
-}
-
-function downloadAll(){
-  captures.forEach((img, i)=>{
-    let a = document.createElement("a");
-    a.href = img;
-    a.download = "capture_" + i + ".png";
-    a.click();
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:"environment" }
   });
+
+  video.srcObject = stream;
+  await video.play();
+
+  document.getElementById("status").innerText = "camera running";
+
+  startRendering();
 }
 
-// ---------- RENDER LOOP ----------
-// 🔥 FIX: only start AFTER video is actually playing
-video.addEventListener("playing", ()=>{
-  requestAnimationFrame(loop);
-});
+// ---------- rendering ----------
+function startRendering(){
 
-function loop(){
+  // 🔥 BEST: modern browsers
+  if(video.requestVideoFrameCallback){
+    const render = ()=>{
+      draw();
+      video.requestVideoFrameCallback(render);
+    };
+    video.requestVideoFrameCallback(render);
+  }
+  else{
+    // fallback
+    function loop(){
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  }
+}
+
+function draw(){
   resize();
-
   gl.viewport(0,0,canvas.width,canvas.height);
+
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   if(video.readyState >= 2){
     gl.bindTexture(gl.TEXTURE_2D, tex);
 
-    // 🔥 CRITICAL: update texture every frame
     gl.texImage2D(
-      gl.TEXTURE_2D, 0, gl.RGBA,
-      gl.RGBA, gl.UNSIGNED_BYTE,
+      gl.TEXTURE_2D,0,gl.RGBA,
+      gl.RGBA,gl.UNSIGNED_BYTE,
       video
     );
   }
 
-  let progress = captures.length / MAX;
-  gl.uniform1f(progressLoc, progress);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
 
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-  requestAnimationFrame(loop);
+// ---------- capture ----------
+function capture(){
+  document.getElementById("status").innerText = "captured";
 }
 </script>
 
