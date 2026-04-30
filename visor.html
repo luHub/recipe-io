@@ -2,39 +2,182 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body { margin:0; background:#000; color:#0f0; font-family:monospace; }
-canvas { width:100%; height:60vh; display:block; }
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
 
-#ui { padding:10px; }
-button { margin:5px; padding:10px; font-size:16px; }
+/* base */
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
 
-#gallery { display:flex; flex-wrap:wrap; margin-top:10px; }
-.item { width:110px; margin:4px; font-size:9px; }
-.item img { width:100%; border:1px solid #0f0; }
+/* top bar */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 16px;
+}
 
-#log {
+.title{
+  font-size:14px;
+  letter-spacing:2px;
+  opacity:0.8;
+}
+
+/* layout */
+.container{
+  padding:16px;
+  max-width:600px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* cards */
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:18px;
+}
+
+/* headings */
+h2{
+  margin-top:0;
+  font-size:16px;
+  letter-spacing:1px;
+}
+
+/* buttons */
+button{
+  width:100%;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  padding:14px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:10px;
+  font-weight:bold;
+
+  box-shadow:
+    0 0 6px rgba(0,170,255,0.4),
+    0 0 12px rgba(0,170,255,0.2);
+
+  transition:all 0.12s ease;
+}
+
+button:hover{
+  box-shadow:
+    0 0 10px rgba(0,170,255,0.6),
+    0 0 18px rgba(0,170,255,0.3);
+}
+
+button:active{
+  transform:scale(0.96);
+  box-shadow:
+    0 0 16px rgba(0,170,255,0.9),
+    0 0 28px rgba(0,170,255,0.5);
+}
+
+button:focus{
+  outline:2px solid #fff;
+  outline-offset:2px;
+}
+
+/* camera canvas */
+canvas{
+  width:100%;
+  height:300px;
+  border-radius:12px;
+  border:1px solid rgba(0,170,255,0.3);
+}
+
+/* gallery */
+#gallery{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.item{
+  width:100px;
+  font-size:9px;
+}
+
+.item img{
+  width:100%;
+  border:1px solid var(--accent);
+  border-radius:6px;
+}
+
+/* logs */
+#log{
   height:80px;
   overflow:auto;
-  border:1px solid #0f0;
-  margin-top:10px;
-  padding:5px;
+  border:1px solid rgba(0,170,255,0.3);
+  padding:8px;
   font-size:10px;
+  border-radius:8px;
+  background:#000;
+}
+
+/* footer */
+.footer{
+  text-align:center;
+  font-size:11px;
+  opacity:0.4;
+  padding:10px;
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="gl"></canvas>
+<div class="topbar">
+  <div class="title">3D SCANNER v0.1</div>
+</div>
 
-<div id="ui">
-  <button onclick="start()">▶ Start Camera</button>
-  <button onclick="enableSensors()">📡 Enable Sensors</button>
-  <button onclick="capture()">📸 Capture</button>
-  <button onclick="downloadAll()">⬇️ Download</button>
+<div class="container">
 
-  <div id="gallery"></div>
-  <div id="log"></div>
+  <!-- CAMERA -->
+  <div class="card">
+    <h2>Camera</h2>
+    <canvas id="gl"></canvas>
+
+    <button onclick="start()">▶ Start Camera</button>
+    <button onclick="enableSensors()">📡 Enable Sensors</button>
+    <button onclick="capture()">📸 Capture</button>
+    <button onclick="downloadAll()">⬇️ Download</button>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="card">
+    <h2>Captured Frames</h2>
+    <div id="gallery"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="card">
+    <h2>Debug</h2>
+    <div id="log"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  experimental photogrammetry pipeline
 </div>
 
 <script>
@@ -52,135 +195,105 @@ function resize(){
   canvas.height = canvas.clientHeight;
 }
 resize();
-window.addEventListener("resize", resize);
 
 // ---------- SHADERS ----------
 const vs = `
 attribute vec2 p;
 varying vec2 uv;
 void main(){
-  uv = (p+1.0)*0.5;
-  gl_Position = vec4(p,0,1);
+ uv=(p+1.0)*0.5;
+ gl_Position=vec4(p,0,1);
 }`;
 
 const fs = `
 precision mediump float;
 uniform sampler2D tex;
 varying vec2 uv;
-
 void main(){
-  vec2 t = vec2(uv.x, 1.0 - uv.y);
-  vec4 c = texture2D(tex, t);
-
-  float cross =
-    step(abs(uv.x-0.5), 0.002) +
-    step(abs(uv.y-0.5), 0.002);
-
-  gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
+ vec2 t=vec2(uv.x,1.0-uv.y);
+ vec4 c=texture2D(tex,t);
+ float cross=step(abs(uv.x-0.5),0.002)+step(abs(uv.y-0.5),0.002);
+ gl_FragColor=vec4(c.rgb+(cross>0.0?vec3(0,1,0):vec3(0)),1.0);
 }`;
 
-// ---------- COMPILE ----------
-function compile(type, src){
-  let s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-  return s;
+// ---------- INIT ----------
+function compile(type,src){
+ let s=gl.createShader(type);
+ gl.shaderSource(s,src);
+ gl.compileShader(s);
+ return s;
 }
 
-let prog = gl.createProgram();
-gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
-gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+let prog=gl.createProgram();
+gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
+gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
 // ---------- QUAD ----------
-let buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1,-1, 1,-1, -1,1, 1,1
-]), gl.STATIC_DRAW);
+let buf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+ -1,-1, 1,-1, -1,1, 1,1
+]),gl.STATIC_DRAW);
 
-let loc = gl.getAttribLocation(prog, "p");
+let loc=gl.getAttribLocation(prog,"p");
 gl.enableVertexAttribArray(loc);
-gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
 // ---------- TEXTURE ----------
-let tex = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, tex);
+let tex=gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,tex);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 
-gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
-  1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,
-  new Uint8Array([0,0,0,255])
-);
-
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 
 // ---------- VIDEO ----------
-let video = document.createElement("video");
-video.playsInline = true;
-video.muted = true;
+let video=document.createElement("video");
+video.playsInline=true;
+video.muted=true;
 
-// ---------- SENSOR DATA ----------
-let sensorData = {
-  orientation: {},
-  motion: {}
-};
+// ---------- SENSOR ----------
+let sensorData={orientation:{},motion:{}};
 
-// ---------- ENABLE SENSORS (FIXED) ----------
 async function enableSensors(){
- try {
-
-   if (typeof DeviceMotionEvent.requestPermission === "function") {
-     let res = await DeviceMotionEvent.requestPermission();
-     if (res !== "granted") throw "motion denied";
+ try{
+   if(typeof DeviceMotionEvent.requestPermission==="function"){
+     await DeviceMotionEvent.requestPermission();
+   }
+   if(typeof DeviceOrientationEvent.requestPermission==="function"){
+     await DeviceOrientationEvent.requestPermission();
    }
 
-   if (typeof DeviceOrientationEvent.requestPermission === "function") {
-     let res = await DeviceOrientationEvent.requestPermission();
-     if (res !== "granted") throw "orientation denied";
-   }
-
-   window.addEventListener("deviceorientation", (e)=>{
-     sensorData.orientation = {
-       alpha:e.alpha,
-       beta:e.beta,
-       gamma:e.gamma
-     };
+   window.addEventListener("deviceorientation",(e)=>{
+     sensorData.orientation=e;
    });
 
-   window.addEventListener("devicemotion", (e)=>{
-     sensorData.motion = {
-       acc:e.acceleration,
-       accG:e.accelerationIncludingGravity,
-       rot:e.rotationRate
-     };
+   window.addEventListener("devicemotion",(e)=>{
+     sensorData.motion=e;
    });
 
    log("Sensors enabled");
-
- } catch(e){
-   log("Sensor error: " + e);
+ }catch(e){
+   log("Sensor error");
  }
 }
 
-// ---------- START CAMERA ----------
+// ---------- START ----------
 async function start(){
- const stream = await navigator.mediaDevices.getUserMedia({
-   video:{ facingMode:"environment" }
+ const stream=await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:"environment"}
  });
 
- video.srcObject = stream;
+ video.srcObject=stream;
  await video.play();
 
- log("Camera started");
-
  render();
+ log("Camera started");
 }
 
 // ---------- RENDER ----------
@@ -189,73 +302,61 @@ function render(){
  gl.viewport(0,0,canvas.width,canvas.height);
  gl.clear(gl.COLOR_BUFFER_BIT);
 
- if(video.readyState >= 2){
-   gl.bindTexture(gl.TEXTURE_2D, tex);
+ if(video.readyState>=2){
+   gl.bindTexture(gl.TEXTURE_2D,tex);
    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
      gl.RGBA,gl.UNSIGNED_BYTE,video);
  }
 
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-
  requestAnimationFrame(render);
 }
 
 // ---------- CAPTURE ----------
-let captures = [];
+let captures=[];
 
 function capture(){
- if(video.readyState < 2){
-   log("Camera not ready");
-   return;
- }
-
- let c = document.createElement("canvas");
- c.width = video.videoWidth;
- c.height = video.videoHeight;
+ let c=document.createElement("canvas");
+ c.width=video.videoWidth;
+ c.height=video.videoHeight;
  c.getContext("2d").drawImage(video,0,0);
 
- let data = c.toDataURL("image/png");
+ let data=c.toDataURL("image/png");
 
- let meta = {
-   time: new Date().toISOString(),
-   orientation: sensorData.orientation,
-   motion: sensorData.motion
+ let meta={
+   time:new Date().toISOString(),
+   orientation:sensorData.orientation,
+   motion:sensorData.motion
  };
 
  captures.push({data,meta});
 
- let div = document.createElement("div");
+ let div=document.createElement("div");
  div.className="item";
 
- let img = document.createElement("img");
- img.src = data;
+ let img=document.createElement("img");
+ img.src=data;
 
- let txt = document.createElement("div");
- txt.innerText = JSON.stringify(meta,null,1);
+ let txt=document.createElement("div");
+ txt.innerText=JSON.stringify(meta,null,1);
 
  div.appendChild(img);
  div.appendChild(txt);
 
  document.getElementById("gallery").appendChild(div);
 
- log("Captured image " + captures.length);
+ log("Captured " + captures.length);
 }
 
 // ---------- DOWNLOAD ----------
 function downloadAll(){
- if(captures.length===0){
-   log("No images to download");
-   return;
- }
-
  captures.forEach((c,i)=>{
-   let a = document.createElement("a");
-   a.href = c.data;
-   a.download = "capture_"+i+".png";
+   let a=document.createElement("a");
+   a.href=c.data;
+   a.download="capture_"+i+".png";
    a.click();
  });
-
- log("Downloaded " + captures.length + " images");
+ log("Download triggered");
 }
 </script>
 
