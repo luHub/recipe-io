@@ -8,33 +8,48 @@ body {
   background:#000;
   color:#fff;
   font-family:Arial;
-  text-align:center;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+#view {
+  position:relative;
+  flex:1;
 }
 
 canvas {
-  width:100vw;
-  height:60vh;
+  width:100%;
+  height:100%;
   display:block;
 }
 
+#controls {
+  padding:10px;
+  background:#111;
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+
 button {
-  padding:12px 20px;
-  margin:10px;
-  font-size:16px;
+  padding:10px 16px;
+  font-size:14px;
 }
 
 #gallery {
+  max-height:30vh;
+  overflow:auto;
   display:flex;
   flex-wrap:wrap;
   gap:10px;
   padding:10px;
-  justify-content:center;
+  background:#000;
 }
 
 .item {
   width:120px;
   font-size:10px;
-  text-align:left;
 }
 
 .item img {
@@ -43,11 +58,14 @@ button {
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="gl"></canvas>
+<div id="view">
+  <canvas id="gl"></canvas>
+</div>
 
-<div>
+<div id="controls">
   <button onclick="capture()">📸 Capture</button>
   <button onclick="downloadAll()">⬇️ Download</button>
 </div>
@@ -67,12 +85,20 @@ let captures = [];
 let motion = {};
 let orientation = {};
 
-// ------------------ SHADERS ------------------
+// ---------- FIX CANVAS SIZE ----------
+function resize(){
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+// ---------- SHADERS ----------
 const vs = `
 attribute vec2 pos;
 varying vec2 uv;
 void main(){
-  uv = vec2(pos.x*0.5+0.5, 1.0-(pos.y*0.5+0.5)); // FIXED FLIP
+  uv = vec2(pos.x*0.5+0.5, 1.0-(pos.y*0.5+0.5));
   gl_Position = vec4(pos,0,1);
 }`;
 
@@ -85,27 +111,27 @@ void main(){
   vec4 color = texture2D(tex, uv);
 
   // crosshair
-  float lineX = step(abs(uv.x-0.5), 0.003);
-  float lineY = step(abs(uv.y-0.5), 0.003);
+  float cx = step(abs(uv.x-0.5), 0.003);
+  float cy = step(abs(uv.y-0.5), 0.003);
 
-  if(lineX>0.0 || lineY>0.0){
+  if(cx>0.0 || cy>0.0){
     color = vec4(0.0,1.0,0.0,1.0);
   }
 
   gl_FragColor = color;
 }`;
 
-// ------------------ INIT ------------------
-function compile(src, type){
+// ---------- INIT ----------
+function compile(src,type){
   let s = gl.createShader(type);
-  gl.shaderSource(s, src);
+  gl.shaderSource(s,src);
   gl.compileShader(s);
   return s;
 }
 
 let prog = gl.createProgram();
-gl.attachShader(prog, compile(vs, gl.VERTEX_SHADER));
-gl.attachShader(prog, compile(fs, gl.FRAGMENT_SHADER));
+gl.attachShader(prog, compile(vs,gl.VERTEX_SHADER));
+gl.attachShader(prog, compile(fs,gl.FRAGMENT_SHADER));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
@@ -119,13 +145,13 @@ let pos = gl.getAttribLocation(prog,"pos");
 gl.enableVertexAttribArray(pos);
 gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
 
-// texture
+// ---------- TEXTURE ----------
 texture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, texture);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-// ------------------ CAMERA ------------------
+// ---------- CAMERA ----------
 navigator.mediaDevices.getUserMedia({
   video:{ facingMode:"environment" }
 }).then(stream=>{
@@ -136,27 +162,18 @@ navigator.mediaDevices.getUserMedia({
   };
 });
 
-// ------------------ SENSORS ------------------
+// ---------- SENSORS ----------
 window.addEventListener("devicemotion", e=>{
-  motion = {
-    acc: e.acceleration,
-    accG: e.accelerationIncludingGravity,
-    rot: e.rotationRate,
-    interval: e.interval
-  };
+  motion = e;
 });
 
 window.addEventListener("deviceorientation", e=>{
-  orientation = {
-    alpha:e.alpha,
-    beta:e.beta,
-    gamma:e.gamma,
-    absolute:e.absolute
-  };
+  orientation = e;
 });
 
-// ------------------ RENDER LOOP ------------------
+// ---------- LOOP ----------
 function loop(){
+  resize();
   gl.viewport(0,0,canvas.width,canvas.height);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -169,7 +186,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-// ------------------ CAPTURE ------------------
+// ---------- CAPTURE ----------
 function capture(){
   let c = document.createElement("canvas");
   c.width = video.videoWidth;
@@ -181,74 +198,41 @@ function capture(){
 
   let meta = {
     time: new Date().toISOString(),
-
-    // orientation
     alpha: orientation.alpha,
     beta: orientation.beta,
     gamma: orientation.gamma,
-
-    // motion
-    accX: motion.acc?.x,
-    accY: motion.acc?.y,
-    accZ: motion.acc?.z,
-
-    accGX: motion.accG?.x,
-    accGY: motion.accG?.y,
-    accGZ: motion.accG?.z,
-
-    rotA: motion.rot?.alpha,
-    rotB: motion.rot?.beta,
-    rotG: motion.rot?.gamma,
-
-    interval: motion.interval,
-
-    // device info
-    userAgent: navigator.userAgent,
-    platform: navigator.platform,
-
-    // screen
-    screenW: screen.width,
-    screenH: screen.height,
-    orientationScreen: screen.orientation?.type
+    acc: motion.acceleration,
+    accG: motion.accelerationIncludingGravity,
+    rot: motion.rotationRate
   };
 
-  captures.push({img, meta});
+  captures.push({img,meta});
   renderGallery();
 }
 
-// ------------------ GALLERY ------------------
+// ---------- GALLERY ----------
 function renderGallery(){
   let g = document.getElementById("gallery");
-  g.innerHTML = "";
+  g.innerHTML="";
 
   captures.forEach(c=>{
     let div = document.createElement("div");
     div.className="item";
-
     div.innerHTML = `
       <img src="${c.img}">
       <pre>${JSON.stringify(c.meta,null,1)}</pre>
     `;
-
     g.appendChild(div);
   });
 }
 
-// ------------------ DOWNLOAD ------------------
+// ---------- DOWNLOAD ----------
 function downloadAll(){
   captures.forEach((c,i)=>{
     let a = document.createElement("a");
     a.href = c.img;
     a.download = "img_"+i+".png";
     a.click();
-
-    let metaBlob = new Blob([JSON.stringify(c.meta,null,2)],{type:"application/json"});
-    let url = URL.createObjectURL(metaBlob);
-
-    let b = document.createElement("a");
-    b.href = url;
-    b.download = "img_"+i+".json";
-    b.click();
   });
 }
 </script>
