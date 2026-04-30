@@ -10,9 +10,17 @@ canvas { width:100%; height:60vh; display:block; }
 button { margin:5px; padding:10px; font-size:16px; }
 
 #gallery { display:flex; flex-wrap:wrap; margin-top:10px; }
-.item { margin:4px; width:100px; font-size:9px; }
+.item { width:110px; margin:4px; font-size:9px; }
 .item img { width:100%; border:1px solid #0f0; }
-.meta { white-space:pre-wrap; }
+
+#log {
+  height:80px;
+  overflow:auto;
+  border:1px solid #0f0;
+  margin-top:10px;
+  padding:5px;
+  font-size:10px;
+}
 </style>
 </head>
 <body>
@@ -26,13 +34,19 @@ button { margin:5px; padding:10px; font-size:16px; }
   <button onclick="downloadAll()">⬇️ Download</button>
 
   <div id="gallery"></div>
+  <div id="log"></div>
 </div>
 
 <script>
+// ---------- LOG ----------
+function log(msg){
+  document.getElementById("log").innerText += msg + "\n";
+}
+
+// ---------- WEBGL ----------
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
-// ---------- resize ----------
 function resize(){
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
@@ -40,141 +54,167 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ---------- shaders ----------
-const vs = `attribute vec2 p; varying vec2 uv;
-void main(){ uv=(p+1.0)*0.5; gl_Position=vec4(p,0,1); }`;
-
-const fs = `precision mediump float;
-uniform sampler2D tex; varying vec2 uv;
+// ---------- SHADERS ----------
+const vs = `
+attribute vec2 p;
+varying vec2 uv;
 void main(){
- vec2 t=vec2(uv.x,1.0-uv.y);
- vec4 c=texture2D(tex,t);
- float cross = step(abs(uv.x-0.5),0.002)+step(abs(uv.y-0.5),0.002);
- gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
+  uv = (p+1.0)*0.5;
+  gl_Position = vec4(p,0,1);
 }`;
 
-// ---------- compile ----------
-function compile(t,s){
- let sh=gl.createShader(t);
- gl.shaderSource(sh,s);
- gl.compileShader(sh);
- return sh;
+const fs = `
+precision mediump float;
+uniform sampler2D tex;
+varying vec2 uv;
+
+void main(){
+  vec2 t = vec2(uv.x, 1.0 - uv.y);
+  vec4 c = texture2D(tex, t);
+
+  float cross =
+    step(abs(uv.x-0.5), 0.002) +
+    step(abs(uv.y-0.5), 0.002);
+
+  gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
+}`;
+
+// ---------- COMPILE ----------
+function compile(type, src){
+  let s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  return s;
 }
 
-let prog=gl.createProgram();
-gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
-gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
+let prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
 gl.linkProgram(prog);
 gl.useProgram(prog);
 
-// ---------- quad ----------
-let buf=gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
- -1,-1, 1,-1, -1,1, 1,1
-]),gl.STATIC_DRAW);
+// ---------- QUAD ----------
+let buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1,-1, 1,-1, -1,1, 1,1
+]), gl.STATIC_DRAW);
 
-let loc=gl.getAttribLocation(prog,"p");
+let loc = gl.getAttribLocation(prog, "p");
 gl.enableVertexAttribArray(loc);
-gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-// ---------- texture ----------
-let tex=gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D,tex);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+// ---------- TEXTURE ----------
+let tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
 
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
+  1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,
+  new Uint8Array([0,0,0,255])
+);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 
-// ---------- video ----------
-let video=document.createElement("video");
-video.playsInline=true;
-video.muted=true;
+// ---------- VIDEO ----------
+let video = document.createElement("video");
+video.playsInline = true;
+video.muted = true;
 
-// ---------- sensor data ----------
+// ---------- SENSOR DATA ----------
 let sensorData = {
   orientation: {},
   motion: {}
 };
 
-// ---------- enable sensors ----------
+// ---------- ENABLE SENSORS (FIXED) ----------
 async function enableSensors(){
  try {
-   if(typeof DeviceOrientationEvent.requestPermission==="function"){
-     await DeviceOrientationEvent.requestPermission();
-     await DeviceMotionEvent.requestPermission();
+
+   if (typeof DeviceMotionEvent.requestPermission === "function") {
+     let res = await DeviceMotionEvent.requestPermission();
+     if (res !== "granted") throw "motion denied";
    }
 
-   window.addEventListener("deviceorientation",(e)=>{
+   if (typeof DeviceOrientationEvent.requestPermission === "function") {
+     let res = await DeviceOrientationEvent.requestPermission();
+     if (res !== "granted") throw "orientation denied";
+   }
+
+   window.addEventListener("deviceorientation", (e)=>{
      sensorData.orientation = {
-       alpha: e.alpha,
-       beta: e.beta,
-       gamma: e.gamma
+       alpha:e.alpha,
+       beta:e.beta,
+       gamma:e.gamma
      };
    });
 
-   window.addEventListener("devicemotion",(e)=>{
+   window.addEventListener("devicemotion", (e)=>{
      sensorData.motion = {
-       acc: e.acceleration,
-       accG: e.accelerationIncludingGravity,
-       rot: e.rotationRate
+       acc:e.acceleration,
+       accG:e.accelerationIncludingGravity,
+       rot:e.rotationRate
      };
    });
 
-   alert("Sensors enabled");
+   log("Sensors enabled");
 
  } catch(e){
-   alert("Sensor permission denied");
+   log("Sensor error: " + e);
  }
 }
 
-// ---------- start camera ----------
+// ---------- START CAMERA ----------
 async function start(){
- const stream=await navigator.mediaDevices.getUserMedia({
-   video:{facingMode:"environment"}
+ const stream = await navigator.mediaDevices.getUserMedia({
+   video:{ facingMode:"environment" }
  });
 
- video.srcObject=stream;
+ video.srcObject = stream;
  await video.play();
+
+ log("Camera started");
 
  render();
 }
 
-// ---------- render ----------
+// ---------- RENDER ----------
 function render(){
  resize();
  gl.viewport(0,0,canvas.width,canvas.height);
  gl.clear(gl.COLOR_BUFFER_BIT);
 
- if(video.readyState>=2){
-   gl.bindTexture(gl.TEXTURE_2D,tex);
+ if(video.readyState >= 2){
+   gl.bindTexture(gl.TEXTURE_2D, tex);
    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
      gl.RGBA,gl.UNSIGNED_BYTE,video);
  }
 
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
  requestAnimationFrame(render);
 }
 
-// ---------- storage ----------
-let captures=[];
+// ---------- CAPTURE ----------
+let captures = [];
 
-// ---------- capture ----------
 function capture(){
- if(video.readyState<2){
-   alert("Camera not ready");
+ if(video.readyState < 2){
+   log("Camera not ready");
    return;
  }
 
- let c=document.createElement("canvas");
- c.width=video.videoWidth;
- c.height=video.videoHeight;
+ let c = document.createElement("canvas");
+ c.width = video.videoWidth;
+ c.height = video.videoHeight;
  c.getContext("2d").drawImage(video,0,0);
 
- let data=c.toDataURL("image/png");
+ let data = c.toDataURL("image/png");
 
  let meta = {
    time: new Date().toISOString(),
@@ -182,38 +222,40 @@ function capture(){
    motion: sensorData.motion
  };
 
- captures.push({data, meta});
+ captures.push({data,meta});
 
- // UI
- let div=document.createElement("div");
+ let div = document.createElement("div");
  div.className="item";
 
- let img=document.createElement("img");
- img.src=data;
+ let img = document.createElement("img");
+ img.src = data;
 
- let info=document.createElement("div");
- info.className="meta";
- info.innerText = JSON.stringify(meta,null,1);
+ let txt = document.createElement("div");
+ txt.innerText = JSON.stringify(meta,null,1);
 
  div.appendChild(img);
- div.appendChild(info);
+ div.appendChild(txt);
 
  document.getElementById("gallery").appendChild(div);
+
+ log("Captured image " + captures.length);
 }
 
-// ---------- download ----------
+// ---------- DOWNLOAD ----------
 function downloadAll(){
  if(captures.length===0){
-   alert("No images to download");
+   log("No images to download");
    return;
  }
 
  captures.forEach((c,i)=>{
-   let a=document.createElement("a");
-   a.href=c.data;
-   a.download="capture_"+i+".png";
+   let a = document.createElement("a");
+   a.href = c.data;
+   a.download = "capture_"+i+".png";
    a.click();
  });
+
+ log("Downloaded " + captures.length + " images");
 }
 </script>
 
