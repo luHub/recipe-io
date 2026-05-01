@@ -2,101 +2,139 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
 <style>
-body {
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
+body{
   margin:0;
-  font-family:sans-serif;
-  background:#000;
-  color:#0f0;
-  display:flex;
-  flex-direction:column;
-  height:100vh;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
 }
 
-#gl {
+.container{
+  padding:16px;
+  max-width:650px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:16px;
+}
+
+button{
   width:100%;
-  height:40vh;
-  background:black;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  font-size:14px;
 }
 
-#ui {
-  padding:10px;
+canvas{
+  width:100%;
+  height:240px;
+  border-radius:10px;
+}
+
+#orbit{ height:140px; }
+
+#gallery{
   display:flex;
-  flex-direction:column;
+  flex-wrap:wrap;
   gap:10px;
 }
 
-#meta {
+.item{
+  width:150px;
+  background:#000;
+  padding:6px;
+  border-radius:8px;
+}
+
+.item img{
+  width:100%;
+  border-radius:6px;
+}
+
+.meta{
+  font-size:10px;
+  margin-top:6px;
   background:#111;
-  padding:10px;
-  height:200px;
-  overflow-y:auto;
-  font-size:12px;
-  white-space:pre-wrap;
-  border:1px solid #333;
-}
-
-button {
-  padding:12px;
-  font-size:16px;
-  background:#222;
-  color:#0f0;
-  border:1px solid #0f0;
-}
-
-#gallery {
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
-
-#gallery img {
-  width:60px;
-  height:60px;
-  object-fit:cover;
+  padding:6px;
+  border-radius:6px;
+  max-height:120px;
+  overflow:auto;
+  white-space:normal;
+  word-break:break-word;
 }
 </style>
 </head>
 
 <body>
 
+<div class="container">
+
+<!-- CAMERA -->
+<div class="card">
 <canvas id="gl"></canvas>
+<button onclick="start()">Start</button>
+<button onclick="enableSensors()">Enable Sensors</button>
+<button onclick="capture()">Capture</button>
+</div>
 
-<div id="ui">
-  <button id="captureBtn">Capture</button>
-  <button id="downloadBtn">Download JSON + Images</button>
+<!-- ORBIT -->
+<div class="card">
+<canvas id="orbit"></canvas>
+</div>
 
-  <div id="meta"></div>
-  <div id="gallery"></div>
+<!-- GALLERY -->
+<div class="card">
+<div id="gallery"></div>
+</div>
+
+<!-- DOWNLOAD (moved here) -->
+<div class="card">
+<button onclick="downloadAll()">Download Bundle</button>
+</div>
+
 </div>
 
 <script>
+
+// ---------- WEBGL ----------
 const canvas = document.getElementById("gl");
 const gl = canvas.getContext("webgl");
 
-canvas.width = innerWidth;
-canvas.height = innerHeight * 0.4;
-gl.viewport(0,0,canvas.width,canvas.height);
-
-// ---------- VIDEO ----------
-const video = document.createElement("video");
-video.autoplay = true;
-video.playsInline = true;
-
-// ---------- CAMERA ----------
-navigator.mediaDevices.getUserMedia({
-  video:{ facingMode:"environment" }
-}).then(stream=>{
-  video.srcObject = stream;
-});
+function resize(){
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+}
 
 // ---------- SHADERS ----------
 const vs = `
-attribute vec2 position;
+attribute vec2 p;
 varying vec2 uv;
 void main(){
-  uv = vec2(position.x*0.5+0.5, 1.0-(position.y*0.5+0.5));
-  gl_Position = vec4(position,0,1);
+ uv=(p+1.0)*0.5;
+ gl_Position=vec4(p,0,1);
 }`;
 
 const fs = `
@@ -105,135 +143,215 @@ uniform sampler2D tex;
 varying vec2 uv;
 
 void main(){
-  vec4 c = texture2D(tex, uv);
+ vec2 t = vec2(uv.x, 1.0 - uv.y);
+ vec4 c = texture2D(tex, t);
 
-  float cx = abs(uv.x - 0.5);
-  float cy = abs(uv.y - 0.5);
+ float cross =
+   step(abs(uv.x-0.5),0.002)+
+   step(abs(uv.y-0.5),0.002);
 
-  if(cx < 0.002 || cy < 0.002){
-    gl_FragColor = vec4(0.0,1.0,0.0,1.0);
-  } else {
-    gl_FragColor = vec4(c.rgb,1.0);
-  }
+ gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
 }`;
 
-// ---------- COMPILE ----------
+// ---------- INIT ----------
 function compile(type,src){
-  const s = gl.createShader(type);
-  gl.shaderSource(s,src);
-  gl.compileShader(s);
-  return s;
+ let s=gl.createShader(type);
+ gl.shaderSource(s,src);
+ gl.compileShader(s);
+ return s;
 }
 
-const program = gl.createProgram();
-gl.attachShader(program,compile(gl.VERTEX_SHADER,vs));
-gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fs));
-gl.linkProgram(program);
-gl.useProgram(program);
+let prog=gl.createProgram();
+gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
+gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
+gl.linkProgram(prog);
+gl.useProgram(prog);
 
 // ---------- QUAD ----------
-const buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+let buf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buf);
 gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
-  -1,-1, 1,-1, -1,1, 1,1
+ -1,-1, 1,-1, -1,1, 1,1
 ]),gl.STATIC_DRAW);
 
-const pos = gl.getAttribLocation(program,"position");
-gl.enableVertexAttribArray(pos);
-gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+let loc=gl.getAttribLocation(prog,"p");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
 
 // ---------- TEXTURE ----------
-const tex = gl.createTexture();
+let tex=gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D,tex);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 
-gl.uniform1i(gl.getUniformLocation(program,"tex"),0);
+gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
+
+// ---------- VIDEO ----------
+let video=document.createElement("video");
+video.playsInline=true;
+video.muted=true;
 
 // ---------- SENSOR DATA ----------
-let sensorData = {};
+let sensorData = { orientation:{}, motion:{} };
 
-if (window.DeviceOrientationEvent) {
-  window.addEventListener("deviceorientation", e=>{
-    sensorData.alpha = e.alpha;
-    sensorData.beta = e.beta;
-    sensorData.gamma = e.gamma;
-  });
+async function enableSensors(){
+ try{
+   if(DeviceMotionEvent.requestPermission){
+     await DeviceMotionEvent.requestPermission();
+     await DeviceOrientationEvent.requestPermission();
+   }
+
+   window.addEventListener("deviceorientation",(e)=>{
+     sensorData.orientation = {
+       alpha:e.alpha,
+       beta:e.beta,
+       gamma:e.gamma
+     };
+   });
+
+   window.addEventListener("devicemotion",(e)=>{
+     sensorData.motion = {
+       acc:e.acceleration,
+       accG:e.accelerationIncludingGravity,
+       rot:e.rotationRate
+     };
+   });
+
+ }catch(e){}
 }
 
-if (window.DeviceMotionEvent) {
-  window.addEventListener("devicemotion", e=>{
-    sensorData.acc = e.acceleration;
-    sensorData.accG = e.accelerationIncludingGravity;
-    sensorData.rot = e.rotationRate;
-  });
+// ---------- ORBIT ----------
+const orbitCanvas=document.getElementById("orbit");
+const ctx=orbitCanvas.getContext("2d");
+
+const YAW=12;
+const PITCH=6;
+let visited=new Set();
+
+function getCell(){
+ let yaw=Math.floor(((sensorData.orientation.alpha||0)%360)/30);
+ let pitch=Math.floor(((sensorData.orientation.beta||0)+90)/30);
+ return yaw+"_"+pitch;
 }
 
-// ---------- STORAGE ----------
-const captures = [];
+function drawOrbit(){
+ orbitCanvas.width = orbitCanvas.clientWidth;
+ orbitCanvas.height = orbitCanvas.clientHeight;
+
+ let w=orbitCanvas.width/YAW;
+ let h=orbitCanvas.height/PITCH;
+
+ let current=getCell();
+
+ for(let y=0;y<PITCH;y++){
+  for(let x=0;x<YAW;x++){
+   let key=x+"_"+y;
+
+   ctx.fillStyle="#111";
+   if(visited.has(key)) ctx.fillStyle="#00ff88";
+   if(key===current) ctx.fillStyle="#00aaff";
+
+   ctx.fillRect(x*w,y*h,w-2,h-2);
+  }
+ }
+}
+
+// ---------- START ----------
+async function start(){
+ const stream=await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:"environment"}
+ });
+
+ video.srcObject=stream;
+ await video.play();
+
+ render();
+}
+
+// ---------- RENDER ----------
+function render(){
+ resize();
+ gl.viewport(0,0,canvas.width,canvas.height);
+ gl.clear(gl.COLOR_BUFFER_BIT);
+
+ if(video.readyState>=2){
+   gl.bindTexture(gl.TEXTURE_2D,tex);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
+     gl.RGBA,gl.UNSIGNED_BYTE,video);
+ }
+
+ gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+ visited.add(getCell());
+ drawOrbit();
+
+ requestAnimationFrame(render);
+}
 
 // ---------- CAPTURE ----------
-document.getElementById("captureBtn").onclick = ()=>{
-  const capCanvas = document.createElement("canvas");
-  capCanvas.width = video.videoWidth;
-  capCanvas.height = video.videoHeight;
-  const ctx = capCanvas.getContext("2d");
-  ctx.drawImage(video,0,0);
+let captures=[];
 
-  const img = capCanvas.toDataURL("image/jpeg");
+function capture(){
+ let c=document.createElement("canvas");
+ c.width=video.videoWidth;
+ c.height=video.videoHeight;
+ c.getContext("2d").drawImage(video,0,0);
 
-  const meta = {
-    time: Date.now(),
-    orientation: {
-      alpha: sensorData.alpha,
-      beta: sensorData.beta,
-      gamma: sensorData.gamma
-    },
-    motion: sensorData.acc,
-    rotation: sensorData.rot,
-    screen: {
-      width: screen.width,
-      height: screen.height,
-      orientation: screen.orientation?.type
-    }
-  };
+ let data=c.toDataURL();
 
-  captures.push({img,meta});
+ let meta={
+   time:new Date().toISOString(),
+   orientation:sensorData.orientation,
+   motion:sensorData.motion,
+   cell:getCell(),
+   coverage:visited.size,
+   resolution: video.videoWidth + "x" + video.videoHeight
+ };
 
-  // show metadata
-  document.getElementById("meta").textContent =
-    JSON.stringify(meta,null,2);
+ captures.push({data,meta});
 
-  // thumbnail
-  const thumb = document.createElement("img");
-  thumb.src = img;
-  document.getElementById("gallery").appendChild(thumb);
-};
+ let div=document.createElement("div");
+ div.className="item";
 
-// ---------- DOWNLOAD ----------
-document.getElementById("downloadBtn").onclick = ()=>{
-  const data = JSON.stringify(captures,null,2);
-  const blob = new Blob([data],{type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "scan.json";
-  a.click();
-};
+ div.innerHTML=`
+   <img src="${data}">
+   <div class="meta">${JSON.stringify(meta,null,2)}</div>
+ `;
 
-// ---------- RENDER LOOP ----------
-function loop(){
-  if(video.readyState >= 2){
-    gl.bindTexture(gl.TEXTURE_2D,tex);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
-  }
-
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-  requestAnimationFrame(loop);
+ document.getElementById("gallery").appendChild(div);
 }
 
-video.onplaying = ()=>loop();
+// ---------- DOWNLOAD ----------
+async function downloadAll(){
+
+ const zip = new JSZip();
+
+ const manifest = {
+   total: captures.length,
+   captures: captures.map((c,i)=>({
+     id:i,
+     file:`image_${i}.png`,
+     meta:c.meta
+   }))
+ };
+
+ zip.file("manifest.json", JSON.stringify(manifest,null,2));
+
+ for(let i=0;i<captures.length;i++){
+   const base64 = captures[i].data.split(",")[1];
+   zip.file(`image_${i}.png`, base64, {base64:true});
+ }
+
+ const blob = await zip.generateAsync({type:"blob"});
+
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="scan_bundle.zip";
+ a.click();
+}
+
 </script>
 
 </body>
