@@ -3,6 +3,8 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
 <style>
 :root{
   --bg:#050507;
@@ -19,18 +21,6 @@ body{
   color:var(--text);
 }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 16px;
-}
-
-.title{
-  font-size:14px;
-  letter-spacing:2px;
-  opacity:0.8;
-}
-
 .container{
   padding:16px;
   max-width:600px;
@@ -44,7 +34,7 @@ body{
   background: linear-gradient(180deg,var(--panel),var(--panel2));
   border:1px solid rgba(0,170,255,0.25);
   border-radius:14px;
-  padding:18px;
+  padding:16px;
 }
 
 button{
@@ -52,89 +42,59 @@ button{
   background:#000;
   color:#fff;
   border:1px solid var(--accent);
-  padding:14px;
-  border-radius:10px;
-  cursor:pointer;
-  margin-top:10px;
+  padding:12px;
+  margin-top:8px;
+  border-radius:8px;
 }
 
 canvas{
   width:100%;
-  height:260px;
-  border-radius:12px;
-  border:1px solid rgba(0,170,255,0.3);
+  height:240px;
+  border-radius:10px;
 }
 
-#orbit{
-  height:160px;
-}
+#orbit{ height:140px; }
 
 #gallery{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
+  gap:6px;
 }
 
 .item{
   width:100px;
-  font-size:9px;
+  font-size:8px;
 }
 
 .item img{
   width:100%;
-  border:1px solid var(--accent);
-  border-radius:6px;
-}
-
-#log{
-  height:80px;
-  overflow:auto;
-  border:1px solid rgba(0,170,255,0.3);
-  padding:8px;
-  font-size:10px;
-  border-radius:8px;
-  background:#000;
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <div class="title">3D SCANNER v1.0</div>
-</div>
-
 <div class="container">
 
-  <div class="card">
-    <canvas id="gl"></canvas>
+<div class="card">
+<canvas id="gl"></canvas>
+<button onclick="start()">Start</button>
+<button onclick="enableSensors()">Enable Sensors</button>
+<button onclick="capture()">Capture</button>
+<button onclick="downloadAll()">Download Bundle</button>
+</div>
 
-    <button onclick="start()">▶ Start Camera</button>
-    <button onclick="enableSensors()">📡 Enable Sensors</button>
-    <button onclick="capture()">📸 Capture</button>
-    <button onclick="downloadAll()">⬇️ Download</button>
-  </div>
+<div class="card">
+<canvas id="orbit"></canvas>
+</div>
 
-  <div class="card">
-    <canvas id="orbit"></canvas>
-  </div>
-
-  <div class="card">
-    <div id="gallery"></div>
-  </div>
-
-  <div class="card">
-    <div id="log"></div>
-  </div>
+<div class="card">
+<div id="gallery"></div>
+</div>
 
 </div>
 
 <script>
-
-// ---------- LOG ----------
-function log(msg){
-  document.getElementById("log").innerText += msg + "\n";
-}
 
 // ---------- WEBGL ----------
 const canvas = document.getElementById("gl");
@@ -151,7 +111,6 @@ attribute vec2 p;
 varying vec2 uv;
 void main(){
  uv=(p+1.0)*0.5;
- uv.y = 1.0 - uv.y; // FIX flip
  gl_Position=vec4(p,0,1);
 }`;
 
@@ -161,11 +120,12 @@ uniform sampler2D tex;
 varying vec2 uv;
 
 void main(){
- vec4 c = texture2D(tex, uv);
+ vec2 t = vec2(uv.x, 1.0 - uv.y);
+ vec4 c = texture2D(tex, t);
 
  float cross =
-   step(abs(uv.x-0.5), 0.002) +
-   step(abs(uv.y-0.5), 0.002);
+   step(abs(uv.x-0.5),0.002)+
+   step(abs(uv.y-0.5),0.002);
 
  gl_FragColor = vec4(c.rgb + (cross>0.0?vec3(0,1,0):vec3(0)),1.0);
 }`;
@@ -211,80 +171,69 @@ video.playsInline=true;
 video.muted=true;
 
 // ---------- SENSOR DATA ----------
-let orientationData={alpha:0,beta:0,gamma:0};
-let motionData={};
+let sensorData = {
+  orientation:{},
+  motion:{}
+};
 
-// ---------- ENABLE SENSORS ----------
 async function enableSensors(){
-
  try{
-   if(DeviceOrientationEvent?.requestPermission){
+   if(DeviceMotionEvent.requestPermission){
+     await DeviceMotionEvent.requestPermission();
      await DeviceOrientationEvent.requestPermission();
    }
 
-   if(DeviceMotionEvent?.requestPermission){
-     await DeviceMotionEvent.requestPermission();
-   }
-
    window.addEventListener("deviceorientation",(e)=>{
-     orientationData={
-       alpha:e.alpha||0,
-       beta:e.beta||0,
-       gamma:e.gamma||0
+     sensorData.orientation = {
+       alpha:e.alpha,
+       beta:e.beta,
+       gamma:e.gamma
      };
    });
 
    window.addEventListener("devicemotion",(e)=>{
-     motionData={
-       accel:e.acceleration,
-       accelG:e.accelerationIncludingGravity,
-       rotation:e.rotationRate,
-       interval:e.interval
+     sensorData.motion = {
+       acc:e.acceleration,
+       accG:e.accelerationIncludingGravity,
+       rot:e.rotationRate
      };
    });
 
-   log("Sensors enabled");
-
- }catch(err){
-   log("Sensor error");
- }
+ }catch(e){}
 }
 
 // ---------- ORBIT ----------
 const orbitCanvas=document.getElementById("orbit");
-const orbitCtx=orbitCanvas.getContext("2d");
+const ctx=orbitCanvas.getContext("2d");
 
-const YAW_STEPS=12;
-const PITCH_STEPS=6;
-
+const YAW=12;
+const PITCH=6;
 let visited=new Set();
 
 function getCell(){
- let yaw=Math.floor((orientationData.alpha%360)/30);
- let pitch=Math.floor((orientationData.beta+90)/30);
+ let yaw=Math.floor(((sensorData.orientation.alpha||0)%360)/30);
+ let pitch=Math.floor(((sensorData.orientation.beta||0)+90)/30);
  return yaw+"_"+pitch;
 }
 
 function drawOrbit(){
- let w=orbitCanvas.width/YAW_STEPS;
- let h=orbitCanvas.height/PITCH_STEPS;
+ orbitCanvas.width = orbitCanvas.clientWidth;
+ orbitCanvas.height = orbitCanvas.clientHeight;
 
- orbitCtx.clearRect(0,0,orbitCanvas.width,orbitCanvas.height);
+ let w=orbitCanvas.width/YAW;
+ let h=orbitCanvas.height/PITCH;
 
  let current=getCell();
 
- for(let y=0;y<PITCH_STEPS;y++){
-  for(let x=0;x<YAW_STEPS;x++){
-
+ for(let y=0;y<PITCH;y++){
+  for(let x=0;x<YAW;x++){
    let key=x+"_"+y;
 
-   let color="#111";
+   ctx.fillStyle="#111";
+   if(visited.has(key)) ctx.fillStyle="#00ff88";
+   if(key===current) ctx.fillStyle="#00aaff";
 
-   if(visited.has(key)) color="#00ff88";
-   if(key===current) color="#00aaff";
-
-   orbitCtx.fillStyle=color;
-   orbitCtx.fillRect(x*w,y*h,w-2,h-2);
+   ctx.fillRect(x*w,y*h,w-2,h-2);
   }
  }
 }
@@ -299,7 +248,6 @@ async function start(){
  await video.play();
 
  render();
- log("Camera started");
 }
 
 // ---------- RENDER ----------
@@ -320,10 +268,6 @@ function render(){
  visited.add(getCell());
  drawOrbit();
 
- document.getElementById("log").innerText =
-   "Coverage: "+visited.size+" / 72\n" +
-   "Suggestion: "+(visited.size<20?"Move around object":"Fill gaps");
-
  requestAnimationFrame(render);
 }
 
@@ -331,7 +275,6 @@ function render(){
 let captures=[];
 
 function capture(){
-
  let c=document.createElement("canvas");
  c.width=video.videoWidth;
  c.height=video.videoHeight;
@@ -340,36 +283,50 @@ function capture(){
  let data=c.toDataURL();
 
  let meta={
-   version:"v1.0",
    time:new Date().toISOString(),
-   orientation:orientationData,
-   motion:motionData,
+   orientation:sensorData.orientation,
+   motion:sensorData.motion,
    cell:getCell(),
    coverage:visited.size,
-   resolution:video.videoWidth+"x"+video.videoHeight
+   resolution: video.videoWidth + "x" + video.videoHeight
  };
 
  captures.push({data,meta});
 
  let div=document.createElement("div");
  div.className="item";
-
- div.innerHTML=`
-   <img src="${data}">
-   <div>${JSON.stringify(meta,null,1)}</div>
- `;
+ div.innerHTML=`<img src="${data}"><div>${JSON.stringify(meta)}</div>`;
 
  document.getElementById("gallery").appendChild(div);
 }
 
 // ---------- DOWNLOAD ----------
-function downloadAll(){
- captures.forEach((c,i)=>{
-   let a=document.createElement("a");
-   a.href=c.data;
-   a.download="capture_"+i+".png";
-   a.click();
- });
+async function downloadAll(){
+
+ const zip = new JSZip();
+
+ const manifest = {
+   total: captures.length,
+   captures: captures.map((c,i)=>({
+     id:i,
+     file:`image_${i}.png`,
+     meta:c.meta
+   }))
+ };
+
+ zip.file("manifest.json", JSON.stringify(manifest,null,2));
+
+ for(let i=0;i<captures.length;i++){
+   const base64 = captures[i].data.split(",")[1];
+   zip.file(`image_${i}.png`, base64, {base64:true});
+ }
+
+ const blob = await zip.generateAsync({type:"blob"});
+
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="scan_bundle.zip";
+ a.click();
 }
 
 </script>
