@@ -156,7 +156,6 @@ varying vec2 uv;
 
 void main(){
  vec2 t = vec2(uv.x, mix(uv.y, 1.0 - uv.y, flipY));
-
  vec4 c = texture2D(tex, t);
 
  float cross =
@@ -202,7 +201,7 @@ gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
 
 gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
 
-// ---------- FLIP CONTROL ----------
+// ---------- FLIP ----------
 let flipLoc = gl.getUniformLocation(prog,"flipY");
 let flip = 1.0;
 gl.uniform1f(flipLoc, flip);
@@ -284,10 +283,47 @@ function capture(){
 
  let data=c.toDataURL("image/png");
 
+ let track = video.srcObject?.getVideoTracks?.()[0];
+ let settings = track?.getSettings?.() || {};
+
  let meta={
-   time:new Date().toISOString(),
-   orientation:sensorData.orientation,
-   motion:sensorData.motion
+   timeISO:new Date().toISOString(),
+   timeMS:performance.now(),
+   frameIndex:captures.length,
+
+   width:video.videoWidth,
+   height:video.videoHeight,
+   facingMode:settings.facingMode,
+   frameRate:settings.frameRate,
+
+   focalLengthApprox:video.videoWidth*0.8,
+   principalPoint:{
+     x:video.videoWidth/2,
+     y:video.videoHeight/2
+   },
+
+   alpha:sensorData.orientation.alpha,
+   beta:sensorData.orientation.beta,
+   gamma:sensorData.orientation.gamma,
+
+   acc:sensorData.motion.acceleration,
+   accGravity:sensorData.motion.accelerationIncludingGravity,
+   rotationRate:sensorData.motion.rotationRate,
+   interval:sensorData.motion.interval,
+
+   device:{
+     userAgent:navigator.userAgent,
+     platform:navigator.platform,
+     cores:navigator.hardwareConcurrency,
+     memory:navigator.deviceMemory
+   },
+
+   screen:{
+     w:screen.width,
+     h:screen.height,
+     ratio:window.devicePixelRatio,
+     orientation:screen.orientation?.type
+   }
  };
 
  captures.push({data,meta});
@@ -306,7 +342,7 @@ function capture(){
 
  document.getElementById("gallery").appendChild(div);
 
- log("Captured " + captures.length);
+ log("Captured "+captures.length);
 }
 
 // ---------- DOWNLOAD ----------
@@ -316,8 +352,16 @@ function downloadAll(){
    a.href=c.data;
    a.download="capture_"+i+".png";
    a.click();
+
+   let blob=new Blob([JSON.stringify(c.meta,null,2)],{type:"application/json"});
+   let url=URL.createObjectURL(blob);
+
+   let b=document.createElement("a");
+   b.href=url;
+   b.download="capture_"+i+".json";
+   b.click();
  });
- log("Download triggered");
+ log("Download done");
 }
 </script>
 
