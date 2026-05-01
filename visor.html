@@ -101,7 +101,7 @@ canvas{
 <body>
 
 <div class="topbar">
-  <div class="title">3D SCANNER v0.3</div>
+  <div class="title">3D SCANNER v1.0</div>
 </div>
 
 <div class="container">
@@ -151,6 +151,7 @@ attribute vec2 p;
 varying vec2 uv;
 void main(){
  uv=(p+1.0)*0.5;
+ uv.y = 1.0 - uv.y; // FIX flip
  gl_Position=vec4(p,0,1);
 }`;
 
@@ -209,17 +210,45 @@ let video=document.createElement("video");
 video.playsInline=true;
 video.muted=true;
 
-// ---------- SENSOR ----------
+// ---------- SENSOR DATA ----------
 let orientationData={alpha:0,beta:0,gamma:0};
-let visited=new Set();
+let motionData={};
 
-window.addEventListener("deviceorientation",(e)=>{
-  orientationData={
-    alpha:e.alpha||0,
-    beta:e.beta||0,
-    gamma:e.gamma||0
-  };
-});
+// ---------- ENABLE SENSORS ----------
+async function enableSensors(){
+
+ try{
+   if(DeviceOrientationEvent?.requestPermission){
+     await DeviceOrientationEvent.requestPermission();
+   }
+
+   if(DeviceMotionEvent?.requestPermission){
+     await DeviceMotionEvent.requestPermission();
+   }
+
+   window.addEventListener("deviceorientation",(e)=>{
+     orientationData={
+       alpha:e.alpha||0,
+       beta:e.beta||0,
+       gamma:e.gamma||0
+     };
+   });
+
+   window.addEventListener("devicemotion",(e)=>{
+     motionData={
+       accel:e.acceleration,
+       accelG:e.accelerationIncludingGravity,
+       rotation:e.rotationRate,
+       interval:e.interval
+     };
+   });
+
+   log("Sensors enabled");
+
+ }catch(err){
+   log("Sensor error");
+ }
+}
 
 // ---------- ORBIT ----------
 const orbitCanvas=document.getElementById("orbit");
@@ -227,6 +256,8 @@ const orbitCtx=orbitCanvas.getContext("2d");
 
 const YAW_STEPS=12;
 const PITCH_STEPS=6;
+
+let visited=new Set();
 
 function getCell(){
  let yaw=Math.floor((orientationData.alpha%360)/30);
@@ -287,7 +318,6 @@ function render(){
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
  visited.add(getCell());
-
  drawOrbit();
 
  document.getElementById("log").innerText =
@@ -301,6 +331,7 @@ function render(){
 let captures=[];
 
 function capture(){
+
  let c=document.createElement("canvas");
  c.width=video.videoWidth;
  c.height=video.videoHeight;
@@ -309,10 +340,13 @@ function capture(){
  let data=c.toDataURL();
 
  let meta={
+   version:"v1.0",
    time:new Date().toISOString(),
    orientation:orientationData,
+   motion:motionData,
    cell:getCell(),
-   coverage:visited.size
+   coverage:visited.size,
+   resolution:video.videoWidth+"x"+video.videoHeight
  };
 
  captures.push({data,meta});
