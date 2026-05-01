@@ -101,7 +101,7 @@ canvas{
 <body>
 
 <div class="topbar">
-  <div class="title">3D SCANNER v0.3</div>
+  <div class="title">3D SCANNER v0.4</div>
 </div>
 
 <div class="container">
@@ -110,7 +110,6 @@ canvas{
     <canvas id="gl"></canvas>
 
     <button onclick="start()">▶ Start Camera</button>
-    <button onclick="enableSensors()">📡 Enable Sensors</button>
     <button onclick="capture()">📸 Capture</button>
     <button onclick="downloadAll()">⬇️ Download</button>
   </div>
@@ -150,8 +149,8 @@ const vs = `
 attribute vec2 p;
 varying vec2 uv;
 void main(){
- uv=(p+1.0)*0.5;
- gl_Position=vec4(p,0,1);
+ uv = (p + 1.0) * 0.5;
+ gl_Position = vec4(p,0,1);
 }`;
 
 const fs = `
@@ -160,7 +159,9 @@ uniform sampler2D tex;
 varying vec2 uv;
 
 void main(){
- vec4 c = texture2D(tex, uv);
+ vec2 t = vec2(uv.x, 1.0 - uv.y); // FIXED orientation
+
+ vec4 c = texture2D(tex, t);
 
  float cross =
    step(abs(uv.x-0.5), 0.002) +
@@ -202,31 +203,21 @@ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 
-gl.uniform1i(gl.getUniformLocation(prog,"tex"),0);
-
 // ---------- VIDEO ----------
 let video=document.createElement("video");
 video.playsInline=true;
 video.muted=true;
 
-// ---------- SENSOR ----------
-let orientationData={alpha:0,beta:0,gamma:0};
+// ---------- ORBIT ----------
 let visited=new Set();
+let orientationData={alpha:0,beta:0};
 
 window.addEventListener("deviceorientation",(e)=>{
   orientationData={
     alpha:e.alpha||0,
-    beta:e.beta||0,
-    gamma:e.gamma||0
+    beta:e.beta||0
   };
 });
-
-// ---------- ORBIT ----------
-const orbitCanvas=document.getElementById("orbit");
-const orbitCtx=orbitCanvas.getContext("2d");
-
-const YAW_STEPS=12;
-const PITCH_STEPS=6;
 
 function getCell(){
  let yaw=Math.floor((orientationData.alpha%360)/30);
@@ -234,16 +225,22 @@ function getCell(){
  return yaw+"_"+pitch;
 }
 
-function drawOrbit(){
- let w=orbitCanvas.width/YAW_STEPS;
- let h=orbitCanvas.height/PITCH_STEPS;
+// ---------- ORBIT DRAW ----------
+const orbitCanvas=document.getElementById("orbit");
+const orbitCtx=orbitCanvas.getContext("2d");
 
- orbitCtx.clearRect(0,0,orbitCanvas.width,orbitCanvas.height);
+function drawOrbit(){
+
+ orbitCanvas.width = orbitCanvas.clientWidth;
+ orbitCanvas.height = orbitCanvas.clientHeight;
+
+ let w=orbitCanvas.width/12;
+ let h=orbitCanvas.height/6;
 
  let current=getCell();
 
- for(let y=0;y<PITCH_STEPS;y++){
-  for(let x=0;x<YAW_STEPS;x++){
+ for(let y=0;y<6;y++){
+  for(let x=0;x<12;x++){
 
    let key=x+"_"+y;
 
@@ -291,8 +288,7 @@ function render(){
  drawOrbit();
 
  document.getElementById("log").innerText =
-   "Coverage: "+visited.size+" / 72\n" +
-   "Suggestion: "+(visited.size<20?"Move around object":"Fill gaps");
+   "Coverage: "+visited.size+" / 72";
 
  requestAnimationFrame(render);
 }
@@ -308,31 +304,20 @@ function capture(){
 
  let data=c.toDataURL();
 
- let meta={
-   time:new Date().toISOString(),
-   orientation:orientationData,
-   cell:getCell(),
-   coverage:visited.size
- };
-
- captures.push({data,meta});
+ captures.push(data);
 
  let div=document.createElement("div");
  div.className="item";
-
- div.innerHTML=`
-   <img src="${data}">
-   <div>${JSON.stringify(meta,null,1)}</div>
- `;
+ div.innerHTML=`<img src="${data}">`;
 
  document.getElementById("gallery").appendChild(div);
 }
 
 // ---------- DOWNLOAD ----------
 function downloadAll(){
- captures.forEach((c,i)=>{
+ captures.forEach((img,i)=>{
    let a=document.createElement("a");
-   a.href=c.data;
+   a.href=img;
    a.download="capture_"+i+".png";
    a.click();
  });
