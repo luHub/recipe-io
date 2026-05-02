@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Panel</title>
+
+<style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 16px;
+}
+
+.title{
+  font-size:14px;
+  letter-spacing:2px;
+  opacity:0.8;
+}
+
+.container{
+  padding:16px;
+  max-width:600px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:18px;
+}
+
+h2{
+  margin-top:0;
+  font-size:16px;
+  letter-spacing:1px;
+}
+
+textarea{
+  width:100%;
+  height:160px;
+  background:#000;
+  color:#0f0;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:10px;
+  font-family: monospace;
+}
+
+iframe{
+  width:100%;
+  height:180px;
+  border:none;
+  border-radius:10px;
+  background:#fff;
+}
+
+.console{
+  background:#000;
+  color:#0f0;
+  font-family: monospace;
+  font-size:12px;
+  padding:10px;
+  height:120px;
+  overflow:auto;
+  border-radius:10px;
+  border:1px solid var(--accent);
+}
+
+button{
+  width:100%;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  padding:14px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:10px;
+  font-weight:bold;
+  box-shadow:
+    0 0 6px rgba(0,170,255,0.4),
+    0 0 12px rgba(0,170,255,0.2);
+  transition:all 0.12s ease;
+}
+
+button:hover{
+  box-shadow:
+    0 0 10px rgba(0,170,255,0.6),
+    0 0 18px rgba(0,170,255,0.3);
+}
+
+button:active{
+  transform:scale(0.96);
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  border-radius:10px;
+}
+
+.desc{
+  font-size:13px;
+  opacity:0.75;
+  margin-bottom:10px;
+}
+
+.footer{
+  text-align:center;
+  font-size:11px;
+  opacity:0.4;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div class="title">CONTROL PANEL</div>
+</div>
+
+<div class="container">
+
+  <!-- CALL COUNTER -->
+  <div class="card">
+    <h2>CALL COUNTER</h2>
+    <div class="desc">Set name, limit, and weekly goal</div>
+
+    <input id="name" placeholder="Name">
+    <input id="limit" type="number" placeholder="Limit">
+    <input id="weekly" type="number" placeholder="Weekly Goal">
+
+    <button onclick="saveConfig()">SAVE CONFIG</button>
+    <button onclick="triggerCall()">CALL</button>
+    <button onclick="shareToX()">SHARE ON X</button>
+
+    <div class="console" id="counterLog"></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="card">
+    <h2>EDITOR</h2>
+    <div class="desc">Write HTML + CSS + JS</div>
+    <textarea id="code"></textarea>
+    <button onclick="runCode()">RUN</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="card">
+    <h2>OUTPUT</h2>
+    <iframe id="output"></iframe>
+  </div>
+
+  <!-- CONSOLE -->
+  <div class="card">
+    <h2>CONSOLE</h2>
+    <div class="console" id="console"></div>
+  </div>
+
+</div>
+
+<div class="footer">local session saved</div>
+
+<script>
+const textarea = document.getElementById("code");
+const iframe = document.getElementById("output");
+const consoleBox = document.getElementById("console");
+const counterLog = document.getElementById("counterLog");
+
+const nameInput = document.getElementById("name");
+const limitInput = document.getElementById("limit");
+const weeklyInput = document.getElementById("weekly");
+
+// DEFAULT CODE
+const defaultCode = `<h1>Hello</h1>
+<script>
+console.log("Hello from inside iframe");
+<\/script>`;
+
+textarea.value = localStorage.getItem("my_code") || defaultCode;
+
+// LOAD CONFIG
+let config = JSON.parse(localStorage.getItem("call_config")) || {
+  name: "default",
+  limit: 5,
+  count: 0,
+  weeklyGoal: 20,
+  weeklyCount: 0,
+  weekStart: new Date().toDateString()
+};
+
+// FILL INPUTS
+nameInput.value = config.name;
+limitInput.value = config.limit;
+weeklyInput.value = config.weeklyGoal;
+
+// LOG
+function logToConsole(msg, target=consoleBox){
+  const line = document.createElement("div");
+  line.textContent = msg;
+  target.appendChild(line);
+  target.scrollTop = target.scrollHeight;
+}
+
+// WEEK RESET
+function checkWeekReset(){
+  const now = new Date();
+  const saved = new Date(config.weekStart);
+  const diffDays = Math.floor((now - saved) / (1000*60*60*24));
+
+  if(diffDays >= 7){
+    config.weeklyCount = 0;
+    config.weekStart = now.toDateString();
+    logToConsole("🔄 Weekly reset", counterLog);
+  }
+}
+
+// SAVE CONFIG
+function saveConfig(){
+  config.name = nameInput.value || "default";
+  config.limit = parseInt(limitInput.value) || 0;
+  config.weeklyGoal = parseInt(weeklyInput.value) || 0;
+
+  config.count = 0;
+  config.weeklyCount = 0;
+  config.weekStart = new Date().toDateString();
+
+  localStorage.setItem("call_config", JSON.stringify(config));
+
+  counterLog.innerHTML = "";
+  logToConsole("CONFIG SAVED", counterLog);
+}
+
+// CALL
+function triggerCall(){
+  checkWeekReset();
+
+  if(config.count >= config.limit){
+    logToConsole(`❌ LIMIT REACHED (${config.limit})`, counterLog);
+    return;
+  }
+
+  config.count++;
+  config.weeklyCount++;
+
+  logToConsole(
+    `CALL ${config.count}/${config.limit} | WEEK ${config.weeklyCount}/${config.weeklyGoal}`,
+    counterLog
+  );
+
+  if(config.weeklyCount >= config.weeklyGoal){
+    logToConsole("🎯 WEEKLY GOAL REACHED", counterLog);
+  }
+
+  localStorage.setItem("call_config", JSON.stringify(config));
+}
+
+// SHARE TO X
+function shareToX(){
+  const percent = config.weeklyGoal
+    ? Math.floor((config.weeklyCount / config.weeklyGoal) * 100)
+    : 0;
+
+  const text = `📊 ${config.name}
+Calls: ${config.count}/${config.limit}
+Week: ${config.weeklyCount}/${config.weeklyGoal} (${percent}%)
+
+#productivity #tracking`;
+
+  const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+  window.open(url, "_blank");
+}
+
+// RUN CODE
+function runCode(){
+  consoleBox.innerHTML = "";
+
+  const userCode = textarea.value;
+
+  const wrapped = `
+  <script>
+    const oldLog = console.log;
+    console.log = function(...args){
+      parent.postMessage({type:'log', data: args.join(' ')}, '*');
+      oldLog.apply(console, args);
+    };
+
+    window.onerror = function(msg){
+      parent.postMessage({type:'error', data: msg}, '*');
+    };
+  <\/script>
+  ` + userCode;
+
+  iframe.srcdoc = wrapped;
+}
+
+// LISTEN
+window.addEventListener("message", (e)=>{
+  if(e.data.type === "log"){
+    logToConsole("LOG: " + e.data.data);
+  }
+  if(e.data.type === "error"){
+    logToConsole("ERROR: " + e.data.data);
+  }
+});
+
+// AUTOSAVE
+textarea.addEventListener("input", ()=>{
+  localStorage.setItem("my_code", textarea.value);
+});
+
+// INIT
+checkWeekReset();
+runCode();
+</script>
+
+</body>
+</html>
