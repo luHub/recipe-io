@@ -22,9 +22,6 @@ body{
 }
 
 .topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   padding:10px 16px;
 }
 
@@ -50,51 +47,7 @@ body{
   padding:18px;
 }
 
-h2{
-  margin-top:0;
-  font-size:16px;
-  letter-spacing:1px;
-}
-
-.console{
-  background:#000;
-  color:#0f0;
-  font-family: monospace;
-  font-size:12px;
-  padding:10px;
-  height:140px;
-  overflow:auto;
-  border-radius:10px;
-  border:1px solid var(--accent);
-}
-
-button{
-  width:100%;
-  background:#000;
-  color:#fff;
-  border:1px solid var(--accent);
-  padding:14px;
-  border-radius:10px;
-  cursor:pointer;
-  margin-top:10px;
-  font-weight:bold;
-  box-shadow:
-    0 0 6px rgba(0,170,255,0.4),
-    0 0 12px rgba(0,170,255,0.2);
-  transition:all 0.12s ease;
-}
-
-button:hover{
-  box-shadow:
-    0 0 10px rgba(0,170,255,0.6),
-    0 0 18px rgba(0,170,255,0.3);
-}
-
-button:active{
-  transform:scale(0.96);
-}
-
-input{
+input, select{
   width:100%;
   padding:10px;
   margin-top:8px;
@@ -104,10 +57,48 @@ input{
   border-radius:10px;
 }
 
-.desc{
-  font-size:13px;
-  opacity:0.75;
-  margin-bottom:10px;
+button{
+  width:100%;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  padding:14px;
+  border-radius:10px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.console{
+  background:#000;
+  color:#0f0;
+  font-family: monospace;
+  font-size:12px;
+  padding:10px;
+  height:120px;
+  overflow:auto;
+  border-radius:10px;
+  border:1px solid var(--accent);
+}
+
+/* Q BOARD */
+.qitem{
+  background:#000;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
+}
+
+.qtitle{ font-size:12px; opacity:0.6; }
+.qvalue{ font-size:18px; font-weight:bold; }
+
+.plus{
+  width:40px;
+  height:40px;
+  font-size:20px;
 }
 
 .footer{
@@ -122,23 +113,60 @@ input{
 <body>
 
 <div class="topbar">
-  <div class="title">CALL TRACKER</div>
+  <div class="title">MULTI TRACKER</div>
 </div>
 
 <div class="container">
 
+  <!-- SELECT COUNTER -->
   <div class="card">
-    <h2>TRACKING</h2>
-    <div class="desc">Set name, limit, and weekly goal</div>
+    <h2>COUNTERS</h2>
+    <select id="counterSelect" onchange="switchCounter()"></select>
+    <button onclick="createCounter()">+ NEW COUNTER</button>
+  </div>
+
+  <!-- Q BOARD -->
+  <div class="card">
+    <h2>Q BOARD</h2>
+
+    <div class="qitem">
+      <div>
+        <div class="qtitle">NAME</div>
+        <div class="qvalue" id="q_name"></div>
+      </div>
+    </div>
+
+    <div class="qitem">
+      <div>
+        <div class="qtitle">CALLS</div>
+        <div class="qvalue" id="q_calls"></div>
+      </div>
+      <button class="plus" onclick="triggerCall()">+</button>
+    </div>
+
+    <div class="qitem">
+      <div>
+        <div class="qtitle">WEEK</div>
+        <div class="qvalue" id="q_week"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="card">
+    <h2>SETTINGS</h2>
 
     <input id="name" placeholder="Name">
     <input id="limit" type="number" placeholder="Limit">
     <input id="weekly" type="number" placeholder="Weekly Goal">
 
-    <button onclick="saveConfig()">SAVE CONFIG</button>
-    <button onclick="triggerCall()">CALL</button>
+    <button onclick="saveSettings()">SAVE</button>
     <button onclick="shareToX()">SHARE ON X</button>
+  </div>
 
+  <!-- LOG -->
+  <div class="card">
+    <h2>LOG</h2>
     <div class="console" id="log"></div>
   </div>
 
@@ -147,102 +175,159 @@ input{
 <div class="footer">local session saved</div>
 
 <script>
+let data = JSON.parse(localStorage.getItem("multi_counters")) || {
+  active: 0,
+  counters: [
+    {name:"default",limit:5,count:0,weeklyGoal:20,weeklyCount:0,weekStart:new Date().toDateString()}
+  ]
+};
+
+const select = document.getElementById("counterSelect");
 const logBox = document.getElementById("log");
+
+const q_name = document.getElementById("q_name");
+const q_calls = document.getElementById("q_calls");
+const q_week = document.getElementById("q_week");
+
 const nameInput = document.getElementById("name");
 const limitInput = document.getElementById("limit");
 const weeklyInput = document.getElementById("weekly");
 
-// LOAD CONFIG
-let config = JSON.parse(localStorage.getItem("call_config")) || {
-  name: "default",
-  limit: 5,
-  count: 0,
-  weeklyGoal: 20,
-  weeklyCount: 0,
-  weekStart: new Date().toDateString()
-};
-
-// INIT INPUTS
-nameInput.value = config.name;
-limitInput.value = config.limit;
-weeklyInput.value = config.weeklyGoal;
+// SAVE
+function save(){
+  localStorage.setItem("multi_counters", JSON.stringify(data));
+}
 
 // LOG
 function log(msg){
-  const line = document.createElement("div");
-  line.textContent = msg;
-  logBox.appendChild(line);
-  logBox.scrollTop = logBox.scrollHeight;
+  const d=document.createElement("div");
+  d.textContent=msg;
+  logBox.appendChild(d);
+  logBox.scrollTop=logBox.scrollHeight;
+}
+
+// POPULATE SELECT
+function renderSelect(){
+  select.innerHTML="";
+  data.counters.forEach((c,i)=>{
+    const opt=document.createElement("option");
+    opt.value=i;
+    opt.textContent=c.name;
+    if(i===data.active) opt.selected=true;
+    select.appendChild(opt);
+  });
+}
+
+// SWITCH
+function switchCounter(){
+  data.active=parseInt(select.value);
+  updateUI();
+  save();
+}
+
+// CURRENT
+function current(){
+  return data.counters[data.active];
+}
+
+// UPDATE UI
+function updateUI(){
+  const c=current();
+
+  q_name.textContent=c.name;
+  q_calls.textContent=`${c.count}/${c.limit}`;
+  q_week.textContent=`${c.weeklyCount}/${c.weeklyGoal}`;
+
+  nameInput.value=c.name;
+  limitInput.value=c.limit;
+  weeklyInput.value=c.weeklyGoal;
+}
+
+// NEW COUNTER
+function createCounter(){
+  data.counters.push({
+    name:"new",
+    limit:5,
+    count:0,
+    weeklyGoal:20,
+    weeklyCount:0,
+    weekStart:new Date().toDateString()
+  });
+  data.active=data.counters.length-1;
+  renderSelect();
+  updateUI();
+  save();
+}
+
+// SAVE SETTINGS
+function saveSettings(){
+  const c=current();
+  c.name=nameInput.value||"default";
+  c.limit=parseInt(limitInput.value)||0;
+  c.weeklyGoal=parseInt(weeklyInput.value)||0;
+  c.count=0;
+  c.weeklyCount=0;
+  c.weekStart=new Date().toDateString();
+
+  renderSelect();
+  updateUI();
+  save();
+
+  log("UPDATED");
 }
 
 // WEEK RESET
-function checkWeekReset(){
-  const now = new Date();
-  const saved = new Date(config.weekStart);
-  const diffDays = Math.floor((now - saved) / (1000*60*60*24));
-
-  if(diffDays >= 7){
-    config.weeklyCount = 0;
-    config.weekStart = now.toDateString();
-    log("🔄 Weekly reset");
+function checkWeek(c){
+  const now=new Date();
+  const saved=new Date(c.weekStart);
+  const diff=Math.floor((now-saved)/(1000*60*60*24));
+  if(diff>=7){
+    c.weeklyCount=0;
+    c.weekStart=now.toDateString();
+    log("🔄 reset");
   }
-}
-
-// SAVE CONFIG
-function saveConfig(){
-  config.name = nameInput.value || "default";
-  config.limit = parseInt(limitInput.value) || 0;
-  config.weeklyGoal = parseInt(weeklyInput.value) || 0;
-
-  config.count = 0;
-  config.weeklyCount = 0;
-  config.weekStart = new Date().toDateString();
-
-  localStorage.setItem("call_config", JSON.stringify(config));
-
-  logBox.innerHTML = "";
-  log("CONFIG SAVED");
 }
 
 // CALL
 function triggerCall(){
-  checkWeekReset();
+  const c=current();
+  checkWeek(c);
 
-  if(config.count >= config.limit){
-    log(`❌ LIMIT REACHED (${config.limit})`);
+  if(c.count>=c.limit){
+    log("❌ limit reached");
     return;
   }
 
-  config.count++;
-  config.weeklyCount++;
+  c.count++;
+  c.weeklyCount++;
 
-  log(`CALL ${config.count}/${config.limit} | WEEK ${config.weeklyCount}/${config.weeklyGoal}`);
+  log(`+1 ${c.name}`);
 
-  if(config.weeklyCount >= config.weeklyGoal){
-    log("🎯 WEEKLY GOAL REACHED");
+  if(c.weeklyCount>=c.weeklyGoal){
+    log("🎯 goal hit");
   }
 
-  localStorage.setItem("call_config", JSON.stringify(config));
+  updateUI();
+  save();
 }
 
 // SHARE
 function shareToX(){
-  const percent = config.weeklyGoal
-    ? Math.floor((config.weeklyCount / config.weeklyGoal) * 100)
-    : 0;
+  const c=current();
+  const percent = c.weeklyGoal ? Math.floor((c.weeklyCount/c.weeklyGoal)*100) : 0;
 
-  const text = `📊 ${config.name}
-Calls: ${config.count}/${config.limit}
-Week: ${config.weeklyCount}/${config.weeklyGoal} (${percent}%)
+  const text = `📊 ${c.name}
+Calls: ${c.count}/${c.limit}
+Week: ${c.weeklyCount}/${c.weeklyGoal} (${percent}%)
 
-#productivity #tracking`;
+#tracking`;
 
-  const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
-  window.open(url, "_blank");
+  window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(text));
 }
 
 // INIT
-checkWeekReset();
+renderSelect();
+updateUI();
 </script>
 
 </body>
