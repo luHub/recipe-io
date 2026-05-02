@@ -1,0 +1,251 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Saver Terminal</title><style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
+
+.container{
+  padding:12px;
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:14px;
+}
+
+h1{
+  margin:0;
+  font-size:18px;
+  color:var(--accent);
+}
+
+.terminal{
+  background:#000;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:10px;
+  font-family: monospace;
+}
+
+#cmdInput{
+  width:100%;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#00ffcc;
+  font-family: monospace;
+  font-size:16px;
+  padding:10px 0;
+}
+
+.log{
+  max-height:140px;
+  overflow:auto;
+  font-size:12px;
+  color:#aaa;
+  margin-top:8px;
+}
+
+.link-item{
+  padding:8px 0;
+  font-family: monospace;
+  font-size:14px;
+}
+
+.link-item a{
+  color:#00aaff;
+  text-decoration:none;
+}
+
+.link-item a:hover{
+  text-decoration:underline;
+}
+
+.output{
+  background:#000;
+  border:1px solid var(--accent);
+  padding:12px;
+  border-radius:10px;
+  font-size:13px;
+  white-space:pre-wrap;
+  font-family: monospace;
+}
+</style></head><body><div class="container">  <div class="card">
+    <h1>Hyperlink Saver Terminal</h1>
+  </div>  <div class="card">
+    <h3>Terminal</h3>
+    <div class="terminal">
+      <div>> paste links or type commands</div>
+      <div>> add / clear / list / remove</div><input id="cmdInput" placeholder="Paste links or type..." />
+  <div class="log" id="log"></div>
+</div>
+
+  </div>  <div class="card">
+    <h3>Saved Links</h3>
+    <div id="linkList"></div>
+  </div>  <div class="card">
+    <h3>Export</h3>
+    <div id="output" class="output"></div>
+  </div></div><script>
+const KEY = "link_terminal_memory";
+let links = [];
+
+function log(msg){
+  const box = document.getElementById("log");
+  box.innerHTML += msg + "<br>";
+  box.scrollTop = box.scrollHeight;
+}
+
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(links));
+  render();
+  renderOutput();
+}
+
+function load(){
+  const data = localStorage.getItem(KEY);
+  if(data) links = JSON.parse(data);
+  render();
+  renderOutput();
+}
+
+function isValidURL(str) {
+  try {
+    new URL(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function addFromLines(text){
+  const lines = text
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  let added = 0;
+
+  lines.forEach(line => {
+    if(isValidURL(line)){
+      links.push({ url: line });
+      added++;
+    }
+  });
+
+  log("Added " + added + " links");
+  save();
+}
+
+function runCommand(cmd){
+  const trimmed = cmd.trim();
+
+  if(trimmed.startsWith("add ")){
+    addFromLines(trimmed.replace("add ",""));
+    return;
+  }
+
+  if(trimmed === "clear"){
+    links = [];
+    log("Cleared all links");
+    save();
+    return;
+  }
+
+  if(trimmed === "list"){
+    links.forEach((l,i)=>{
+      log((i+1)+". "+l.url);
+    });
+    return;
+  }
+
+  if(trimmed.startsWith("remove ")){
+    const i = parseInt(trimmed.split(" ")[1]) - 1;
+    if(links[i]){
+      links.splice(i,1);
+      log("Removed link " + (i+1));
+      save();
+    }
+    return;
+  }
+
+  log("Unknown command");
+}
+
+const input = document.getElementById("cmdInput");
+
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){
+    const value = input.value;
+
+    if(value.includes("\n") || value.startsWith("http")){
+      addFromLines(value);
+    } else {
+      runCommand(value);
+    }
+
+    input.value = "";
+  }
+});
+
+input.addEventListener("paste", e=>{
+  const text = (e.clipboardData || window.clipboardData).getData("text");
+
+  if(text.includes("http")){
+    e.preventDefault();
+    addFromLines(text);
+    input.value = "";
+  }
+});
+
+function render(){
+  const box = document.getElementById("linkList");
+  box.innerHTML = "";
+
+  links.forEach((l,i)=>{
+    const div = document.createElement("div");
+    div.className = "link-item";
+
+    const a = document.createElement("a");
+    a.href = l.url;
+    a.textContent = (i+1)+". "+l.url;
+    a.target = "_blank";
+
+    div.appendChild(a);
+    box.appendChild(div);
+  });
+}
+
+function renderOutput(){
+  let out = "";
+  links.forEach((l,i)=>{
+    out += (i+1)+". "+l.url+"\n";
+  });
+
+  document.getElementById("output").innerText = out;
+}
+
+load();
+</script></body>
+</html>
