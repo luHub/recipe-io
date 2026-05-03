@@ -75,6 +75,12 @@ input,select{
   border:1px solid var(--accent);
   border-radius:10px;
 }
+
+.meta{
+  font-size:11px;
+  opacity:0.6;
+  margin-top:8px;
+}
 </style>
 </head>
 
@@ -109,11 +115,16 @@ function save(){
   localStorage.setItem("items", JSON.stringify(items));
 }
 
+function now(){
+  return new Date();
+}
+
 function calcEnd(item){
   const start = new Date(item.start);
 
+  // if completed → lock end time
   if(item.limit && item.count >= item.limit){
-    return new Date(); // finished now
+    return item.end ? new Date(item.end) : new Date();
   }
 
   if(item.reset === "day"){
@@ -136,16 +147,14 @@ function calcEnd(item){
 function checkReset(item){
   if(item.reset==="none") return;
 
-  const end = calcEnd(item);
-  if(!end) return;
-
-  // IMPORTANT FIX:
-  // do NOT reset if goal reached — only reset by time
+  // do NOT reset if finished
   if(item.limit && item.count >= item.limit) return;
 
-  if(new Date() >= end){
+  const end = calcEnd(item);
+  if(end && new Date() >= end){
     item.count = 0;
     item.start = new Date().toISOString();
+    item.end = null;
   }
 }
 
@@ -162,6 +171,11 @@ function render(){
       ? Math.min((item.count/item.limit)*100,100)
       : 0;
 
+    // LOCK END TIME WHEN COMPLETED
+    if(isDone && !item.end){
+      item.end = new Date().toISOString();
+    }
+
     const div = document.createElement("div");
     div.className="card";
 
@@ -175,6 +189,11 @@ function render(){
 
       <button onclick="inc(${i})" ${isDone?"disabled":""}>+</button>
       <button onclick="del(${i})">DELETE</button>
+
+      <div class="meta">
+        Start: ${item.start ? new Date(item.start).toLocaleString() : "-"}<br>
+        End: ${item.end ? new Date(item.end).toLocaleString() : "-"}
+      </div>
     `;
 
     list.appendChild(div);
@@ -195,8 +214,12 @@ function add(){
     count:0,
     limit:isNaN(limit)?null:limit,
     reset,
-    start:new Date().toISOString()
+    start:new Date().toISOString(),
+    end:null
   });
+
+  document.getElementById("name").value="";
+  document.getElementById("limit").value="";
 
   render();
 }
@@ -204,17 +227,15 @@ function add(){
 function inc(i){
   const item = items[i];
 
-  // 🔒 HARD STOP (final fix)
   if(item.limit && item.count >= item.limit){
-    item.count = item.limit; // clamp
+    item.count = item.limit;
     return;
   }
 
   item.count++;
 
-  // clamp safety
-  if(item.limit && item.count > item.limit){
-    item.count = item.limit;
+  if(item.limit && item.count >= item.limit){
+    item.end = new Date().toISOString();
   }
 
   render();
