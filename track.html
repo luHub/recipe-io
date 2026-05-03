@@ -12,6 +12,7 @@
   --panel2:#0f1830;
   --text:#eaeaf2;
   --accent:#00aaff;
+  --danger:#ff3b3b;
 }
 
 body{
@@ -63,7 +64,6 @@ h2{
 .row{
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
 .meta{
@@ -83,6 +83,11 @@ h2{
 .bar{
   height:100%;
   background:var(--accent);
+  transition:0.2s;
+}
+
+.bar.done{
+  background:var(--danger);
 }
 
 button{
@@ -102,6 +107,11 @@ button{
 
 button:active{
   transform:scale(0.96);
+}
+
+button:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
 }
 
 input,select{
@@ -131,7 +141,7 @@ input,select{
 
 <div class="container">
 
-  <!-- BOARD -->
+  <!-- TRACK -->
   <div class="card">
     <h2>TRACK</h2>
     <div id="list"></div>
@@ -163,10 +173,6 @@ let items = JSON.parse(localStorage.getItem("items")||"[]");
 
 function save(){
   localStorage.setItem("items", JSON.stringify(items));
-}
-
-function now(){
-  return new Date();
 }
 
 function calcEnd(item){
@@ -220,6 +226,7 @@ function render(){
       ? Math.min((item.count/item.limit)*100,100)
       : 0;
 
+    const isDone = item.limit && item.count >= item.limit;
     const end = calcEnd(item);
 
     const div = document.createElement("div");
@@ -232,10 +239,10 @@ function render(){
       </div>
 
       <div class="progress">
-        <div class="bar" style="width:${percent}%"></div>
+        <div class="bar ${isDone ? "done" : ""}" style="width:${percent}%"></div>
       </div>
 
-      <button onclick="inc(${i})">+</button>
+      <button onclick="inc(${i})" ${isDone ? "disabled" : ""}>+</button>
       <button onclick="edit(${i})">EDIT</button>
       <button onclick="del(${i})">DELETE</button>
 
@@ -273,10 +280,9 @@ function add(){
 function inc(i){
   const item = items[i];
 
-  if(!item.limit || item.count < item.limit){
-    item.count++;
-  }
+  if(item.limit && item.count >= item.limit) return;
 
+  item.count++;
   render();
 }
 
