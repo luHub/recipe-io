@@ -1,334 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Call Tracker</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Counter Board</title>
 
-<style>
-:root{
-  --bg:#050507;
-  --panel:#0c1220;
-  --panel2:#0f1830;
-  --text:#eaeaf2;
-  --accent:#00aaff;
-}
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      background: #f2f2f2;
+    }
 
-body{
-  margin:0;
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color:var(--text);
-}
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 12px;
+    }
 
-.topbar{
-  padding:10px 16px;
-}
+    h2 {
+      margin: 10px 0;
+    }
 
-.title{
-  font-size:14px;
-  letter-spacing:2px;
-  opacity:0.8;
-}
+    .board {
+      margin-bottom: 80px;
+    }
 
-.container{
-  padding:16px;
-  max-width:600px;
-  margin:auto;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
+    .item {
+      background: white;
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.card{
-  background: linear-gradient(180deg,var(--panel),var(--panel2));
-  border:1px solid rgba(0,170,255,0.25);
-  border-radius:14px;
-  padding:18px;
-}
+    .item-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
 
-input, select{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  background:#000;
-  color:#fff;
-  border:1px solid var(--accent);
-  border-radius:10px;
-}
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-button{
-  width:100%;
-  background:#000;
-  color:#fff;
-  border:1px solid var(--accent);
-  padding:14px;
-  border-radius:10px;
-  margin-top:10px;
-  cursor:pointer;
-}
+    .count {
+      font-weight: bold;
+      font-size: 16px;
+      min-width: 24px;
+      text-align: center;
+    }
 
-.console{
-  background:#000;
-  color:#0f0;
-  font-family: monospace;
-  font-size:12px;
-  padding:10px;
-  height:120px;
-  overflow:auto;
-  border-radius:10px;
-  border:1px solid var(--accent);
-}
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
-/* Q BOARD */
-.qitem{
-  background:#000;
-  border:1px solid var(--accent);
-  border-radius:10px;
-  padding:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:10px;
-}
+    .increase {
+      background: #4CAF50;
+      color: white;
+      font-size: 16px;
+    }
 
-.qtitle{ font-size:12px; opacity:0.6; }
-.qvalue{ font-size:18px; font-weight:bold; }
+    .edit {
+      background: #FFC107;
+    }
 
-.plus{
-  width:40px;
-  height:40px;
-  font-size:20px;
-}
+    .delete {
+      background: #f44336;
+      color: white;
+    }
 
-.footer{
-  text-align:center;
-  font-size:11px;
-  opacity:0.4;
-  padding:10px;
-}
-</style>
+    /* Sticky setup bottom */
+    .setup {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    }
+
+    .setup-inner {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .add-btn {
+      background: #2196F3;
+      color: white;
+      padding: 10px 14px;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="topbar">
-  <div class="title">MULTI TRACKER</div>
-</div>
-
-<div class="container">
-
-  <!-- SELECT COUNTER -->
-  <div class="card">
-    <h2>COUNTERS</h2>
-    <select id="counterSelect" onchange="switchCounter()"></select>
-    <button onclick="createCounter()">+ NEW COUNTER</button>
-  </div>
-
-  <!-- Q BOARD -->
-  <div class="card">
-    <h2>Q BOARD</h2>
-
-    <div class="qitem">
-      <div>
-        <div class="qtitle">NAME</div>
-        <div class="qvalue" id="q_name"></div>
-      </div>
-    </div>
-
-    <div class="qitem">
-      <div>
-        <div class="qtitle">CALLS</div>
-        <div class="qvalue" id="q_calls"></div>
-      </div>
-      <button class="plus" onclick="triggerCall()">+</button>
-    </div>
-
-    <div class="qitem">
-      <div>
-        <div class="qtitle">WEEK</div>
-        <div class="qvalue" id="q_week"></div>
-      </div>
+  <div class="container">
+    <div class="board">
+      <h2>Items</h2>
+      <div id="itemList"></div>
     </div>
   </div>
 
-  <!-- SETTINGS -->
-  <div class="card">
-    <h2>SETTINGS</h2>
-
-    <input id="name" placeholder="Name">
-    <input id="limit" type="number" placeholder="Limit">
-    <input id="weekly" type="number" placeholder="Weekly Goal">
-
-    <button onclick="saveSettings()">SAVE</button>
-    <button onclick="shareToX()">SHARE ON X</button>
+  <!-- Sticky setup -->
+  <div class="setup">
+    <div class="setup-inner">
+      <input type="text" id="newItemInput" placeholder="New item..." />
+      <button class="add-btn" onclick="addItem()">Add</button>
+    </div>
   </div>
 
-  <!-- LOG -->
-  <div class="card">
-    <h2>LOG</h2>
-    <div class="console" id="log"></div>
-  </div>
+  <script>
+    let items = JSON.parse(localStorage.getItem("items")) || [];
 
-</div>
+    function save() {
+      localStorage.setItem("items", JSON.stringify(items));
+    }
 
-<div class="footer">local session saved</div>
+    function renderItems() {
+      const list = document.getElementById("itemList");
+      list.innerHTML = "";
 
-<script>
-let data = JSON.parse(localStorage.getItem("multi_counters")) || {
-  active: 0,
-  counters: [
-    {name:"default",limit:5,count:0,weeklyGoal:20,weeklyCount:0,weekStart:new Date().toDateString()}
-  ]
-};
+      items.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "item";
 
-const select = document.getElementById("counterSelect");
-const logBox = document.getElementById("log");
+        div.innerHTML = `
+          <div class="item-name">${item.name}</div>
+          <div class="controls">
+            <span class="count">${item.count}</span>
+            <button class="increase" onclick="increase(${index})">+</button>
+            <button class="edit" onclick="editItem(${index})">✏️</button>
+            <button class="delete" onclick="deleteItem(${index})">🗑️</button>
+          </div>
+        `;
 
-const q_name = document.getElementById("q_name");
-const q_calls = document.getElementById("q_calls");
-const q_week = document.getElementById("q_week");
+        list.appendChild(div);
+      });
+    }
 
-const nameInput = document.getElementById("name");
-const limitInput = document.getElementById("limit");
-const weeklyInput = document.getElementById("weekly");
+    function addItem() {
+      const input = document.getElementById("newItemInput");
+      const name = input.value.trim();
+      if (!name) return;
 
-// SAVE
-function save(){
-  localStorage.setItem("multi_counters", JSON.stringify(data));
-}
+      items.push({ name, count: 0 });
+      input.value = "";
+      save();
+      renderItems();
+    }
 
-// LOG
-function log(msg){
-  const d=document.createElement("div");
-  d.textContent=msg;
-  logBox.appendChild(d);
-  logBox.scrollTop=logBox.scrollHeight;
-}
+    function increase(index) {
+      items[index].count++;
+      save();
+      renderItems();
+    }
 
-// POPULATE SELECT
-function renderSelect(){
-  select.innerHTML="";
-  data.counters.forEach((c,i)=>{
-    const opt=document.createElement("option");
-    opt.value=i;
-    opt.textContent=c.name;
-    if(i===data.active) opt.selected=true;
-    select.appendChild(opt);
-  });
-}
+    function editItem(index) {
+      const newName = prompt("Edit item name:", items[index].name);
+      if (!newName) return;
 
-// SWITCH
-function switchCounter(){
-  data.active=parseInt(select.value);
-  updateUI();
-  save();
-}
+      items[index].name = newName;
+      save();
+      renderItems();
+    }
 
-// CURRENT
-function current(){
-  return data.counters[data.active];
-}
+    function deleteItem(index) {
+      if (!confirm("Delete this item?")) return;
 
-// UPDATE UI
-function updateUI(){
-  const c=current();
+      items.splice(index, 1);
+      save();
+      renderItems();
+    }
 
-  q_name.textContent=c.name;
-  q_calls.textContent=`${c.count}/${c.limit}`;
-  q_week.textContent=`${c.weeklyCount}/${c.weeklyGoal}`;
-
-  nameInput.value=c.name;
-  limitInput.value=c.limit;
-  weeklyInput.value=c.weeklyGoal;
-}
-
-// NEW COUNTER
-function createCounter(){
-  data.counters.push({
-    name:"new",
-    limit:5,
-    count:0,
-    weeklyGoal:20,
-    weeklyCount:0,
-    weekStart:new Date().toDateString()
-  });
-  data.active=data.counters.length-1;
-  renderSelect();
-  updateUI();
-  save();
-}
-
-// SAVE SETTINGS
-function saveSettings(){
-  const c=current();
-  c.name=nameInput.value||"default";
-  c.limit=parseInt(limitInput.value)||0;
-  c.weeklyGoal=parseInt(weeklyInput.value)||0;
-  c.count=0;
-  c.weeklyCount=0;
-  c.weekStart=new Date().toDateString();
-
-  renderSelect();
-  updateUI();
-  save();
-
-  log("UPDATED");
-}
-
-// WEEK RESET
-function checkWeek(c){
-  const now=new Date();
-  const saved=new Date(c.weekStart);
-  const diff=Math.floor((now-saved)/(1000*60*60*24));
-  if(diff>=7){
-    c.weeklyCount=0;
-    c.weekStart=now.toDateString();
-    log("🔄 reset");
-  }
-}
-
-// CALL
-function triggerCall(){
-  const c=current();
-  checkWeek(c);
-
-  if(c.count>=c.limit){
-    log("❌ limit reached");
-    return;
-  }
-
-  c.count++;
-  c.weeklyCount++;
-
-  log(`+1 ${c.name}`);
-
-  if(c.weeklyCount>=c.weeklyGoal){
-    log("🎯 goal hit");
-  }
-
-  updateUI();
-  save();
-}
-
-// SHARE
-function shareToX(){
-  const c=current();
-  const percent = c.weeklyGoal ? Math.floor((c.weeklyCount/c.weeklyGoal)*100) : 0;
-
-  const text = `📊 ${c.name}
-Calls: ${c.count}/${c.limit}
-Week: ${c.weeklyCount}/${c.weeklyGoal} (${percent}%)
-
-#tracking`;
-
-  window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(text));
-}
-
-// INIT
-renderSelect();
-updateUI();
-</script>
+    renderItems();
+  </script>
 
 </body>
 </html>
