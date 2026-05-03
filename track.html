@@ -3,44 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Counter Board</title>
+<title>Control Panel</title>
 
 <style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+}
+
 body{
   margin:0;
-  font-family:system-ui,sans-serif;
-  background:#0f1115;
-  color:#e6e6e6;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color:var(--text);
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 16px;
+}
+
+.title{
+  font-size:14px;
+  letter-spacing:2px;
+  opacity:0.8;
 }
 
 .container{
-  max-width:520px;
-  margin:0 auto;
   padding:16px;
+  max-width:600px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.card{
+  background: linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,0.25);
+  border-radius:14px;
+  padding:18px;
 }
 
 h2{
-  font-size:14px;
-  letter-spacing:1px;
-  color:#888;
+  margin-top:0;
+  font-size:16px;
 }
 
 .item{
-  background:#1a1d23;
-  border:1px solid #2a2f38;
-  border-radius:12px;
-  padding:14px;
-  margin-bottom:10px;
+  border-top:1px solid rgba(255,255,255,0.1);
+  padding-top:10px;
+  margin-top:10px;
 }
 
-.top{
+.row{
   display:flex;
   justify-content:space-between;
+  align-items:center;
+}
+
+.meta{
+  font-size:11px;
+  opacity:0.6;
+  margin-top:6px;
 }
 
 .progress{
   height:6px;
-  background:#2a2f38;
+  background:#000;
   border-radius:6px;
   margin:10px 0;
   overflow:hidden;
@@ -48,88 +82,81 @@ h2{
 
 .bar{
   height:100%;
-  background:#4caf50;
-}
-
-.controls{
-  display:flex;
-  gap:6px;
-  justify-content:flex-end;
+  background:var(--accent);
 }
 
 button{
-  border:none;
-  border-radius:8px;
-  padding:8px 10px;
-  background:#2a2f38;
-  color:#ddd;
-  cursor:pointer;
-}
-
-.increase{ background:#4caf50; color:#fff; }
-.delete{ background:#d32f2f; color:#fff; }
-
-.meta{
-  font-size:11px;
-  color:#777;
-  margin-top:6px;
-}
-
-.setup{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#1a1d23;
-  border-top:1px solid #2a2f38;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
   padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  margin-top:6px;
+
+  box-shadow:
+    0 0 6px rgba(0,170,255,0.4),
+    0 0 12px rgba(0,170,255,0.2);
 }
 
-.setup-inner{
-  max-width:520px;
-  margin:auto;
-  display:flex;
-  gap:6px;
+button:active{
+  transform:scale(0.96);
 }
 
 input,select{
-  padding:8px;
-  border-radius:8px;
-  border:1px solid #2a2f38;
-  background:#0f1115;
-  color:#eee;
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  background:#000;
+  color:#fff;
+  border:1px solid var(--accent);
+  border-radius:10px;
 }
 
-.limit{ width:60px; }
-.reset{ width:90px; }
-
-.add-btn{
-  background:#2196f3;
-  color:#fff;
+.footer{
+  text-align:center;
+  font-size:11px;
+  opacity:0.4;
+  padding:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>Items</h2>
-  <div id="itemList"></div>
+<div class="topbar">
+  <div class="title">CONTROL PANEL</div>
 </div>
 
-<div class="setup">
-  <div class="setup-inner">
-    <input id="nameInput" placeholder="Item">
-    <input id="limitInput" class="limit" type="number" placeholder="Goal">
-    <select id="resetInput" class="reset">
+<div class="container">
+
+  <!-- BOARD -->
+  <div class="card">
+    <h2>TRACK</h2>
+    <div id="list"></div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="card">
+    <h2>SETUP</h2>
+
+    <input id="name" placeholder="Item name">
+    <input id="limit" type="number" placeholder="Goal (optional)">
+    
+    <select id="reset">
       <option value="none">No reset</option>
       <option value="day">Daily</option>
       <option value="week">Weekly</option>
       <option value="month">Monthly</option>
     </select>
-    <button class="add-btn" onclick="addItem()">Add</button>
+
+    <button onclick="add()">ADD ITEM</button>
   </div>
+
 </div>
+
+<div class="footer">local session saved</div>
 
 <script>
 let items = JSON.parse(localStorage.getItem("items")||"[]");
@@ -139,44 +166,52 @@ function save(){
 }
 
 function now(){
-  return new Date().toISOString();
+  return new Date();
 }
 
-function shouldReset(item){
-  if(item.reset === "none") return false;
+function calcEnd(item){
+  const start = new Date(item.start);
 
-  const last = new Date(item.lastReset || item.created);
-  const current = new Date();
+  if(item.limit && item.count >= item.limit){
+    return new Date(); // reached goal
+  }
 
   if(item.reset === "day"){
-    return current.toDateString() !== last.toDateString();
+    const d = new Date(start);
+    d.setDate(d.getDate()+1);
+    return d;
   }
 
   if(item.reset === "week"){
-    const diff = (current - last) / (1000*60*60*24);
-    return diff >= 7;
+    const d = new Date(start);
+    d.setDate(d.getDate()+7);
+    return d;
   }
 
   if(item.reset === "month"){
-    return current.getMonth() !== last.getMonth() ||
-           current.getFullYear() !== last.getFullYear();
+    const d = new Date(start);
+    d.setMonth(d.getMonth()+1);
+    return d;
   }
 
-  return false;
+  return null;
 }
 
 function checkReset(item){
-  if(shouldReset(item)){
+  if(item.reset==="none") return;
+
+  const end = calcEnd(item);
+  if(!end) return;
+
+  if(new Date() >= end){
     item.count = 0;
-    item.start = now();
-    item.end = null;
-    item.lastReset = now();
+    item.start = new Date().toISOString();
   }
 }
 
 function render(){
-  const list = document.getElementById("itemList");
-  list.innerHTML = "";
+  const list = document.getElementById("list");
+  list.innerHTML="";
 
   items.forEach((item,i)=>{
     checkReset(item);
@@ -185,11 +220,13 @@ function render(){
       ? Math.min((item.count/item.limit)*100,100)
       : 0;
 
+    const end = calcEnd(item);
+
     const div = document.createElement("div");
     div.className="item";
 
     div.innerHTML=`
-      <div class="top">
+      <div class="row">
         <div>${item.name}</div>
         <div>${item.count}${item.limit?"/"+item.limit:""}</div>
       </div>
@@ -198,15 +235,13 @@ function render(){
         <div class="bar" style="width:${percent}%"></div>
       </div>
 
-      <div class="controls">
-        <button class="increase" onclick="inc(${i})">+</button>
-        <button onclick="edit(${i})">Edit</button>
-        <button class="delete" onclick="del(${i})">Del</button>
-      </div>
+      <button onclick="inc(${i})">+</button>
+      <button onclick="edit(${i})">EDIT</button>
+      <button onclick="del(${i})">DELETE</button>
 
       <div class="meta">
-        Start: ${item.start?new Date(item.start).toLocaleString():"-"}<br>
-        End: ${item.end?new Date(item.end).toLocaleString():"-"}
+        Start: ${new Date(item.start).toLocaleString()}<br>
+        End: ${end?end.toLocaleString():"-"}
       </div>
     `;
 
@@ -216,10 +251,10 @@ function render(){
   save();
 }
 
-function addItem(){
-  const name = nameInput.value.trim();
-  const limit = parseInt(limitInput.value);
-  const reset = resetInput.value;
+function add(){
+  const name = document.getElementById("name").value.trim();
+  const limit = parseInt(document.getElementById("limit").value);
+  const reset = document.getElementById("reset").value;
 
   if(!name) return;
 
@@ -228,15 +263,10 @@ function addItem(){
     count:0,
     limit:isNaN(limit)?null:limit,
     reset,
-    created:now(),
-    start:now(),
-    end:null,
-    lastReset:now()
+    start:new Date().toISOString()
   });
 
-  nameInput.value="";
-  limitInput.value="";
-
+  name.value="";
   render();
 }
 
@@ -245,14 +275,6 @@ function inc(i){
 
   if(!item.limit || item.count < item.limit){
     item.count++;
-
-    if(item.count === 1){
-      item.start = now();
-    }
-
-    if(item.limit && item.count === item.limit){
-      item.end = now();
-    }
   }
 
   render();
@@ -271,7 +293,7 @@ function edit(i){
 }
 
 function del(i){
-  if(!confirm("Delete?")) return;
+  if(!confirm("Delete item?")) return;
   items.splice(i,1);
   render();
 }
