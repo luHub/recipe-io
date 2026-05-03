@@ -22,25 +22,10 @@ body{
   color:var(--text);
 }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 16px;
-}
-
-.title{
-  font-size:14px;
-  letter-spacing:2px;
-  opacity:0.8;
-}
-
 .container{
   padding:16px;
   max-width:600px;
   margin:auto;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
 }
 
 .card{
@@ -48,28 +33,7 @@ body{
   border:1px solid rgba(0,170,255,0.25);
   border-radius:14px;
   padding:18px;
-}
-
-h2{
-  margin-top:0;
-  font-size:16px;
-}
-
-.item{
-  border-top:1px solid rgba(255,255,255,0.1);
-  padding-top:10px;
-  margin-top:10px;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-}
-
-.meta{
-  font-size:11px;
-  opacity:0.6;
-  margin-top:6px;
+  margin-bottom:14px;
 }
 
 .progress{
@@ -77,13 +41,11 @@ h2{
   background:#000;
   border-radius:6px;
   margin:10px 0;
-  overflow:hidden;
 }
 
 .bar{
   height:100%;
   background:var(--accent);
-  transition:0.2s;
 }
 
 .bar.done{
@@ -91,27 +53,17 @@ h2{
 }
 
 button{
+  width:100%;
+  margin-top:6px;
+  padding:10px;
   background:#000;
   color:#fff;
   border:1px solid var(--accent);
-  padding:10px;
   border-radius:10px;
-  cursor:pointer;
-  font-weight:bold;
-  margin-top:6px;
-
-  box-shadow:
-    0 0 6px rgba(0,170,255,0.4),
-    0 0 12px rgba(0,170,255,0.2);
-}
-
-button:active{
-  transform:scale(0.96);
 }
 
 button:disabled{
   opacity:0.4;
-  cursor:not-allowed;
 }
 
 input,select{
@@ -123,50 +75,32 @@ input,select{
   border:1px solid var(--accent);
   border-radius:10px;
 }
-
-.footer{
-  text-align:center;
-  font-size:11px;
-  opacity:0.4;
-  padding:10px;
-}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <div class="title">CONTROL PANEL</div>
-</div>
-
 <div class="container">
 
-  <!-- TRACK -->
   <div class="card">
     <h2>TRACK</h2>
     <div id="list"></div>
   </div>
 
-  <!-- SETUP -->
   <div class="card">
     <h2>SETUP</h2>
-
-    <input id="name" placeholder="Item name">
-    <input id="limit" type="number" placeholder="Goal (optional)">
-    
+    <input id="name" placeholder="Item">
+    <input id="limit" type="number" placeholder="Goal">
     <select id="reset">
       <option value="none">No reset</option>
       <option value="day">Daily</option>
       <option value="week">Weekly</option>
       <option value="month">Monthly</option>
     </select>
-
-    <button onclick="add()">ADD ITEM</button>
+    <button onclick="add()">ADD</button>
   </div>
 
 </div>
-
-<div class="footer">local session saved</div>
 
 <script>
 let items = JSON.parse(localStorage.getItem("items")||"[]");
@@ -179,19 +113,15 @@ function calcEnd(item){
   const start = new Date(item.start);
 
   if(item.limit && item.count >= item.limit){
-    return new Date(); // reached goal
+    return new Date(); // finished now
   }
 
   if(item.reset === "day"){
-    const d = new Date(start);
-    d.setDate(d.getDate()+1);
-    return d;
+    return new Date(start.getTime() + 86400000);
   }
 
   if(item.reset === "week"){
-    const d = new Date(start);
-    d.setDate(d.getDate()+7);
-    return d;
+    return new Date(start.getTime() + 7*86400000);
   }
 
   if(item.reset === "month"){
@@ -209,6 +139,10 @@ function checkReset(item){
   const end = calcEnd(item);
   if(!end) return;
 
+  // IMPORTANT FIX:
+  // do NOT reset if goal reached — only reset by time
+  if(item.limit && item.count >= item.limit) return;
+
   if(new Date() >= end){
     item.count = 0;
     item.start = new Date().toISOString();
@@ -222,34 +156,25 @@ function render(){
   items.forEach((item,i)=>{
     checkReset(item);
 
+    const isDone = item.limit && item.count >= item.limit;
+
     const percent = item.limit
       ? Math.min((item.count/item.limit)*100,100)
       : 0;
 
-    const isDone = item.limit && item.count >= item.limit;
-    const end = calcEnd(item);
-
     const div = document.createElement("div");
-    div.className="item";
+    div.className="card";
 
     div.innerHTML=`
-      <div class="row">
-        <div>${item.name}</div>
-        <div>${item.count}${item.limit?"/"+item.limit:""}</div>
-      </div>
+      <div>${item.name}</div>
+      <div>${item.count}${item.limit?"/"+item.limit:""}</div>
 
       <div class="progress">
-        <div class="bar ${isDone ? "done" : ""}" style="width:${percent}%"></div>
+        <div class="bar ${isDone?"done":""}" style="width:${percent}%"></div>
       </div>
 
-      <button onclick="inc(${i})" ${isDone ? "disabled" : ""}>+</button>
-      <button onclick="edit(${i})">EDIT</button>
+      <button onclick="inc(${i})" ${isDone?"disabled":""}>+</button>
       <button onclick="del(${i})">DELETE</button>
-
-      <div class="meta">
-        Start: ${new Date(item.start).toLocaleString()}<br>
-        End: ${end?end.toLocaleString():"-"}
-      </div>
     `;
 
     list.appendChild(div);
@@ -273,33 +198,29 @@ function add(){
     start:new Date().toISOString()
   });
 
-  name.value="";
   render();
 }
 
 function inc(i){
   const item = items[i];
 
-  if(item.limit && item.count >= item.limit) return;
+  // 🔒 HARD STOP (final fix)
+  if(item.limit && item.count >= item.limit){
+    item.count = item.limit; // clamp
+    return;
+  }
 
   item.count++;
-  render();
-}
 
-function edit(i){
-  const n = prompt("Name", items[i].name);
-  const l = prompt("Limit", items[i].limit||"");
-  const r = prompt("Reset (none/day/week/month)", items[i].reset);
-
-  if(n!==null) items[i].name=n;
-  items[i].limit = l?parseInt(l):null;
-  if(r) items[i].reset=r;
+  // clamp safety
+  if(item.limit && item.count > item.limit){
+    item.count = item.limit;
+  }
 
   render();
 }
 
 function del(i){
-  if(!confirm("Delete item?")) return;
   items.splice(i,1);
   render();
 }
