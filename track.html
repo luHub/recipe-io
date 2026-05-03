@@ -1,242 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Counter Board</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counter Board</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #0f1115;
-      color: #e6e6e6;
-    }
+<style>
+body{
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:#0f1115;
+  color:#e6e6e6;
+}
 
-    .container {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 16px;
-    }
+.container{
+  max-width:520px;
+  margin:0 auto;
+  padding:16px;
+}
 
-    h2 {
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #888;
-      margin-bottom: 10px;
-    }
+h2{
+  font-size:14px;
+  letter-spacing:1px;
+  color:#888;
+}
 
-    .item {
-      background: #1a1d23;
-      border: 1px solid #2a2f38;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-    }
+.item{
+  background:#1a1d23;
+  border:1px solid #2a2f38;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:10px;
+}
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.top{
+  display:flex;
+  justify-content:space-between;
+}
 
-    .item-name {
-      font-size: 15px;
-      font-weight: 500;
-    }
+.progress{
+  height:6px;
+  background:#2a2f38;
+  border-radius:6px;
+  margin:10px 0;
+  overflow:hidden;
+}
 
-    .count {
-      font-size: 14px;
-      color: #aaa;
-    }
+.bar{
+  height:100%;
+  background:#4caf50;
+}
 
-    .progress {
-      height: 6px;
-      background: #2a2f38;
-      border-radius: 6px;
-      margin: 10px 0;
-      overflow: hidden;
-    }
+.controls{
+  display:flex;
+  gap:6px;
+  justify-content:flex-end;
+}
 
-    .bar {
-      height: 100%;
-      background: #4caf50;
-      width: 0%;
-      transition: width 0.2s ease;
-    }
+button{
+  border:none;
+  border-radius:8px;
+  padding:8px 10px;
+  background:#2a2f38;
+  color:#ddd;
+  cursor:pointer;
+}
 
-    .controls {
-      display: flex;
-      gap: 6px;
-      justify-content: flex-end;
-    }
+.increase{ background:#4caf50; color:#fff; }
+.delete{ background:#d32f2f; color:#fff; }
 
-    button {
-      border: none;
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      background: #2a2f38;
-      color: #ddd;
-    }
+.meta{
+  font-size:11px;
+  color:#777;
+  margin-top:6px;
+}
 
-    .increase {
-      background: #4caf50;
-      color: white;
-    }
+.setup{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#1a1d23;
+  border-top:1px solid #2a2f38;
+  padding:10px;
+}
 
-    .delete {
-      background: #d32f2f;
-      color: white;
-    }
+.setup-inner{
+  max-width:520px;
+  margin:auto;
+  display:flex;
+  gap:6px;
+}
 
-    /* bottom setup */
-    .setup {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1a1d23;
-      border-top: 1px solid #2a2f38;
-      padding: 12px;
-    }
+input,select{
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #2a2f38;
+  background:#0f1115;
+  color:#eee;
+}
 
-    .setup-inner {
-      max-width: 520px;
-      margin: 0 auto;
-      display: flex;
-      gap: 6px;
-    }
+.limit{ width:60px; }
+.reset{ width:90px; }
 
-    input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #2a2f38;
-      background: #0f1115;
-      color: #eee;
-      font-size: 13px;
-    }
-
-    .limit {
-      max-width: 70px;
-      text-align: center;
-    }
-
-    .add-btn {
-      background: #2196f3;
-      color: white;
-      padding: 10px 12px;
-    }
-  </style>
+.add-btn{
+  background:#2196f3;
+  color:#fff;
+}
+</style>
 </head>
+
 <body>
 
-  <div class="container">
-    <h2>Items</h2>
-    <div id="itemList"></div>
+<div class="container">
+  <h2>Items</h2>
+  <div id="itemList"></div>
+</div>
+
+<div class="setup">
+  <div class="setup-inner">
+    <input id="nameInput" placeholder="Item">
+    <input id="limitInput" class="limit" type="number" placeholder="Goal">
+    <select id="resetInput" class="reset">
+      <option value="none">No reset</option>
+      <option value="day">Daily</option>
+      <option value="week">Weekly</option>
+      <option value="month">Monthly</option>
+    </select>
+    <button class="add-btn" onclick="addItem()">Add</button>
   </div>
+</div>
 
-  <!-- Setup -->
-  <div class="setup">
-    <div class="setup-inner">
-      <input type="text" id="nameInput" placeholder="Item..." />
-      <input type="number" id="limitInput" class="limit" placeholder="Goal" />
-      <button class="add-btn" onclick="addItem()">Add</button>
-    </div>
-  </div>
+<script>
+let items = JSON.parse(localStorage.getItem("items")||"[]");
 
-  <script>
-    let items = JSON.parse(localStorage.getItem("items")) || [];
+function save(){
+  localStorage.setItem("items", JSON.stringify(items));
+}
 
-    function save() {
-      localStorage.setItem("items", JSON.stringify(items));
+function now(){
+  return new Date().toISOString();
+}
+
+function shouldReset(item){
+  if(item.reset === "none") return false;
+
+  const last = new Date(item.lastReset || item.created);
+  const current = new Date();
+
+  if(item.reset === "day"){
+    return current.toDateString() !== last.toDateString();
+  }
+
+  if(item.reset === "week"){
+    const diff = (current - last) / (1000*60*60*24);
+    return diff >= 7;
+  }
+
+  if(item.reset === "month"){
+    return current.getMonth() !== last.getMonth() ||
+           current.getFullYear() !== last.getFullYear();
+  }
+
+  return false;
+}
+
+function checkReset(item){
+  if(shouldReset(item)){
+    item.count = 0;
+    item.start = now();
+    item.end = null;
+    item.lastReset = now();
+  }
+}
+
+function render(){
+  const list = document.getElementById("itemList");
+  list.innerHTML = "";
+
+  items.forEach((item,i)=>{
+    checkReset(item);
+
+    const percent = item.limit
+      ? Math.min((item.count/item.limit)*100,100)
+      : 0;
+
+    const div = document.createElement("div");
+    div.className="item";
+
+    div.innerHTML=`
+      <div class="top">
+        <div>${item.name}</div>
+        <div>${item.count}${item.limit?"/"+item.limit:""}</div>
+      </div>
+
+      <div class="progress">
+        <div class="bar" style="width:${percent}%"></div>
+      </div>
+
+      <div class="controls">
+        <button class="increase" onclick="inc(${i})">+</button>
+        <button onclick="edit(${i})">Edit</button>
+        <button class="delete" onclick="del(${i})">Del</button>
+      </div>
+
+      <div class="meta">
+        Start: ${item.start?new Date(item.start).toLocaleString():"-"}<br>
+        End: ${item.end?new Date(item.end).toLocaleString():"-"}
+      </div>
+    `;
+
+    list.appendChild(div);
+  });
+
+  save();
+}
+
+function addItem(){
+  const name = nameInput.value.trim();
+  const limit = parseInt(limitInput.value);
+  const reset = resetInput.value;
+
+  if(!name) return;
+
+  items.push({
+    name,
+    count:0,
+    limit:isNaN(limit)?null:limit,
+    reset,
+    created:now(),
+    start:now(),
+    end:null,
+    lastReset:now()
+  });
+
+  nameInput.value="";
+  limitInput.value="";
+
+  render();
+}
+
+function inc(i){
+  const item = items[i];
+
+  if(!item.limit || item.count < item.limit){
+    item.count++;
+
+    if(item.count === 1){
+      item.start = now();
     }
 
-    function renderItems() {
-      const list = document.getElementById("itemList");
-      list.innerHTML = "";
-
-      items.forEach((item, index) => {
-        const percent = item.limit ? Math.min((item.count / item.limit) * 100, 100) : 0;
-
-        const div = document.createElement("div");
-        div.className = "item";
-
-        div.innerHTML = `
-          <div class="top">
-            <div class="item-name">${item.name}</div>
-            <div class="count">${item.count}${item.limit ? " / " + item.limit : ""}</div>
-          </div>
-
-          <div class="progress">
-            <div class="bar" style="width:${percent}%"></div>
-          </div>
-
-          <div class="controls">
-            <button class="increase" onclick="increase(${index})">+</button>
-            <button onclick="editItem(${index})">Edit</button>
-            <button class="delete" onclick="deleteItem(${index})">Del</button>
-          </div>
-        `;
-
-        list.appendChild(div);
-      });
+    if(item.limit && item.count === item.limit){
+      item.end = now();
     }
+  }
 
-    function addItem() {
-      const name = document.getElementById("nameInput").value.trim();
-      const limit = parseInt(document.getElementById("limitInput").value);
+  render();
+}
 
-      if (!name) return;
+function edit(i){
+  const n = prompt("Name", items[i].name);
+  const l = prompt("Limit", items[i].limit||"");
+  const r = prompt("Reset (none/day/week/month)", items[i].reset);
 
-      items.push({
-        name,
-        count: 0,
-        limit: isNaN(limit) ? null : limit
-      });
+  if(n!==null) items[i].name=n;
+  items[i].limit = l?parseInt(l):null;
+  if(r) items[i].reset=r;
 
-      document.getElementById("nameInput").value = "";
-      document.getElementById("limitInput").value = "";
+  render();
+}
 
-      save();
-      renderItems();
-    }
+function del(i){
+  if(!confirm("Delete?")) return;
+  items.splice(i,1);
+  render();
+}
 
-    function increase(index) {
-      const item = items[index];
-
-      if (!item.limit || item.count < item.limit) {
-        item.count++;
-      }
-
-      save();
-      renderItems();
-    }
-
-    function editItem(index) {
-      const newName = prompt("Name:", items[index].name);
-      const newLimit = prompt("Limit:", items[index].limit || "");
-
-      if (newName !== null) items[index].name = newName;
-      items[index].limit = newLimit ? parseInt(newLimit) : null;
-
-      save();
-      renderItems();
-    }
-
-    function deleteItem(index) {
-      if (!confirm("Delete item?")) return;
-
-      items.splice(index, 1);
-      save();
-      renderItems();
-    }
-
-    renderItems();
-  </script>
+render();
+</script>
 
 </body>
 </html>
