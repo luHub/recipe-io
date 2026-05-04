@@ -2495,5 +2495,210 @@
       "Servir."
     ]
   }
+},
+
+]{
+  "id": 16,
+  "title": {
+    "en": "Bacon-wrapped Chicken with Roasted Brussels Sprouts",
+    "es": "Pollo con Bacon y Coles de Bruselas Asadas",
+    "nl": "Kip met Spek en Geroosterde Spruitjes",
+    "de": "Hähnchen im Speckmantel mit Rosenkohl",
+    "fr": "Poulet au Bacon avec Choux de Bruxelles Rôtis",
+    "it": "Pollo Avvolto nel Bacon con Cavoletti di Bruxelles",
+    "pt": "Frango Enrolado em Bacon com Couve-de-Bruxelas Assada"
+  },
+  "ingredients": {
+    "en": [
+      "2 chicken breasts",
+      "2 slices bacon",
+      "500 g potatoes",
+      "1 red onion",
+      "300 g Brussels sprouts",
+      "20 g Grana Padano",
+      "10 g parsley",
+      "1 sachet Italian herbs",
+      "2 tbsp butter",
+      "2 tbsp olive oil",
+      "1 tsp mustard",
+      "1 tbsp balsamic vinegar",
+      "1 tsp honey",
+      "Splash milk",
+      "Salt",
+      "Pepper"
+    ],
+    "es": [
+      "2 pechugas de pollo",
+      "2 lonchas de bacon",
+      "500 g papas",
+      "1 cebolla roja",
+      "300 g coles de Bruselas",
+      "20 g queso Grana Padano",
+      "10 g perejil",
+      "1 sobre hierbas italianas",
+      "2 cucharadas mantequilla",
+      "2 cucharadas aceite de oliva",
+      "1 cucharadita mostaza",
+      "1 cucharada vinagre balsámico",
+      "1 cucharadita miel",
+      "Un poco de leche",
+      "Sal",
+      "Pimienta"
+    ],
+    "nl": [
+      "2 kipfilets",
+      "2 plakken spek",
+      "500 g aardappelen",
+      "1 rode ui",
+      "300 g spruitjes",
+      "20 g Grana Padano",
+      "10 g peterselie",
+      "1 zakje Italiaanse kruiden",
+      "2 el boter",
+      "2 el olijfolie",
+      "1 tl mosterd",
+      "1 el balsamicoazijn",
+      "1 tl honing",
+      "Scheutje melk",
+      "Zout",
+      "Peper"
+    ],
+    "de": [
+      "2 Hähnchenbrustfilets",
+      "2 Scheiben Speck",
+      "500 g Kartoffeln",
+      "1 rote Zwiebel",
+      "300 g Rosenkohl",
+      "20 g Grana Padano",
+      "10 g Petersilie",
+      "1 Päckchen italienische Kräuter",
+      "2 EL Butter",
+      "2 EL Olivenöl",
+      "1 TL Senf",
+      "1 EL Balsamico",
+      "1 TL Honig",
+      "Etwas Milch",
+      "Salz",
+      "Pfeffer"
+    ],
+    "fr": [
+      "2 filets de poulet",
+      "2 tranches de bacon",
+      "500 g pommes de terre",
+      "1 oignon rouge",
+      "300 g choux de Bruxelles",
+      "20 g Grana Padano",
+      "10 g persil",
+      "1 sachet d'herbes italiennes",
+      "2 c. à soupe beurre",
+      "2 c. à soupe huile d'olive",
+      "1 c. à café moutarde",
+      "1 c. à soupe vinaigre balsamique",
+      "1 c. à café miel",
+      "Un peu de lait",
+      "Sel",
+      "Poivre"
+    ],
+    "it": [
+      "2 petti di pollo",
+      "2 fette di bacon",
+      "500 g patate",
+      "1 cipolla rossa",
+      "300 g cavoletti di Bruxelles",
+      "20 g Grana Padano",
+      "10 g prezzemolo",
+      "1 bustina erbe italiane",
+      "2 cucchiai burro",
+      "2 cucchiai olio d'oliva",
+      "1 cucchiaino senape",
+      "1 cucchiaio aceto balsamico",
+      "1 cucchiaino miele",
+      "Un po' di latte",
+      "Sale",
+      "Pepe"
+    ],
+    "pt": [
+      "2 peitos de frango",
+      "2 fatias de bacon",
+      "500 g batatas",
+      "1 cebola roxa",
+      "300 g couve-de-bruxelas",
+      "20 g queijo Grana Padano",
+      "10 g salsa",
+      "1 pacote ervas italianas",
+      "2 colheres sopa manteiga",
+      "2 colheres sopa azeite",
+      "1 colher chá mostarda",
+      "1 colher sopa vinagre balsâmico",
+      "1 colher chá mel",
+      "Um pouco de leite",
+      "Sal",
+      "Pimenta"
+    ]
+  },
+  "instructions": {
+    "en": [
+      "Preheat oven to 210°C. Boil Brussels sprouts for 2–3 minutes.",
+      "Roast sprouts with oil, salt, and pepper for 12–15 minutes.",
+      "Boil potatoes for 12–15 minutes, then mash with butter and milk.",
+      "Mix mashed potatoes with mustard, parsley, and herbs.",
+      "Wrap chicken with bacon and cook in pan until fully done.",
+      "Fry onion, add balsamic vinegar and honey, then mix with sprouts.",
+      "Serve mashed potatoes with sprouts and chicken on top."
+    ],
+    "es": [
+      "Precalentar horno a 210°C. Hervir coles 2–3 minutos.",
+      "Hornear coles 12–15 minutos.",
+      "Hervir papas 12–15 minutos y hacer puré.",
+      "Mezclar con mostaza, perejil y hierbas.",
+      "Cocinar pollo con bacon.",
+      "Freír cebolla y añadir vinagre y miel.",
+      "Servir con puré y pollo."
+    ],
+    "nl": [
+      "Verwarm oven op 210°C. Kook spruitjes 2–3 min.",
+      "Rooster spruitjes 12–15 min.",
+      "Kook aardappelen en maak puree.",
+      "Meng met mosterd, kruiden en peterselie.",
+      "Bak kip met spek.",
+      "Bak ui en voeg azijn en honing toe.",
+      "Serveer alles samen."
+    ],
+    "de": [
+      "Backofen auf 210°C vorheizen. Rosenkohl 2–3 Min kochen.",
+      "Rosenkohl 12–15 Min rösten.",
+      "Kartoffeln kochen und stampfen.",
+      "Mit Senf und Kräutern mischen.",
+      "Hähnchen mit Speck braten.",
+      "Zwiebel anbraten und Essig + Honig zugeben.",
+      "Servieren."
+    ],
+    "fr": [
+      "Préchauffer à 210°C. Cuire choux 2–3 min.",
+      "Rôtir 12–15 min.",
+      "Cuire pommes de terre et écraser.",
+      "Ajouter moutarde et herbes.",
+      "Cuire poulet avec bacon.",
+      "Cuire oignon avec vinaigre et miel.",
+      "Servir."
+    ],
+    "it": [
+      "Preriscaldare a 210°C. Cuocere cavoletti 2–3 min.",
+      "Arrostire 12–15 min.",
+      "Cuocere patate e schiacciare.",
+      "Mescolare con senape ed erbe.",
+      "Cuocere pollo con bacon.",
+      "Saltare cipolla con aceto e miele.",
+      "Servire."
+    ],
+    "pt": [
+      "Pré-aquecer a 210°C. Cozinhar couve 2–3 min.",
+      "Assar 12–15 min.",
+      "Cozinhar batatas e amassar.",
+      "Misturar com mostarda e ervas.",
+      "Cozinhar frango com bacon.",
+      "Refogar cebola com vinagre e mel.",
+      "Servir."
+    ]
+  }
 }
-]
