@@ -14,7 +14,6 @@
   --accent:#00aaff;
 }
 
-/* base */
 body{
   margin:0;
   font-family: Arial, sans-serif;
@@ -22,7 +21,6 @@ body{
   color:var(--text);
 }
 
-/* top bar */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -36,7 +34,6 @@ body{
   opacity:0.8;
 }
 
-/* layout */
 .container{
   padding:16px;
   max-width:600px;
@@ -46,7 +43,6 @@ body{
   gap:14px;
 }
 
-/* cards */
 .card{
   background: linear-gradient(180deg,var(--panel),var(--panel2));
   border:1px solid rgba(0,170,255,0.25);
@@ -57,7 +53,6 @@ body{
 h2{
   margin-top:0;
   font-size:16px;
-  letter-spacing:1px;
 }
 
 /* textarea */
@@ -72,13 +67,30 @@ textarea{
   font-family: monospace;
 }
 
-/* iframe auto-grow */
+/* resizable container */
+.output-wrapper{
+  position:relative;
+  min-height:120px;
+}
+
+/* iframe */
 iframe{
   width:100%;
-  min-height:100px;
+  height:100%;
   border:none;
   border-radius:10px;
   background:#fff;
+}
+
+/* resize handle */
+.resize-handle{
+  height:10px;
+  background:transparent;
+  cursor:ns-resize;
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
 }
 
 /* console */
@@ -94,7 +106,7 @@ iframe{
   border:1px solid var(--accent);
 }
 
-/* buttons */
+/* button */
 button{
   width:100%;
   background:#000;
@@ -104,30 +116,12 @@ button{
   border-radius:10px;
   cursor:pointer;
   margin-top:10px;
-  font-weight:bold;
-
-  box-shadow:
-    0 0 6px rgba(0,170,255,0.4),
-    0 0 12px rgba(0,170,255,0.2);
-
-  transition:all 0.12s ease;
-}
-
-button:hover{
-  box-shadow:
-    0 0 10px rgba(0,170,255,0.6),
-    0 0 18px rgba(0,170,255,0.3);
-}
-
-button:active{
-  transform:scale(0.96);
 }
 
 /* text */
 .desc{
   font-size:13px;
   opacity:0.75;
-  margin-bottom:10px;
 }
 
 .footer{
@@ -156,7 +150,10 @@ button:active{
 
   <div class="card">
     <h2>OUTPUT</h2>
-    <iframe id="output"></iframe>
+    <div class="output-wrapper" id="outputWrapper">
+      <iframe id="output"></iframe>
+      <div class="resize-handle" id="resizeHandle"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -172,16 +169,19 @@ button:active{
 const textarea = document.getElementById("code");
 const iframe = document.getElementById("output");
 const consoleBox = document.getElementById("console");
+const wrapper = document.getElementById("outputWrapper");
+const handle = document.getElementById("resizeHandle");
 
+let manualResize = false;
+
+// default code
 const defaultCode = `<h1>Hello</h1>
 <script>
 console.log("Hello from iframe");
 <\/script>`;
 
-// load saved
 textarea.value = localStorage.getItem("my_code") || defaultCode;
 
-// log function
 function logToConsole(msg){
   const line = document.createElement("div");
   line.textContent = msg;
@@ -191,8 +191,6 @@ function logToConsole(msg){
 
 function runCode(){
   consoleBox.innerHTML = "";
-
-  const userCode = textarea.value;
 
   const wrapped = `
   <script>
@@ -207,19 +205,18 @@ function runCode(){
     const oldLog = console.log;
     console.log = function(...args){
       parent.postMessage({type:'log', data: args.join(' ')}, '*');
-      oldLog.apply(console, args);
     };
 
     window.onerror = function(msg){
       parent.postMessage({type:'error', data: msg}, '*');
     };
   <\/script>
-  ` + userCode;
+  ` + textarea.value;
 
   iframe.srcdoc = wrapped;
 }
 
-// message listener
+// receive messages
 window.addEventListener("message", (e)=>{
   if(e.data.type === "log"){
     logToConsole("LOG: " + e.data.data);
@@ -229,14 +226,33 @@ window.addEventListener("message", (e)=>{
     logToConsole("ERROR: " + e.data.data);
   }
 
-  if(e.data.type === "resize"){
-    iframe.style.height = e.data.height + "px";
+  if(e.data.type === "resize" && !manualResize){
+    wrapper.style.height = e.data.height + "px";
   }
 });
 
 // auto-save
 textarea.addEventListener("input", ()=>{
   localStorage.setItem("my_code", textarea.value);
+});
+
+// resize logic
+let isResizing = false;
+
+handle.addEventListener("mousedown", () => {
+  isResizing = true;
+  manualResize = true;
+});
+
+document.addEventListener("mousemove", (e)=>{
+  if(!isResizing) return;
+  const rect = wrapper.getBoundingClientRect();
+  const newHeight = e.clientY - rect.top;
+  wrapper.style.height = newHeight + "px";
+});
+
+document.addEventListener("mouseup", ()=>{
+  isResizing = false;
 });
 
 // initial run
