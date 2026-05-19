@@ -73,3 +73,301 @@ h1{
 .todo-item{
   display:flex;
   flex-direction:column;
+  gap:6px;
+  padding:10px 0;
+  font-family: monospace;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.todo-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.done{
+  text-decoration: line-through;
+  opacity:0.5;
+}
+
+textarea{
+  width:100%;
+  background:#000;
+  color:#0f0;
+  border:1px solid var(--accent);
+  border-radius:6px;
+  padding:6px;
+  font-family: monospace;
+}
+
+img{
+  width:100%;
+  border-radius:8px;
+  margin-top:6px;
+}
+
+button{
+  background:#000;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  padding:8px;
+  border-radius:6px;
+  margin-top:6px;
+}
+
+.output{
+  background:#000;
+  border:1px solid var(--accent);
+  padding:12px;
+  border-radius:10px;
+  white-space:pre-wrap;
+  font-family: monospace;
+}
+
+#qr-reader{
+  width:100%;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h1>Clothes TO-DO Terminal</h1>
+  </div>
+
+  <div class="card">
+    <h3>Terminal Input</h3>
+    <div class="terminal">
+      <div>> add / done / undone / clear / list / import</div>
+      <input id="cmdInput" placeholder="Paste list or type command..." />
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Clothes List</h3>
+    <div id="todoList"></div>
+  </div>
+
+  <div class="card">
+    <h3>Export / Share</h3>
+    <div id="output" class="output"></div>
+
+    <button onclick="generateQR()">Generate QR</button>
+    <div id="qrContainer"></div>
+
+    <button onclick="startScanner()">Scan QR</button>
+    <div id="qr-reader"></div>
+  </div>
+
+</div>
+
+<!-- QR LIBS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+const KEY = "clothes_terminal_v2";
+let todos = [];
+let scanner = null;
+
+/* STORAGE */
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(todos));
+  render();
+  renderOutput();
+}
+
+function load(){
+  const data = localStorage.getItem(KEY);
+  if(data) todos = JSON.parse(data);
+  render();
+  renderOutput();
+}
+
+/* ADD */
+function addFromLines(text){
+  const lines = text.split("\n").map(l=>l.trim()).filter(l=>l);
+  lines.forEach(line=>{
+    todos.push({text:line,done:false,description:"",image:null});
+  });
+  save();
+}
+
+/* COMMANDS */
+function runCommand(cmd){
+  const t = cmd.trim();
+
+  if(t.startsWith("add ")) return addFromLines(t.replace("add ",""));
+
+  if(t==="clear"){ todos=[]; save(); return; }
+
+  if(t==="list"){ console.log(todos); return; }
+
+  if(t.startsWith("done ")){
+    let i=parseInt(t.split(" ")[1])-1;
+    if(todos[i]) todos[i].done=true;
+    save(); return;
+  }
+
+  if(t.startsWith("undone ")){
+    let i=parseInt(t.split(" ")[1])-1;
+    if(todos[i]) todos[i].done=false;
+    save(); return;
+  }
+
+  if(t.startsWith("import ")){
+    try{
+      todos = JSON.parse(t.replace("import ",""));
+      save();
+    }catch(e){ alert("Import failed"); }
+  }
+}
+
+/* INPUT */
+const input=document.getElementById("cmdInput");
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(input.value.includes("\n")) addFromLines(input.value);
+    else runCommand(input.value);
+    input.value="";
+  }
+});
+
+input.addEventListener("paste",e=>{
+  const text=e.clipboardData.getData("text");
+  if(text.includes("\n")){
+    e.preventDefault();
+    addFromLines(text);
+  }
+});
+
+/* IMAGE */
+function handleImage(file,i){
+  const r=new FileReader();
+  r.onload=e=>{
+    todos[i].image=e.target.result;
+    save();
+  };
+  r.readAsDataURL(file);
+}
+
+/* RENDER */
+function render(){
+  const box=document.getElementById("todoList");
+  box.innerHTML="";
+
+  todos.forEach((t,i)=>{
+    const div=document.createElement("div");
+    div.className="todo-item";
+
+    const top=document.createElement("div");
+    top.className="todo-top";
+
+    const cb=document.createElement("input");
+    cb.type="checkbox";
+    cb.checked=t.done;
+    cb.onchange=()=>{t.done=cb.checked;save();};
+
+    const label=document.createElement("span");
+    label.textContent=(i+1)+". "+t.text;
+    if(t.done) label.classList.add("done");
+
+    top.append(cb,label);
+
+    const desc=document.createElement("textarea");
+    desc.value=t.description;
+    desc.placeholder="Description...";
+    desc.onchange=()=>{t.description=desc.value;save();};
+
+    const file=document.createElement("input");
+    file.type="file";
+    file.accept="image/*";
+    file.capture="environment";
+    file.onchange=e=>handleImage(e.target.files[0],i);
+
+    div.append(top,desc,file);
+
+    if(t.image){
+      const img=document.createElement("img");
+      img.src=t.image;
+      div.append(img);
+    }
+
+    box.appendChild(div);
+  });
+}
+
+/* EXPORT TEXT */
+function renderOutput(){
+  let out="";
+  todos.forEach((t,i)=>{
+    out+=(t.done?"[x] ":"[ ] ")+(i+1)+" "+t.text+"\n";
+    if(t.description) out+="  -> "+t.description+"\n";
+  });
+  document.getElementById("output").innerText=out;
+}
+
+/* QR EXPORT */
+function generateQR(){
+  const container=document.getElementById("qrContainer");
+  container.innerHTML="";
+
+  const share=todos.map(t=>({
+    text:t.text,
+    done:t.done,
+    description:t.description
+  }));
+
+  const data=JSON.stringify(share);
+
+  if(data.length>2000){
+    alert("Too big for QR");
+    return;
+  }
+
+  new QRCode(container,{
+    text:data,
+    width:220,
+    height:220,
+    colorDark:"#00aaff",
+    colorLight:"#000"
+  });
+}
+
+/* QR SCANNER */
+function startScanner(){
+  const reader=document.getElementById("qr-reader");
+  reader.innerHTML="";
+
+  scanner = new Html5Qrcode("qr-reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    qr => {
+      try{
+        const data = JSON.parse(qr);
+        todos = data.map(t=>({
+          ...t,
+          image:null
+        }));
+        save();
+        scanner.stop();
+        alert("Imported!");
+      }catch(e){
+        alert("Invalid QR");
+      }
+    }
+  );
+}
+
+load();
+</script>
+
+</body>
+</html>
