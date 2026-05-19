@@ -161,6 +161,7 @@ button{
     <div id="qrContainer"></div>
 
     <button onclick="startScanner()">Scan QR</button>
+    <button onclick="stopScanner()">Stop Scanner</button>
     <div id="qr-reader"></div>
   </div>
 
@@ -171,7 +172,7 @@ button{
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-const KEY = "clothes_terminal_v2";
+const KEY = "clothes_terminal_v3";
 let todos = [];
 let scanner = null;
 
@@ -224,7 +225,10 @@ function runCommand(cmd){
     try{
       todos = JSON.parse(t.replace("import ",""));
       save();
-    }catch(e){ alert("Import failed"); }
+      alert("Imported!");
+    }catch(e){
+      alert("Import failed");
+    }
   }
 }
 
@@ -339,31 +343,62 @@ function generateQR(){
   });
 }
 
-/* QR SCANNER */
+/* QR SCANNER FIXED */
 function startScanner(){
   const reader=document.getElementById("qr-reader");
   reader.innerHTML="";
 
+  if(scanner){
+    scanner.stop().catch(()=>{});
+  }
+
   scanner = new Html5Qrcode("qr-reader");
 
-  scanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    qr => {
-      try{
-        const data = JSON.parse(qr);
-        todos = data.map(t=>({
-          ...t,
-          image:null
-        }));
-        save();
-        scanner.stop();
-        alert("Imported!");
-      }catch(e){
-        alert("Invalid QR");
-      }
+  Html5Qrcode.getCameras().then(devices => {
+    if(!devices.length){
+      alert("No camera found");
+      return;
     }
-  );
+
+    const cameraId = devices.find(d => d.label.toLowerCase().includes("back"))?.id || devices[0].id;
+
+    scanner.start(
+      cameraId,
+      {
+        fps:10,
+        qrbox:{ width:250, height:250 }
+      },
+      qr=>{
+        try{
+          const data = JSON.parse(qr);
+
+          todos = data.map(t=>({
+            text:t.text,
+            done:t.done,
+            description:t.description,
+            image:null
+          }));
+
+          save();
+          stopScanner();
+          alert("✅ Imported!");
+
+        }catch(e){
+          alert("Invalid QR");
+        }
+      }
+    );
+  }).catch(err=>{
+    alert("Camera error: "+err);
+  });
+}
+
+function stopScanner(){
+  if(scanner){
+    scanner.stop().then(()=>{
+      document.getElementById("qr-reader").innerHTML="";
+    }).catch(()=>{});
+  }
 }
 
 load();
