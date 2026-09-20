@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>Grocery Lists Terminal</title>
+
+<style>
+
+/* =========================================================
+   THEME
+   ========================================================= */
+
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+
+  --text:#eaeaf2;
+  --muted:#666;
+  --accent:#00aaff;
+  --green:#00ff99;
+  --yellow:#ffcc00;
+  --danger:#ff5577;
+
+  --border:rgba(0,170,255,.25);
+}
+
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+
+  background:var(--bg);
+  color:var(--text);
+
+  font-family:Arial,sans-serif;
+}
+
+button,
+input{
+  font-family:inherit;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+   ========================================================= */
+
+.container{
+  width:100%;
+  max-width:900px;
+
+  margin:auto;
+  padding:10px;
+
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.card{
+  background:
+    linear-gradient(
+      180deg,
+      var(--panel),
+      var(--panel2)
+    );
+
+  border:1px solid var(--border);
+
+  border-radius:14px;
+
+  padding:14px;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  gap:10px;
+}
+
+h1{
+  margin:0;
+
+  font-size:18px;
+
+  color:var(--accent);
+
+  font-family:monospace;
+}
+
+.header-status{
+  font-family:monospace;
+  font-size:11px;
+  color:var(--muted);
+}
+
+
+/* =========================================================
+   TERMINAL
+   ========================================================= */
+
+.terminal{
+  background:#000;
+
+  border:1px solid var(--accent);
+
+  border-radius:10px;
+
+  padding:10px;
+
+  font-family:monospace;
+}
+
+.terminal-title{
+  color:#777;
+  font-size:11px;
+
+  margin-bottom:8px;
+}
+
+.terminal-title span{
+  color:var(--accent);
+}
+
+.command-line{
+  display:flex;
+  align-items:flex-start;
+
+  gap:7px;
+}
+
+.prompt{
+  color:var(--accent);
+
+  font-size:16px;
+
+  padding-top:10px;
+}
+
+#commandInput{
+  flex:1;
+
+  min-width:0;
+
+  background:transparent;
+
+  border:none;
+  outline:none;
+
+  resize:none;
+
+  color:var(--green);
+
+  font-family:monospace;
+
+  font-size:16px;
+
+  padding:10px 0;
+}
+
+#commandInput::placeholder{
+  color:#444;
+}
+
+.log{
+  margin-top:8px;
+
+  max-height:100px;
+
+  overflow:auto;
+
+  border-top:1px solid #111;
+
+  padding-top:7px;
+
+  color:#777;
+
+  font-size:11px;
+}
+
+.log-line{
+  padding:2px 0;
+}
+
+
+/* =========================================================
+   COMMAND HELP
+   ========================================================= */
+
+.command-help{
+  display:flex;
+  flex-wrap:wrap;
+
+  gap:5px;
+
+  margin-top:9px;
+}
+
+.command-help span{
+  padding:4px 6px;
+
+  border:1px solid #182333;
+
+  border-radius:5px;
+
+  color:#555;
+
+  font-family:monospace;
+
+  font-size:10px;
+}
+
+
+/* =========================================================
+   SECTION HEADER
+   ========================================================= */
+
+.section-header{
+  display:flex;
+
+  align-items:center;
+  justify-content:space-between;
+
+  margin-bottom:10px;
+}
+
+.section-title{
+  color:#aaa;
+
+  font-size:13px;
+
+  font-family:monospace;
+}
+
+.count{
+  color:var(--green);
+}
+
+
+/* =========================================================
+   CREATE LIST
+   ========================================================= */
+
+.create-list{
+  display:flex;
+
+  gap:7px;
+
+  margin-bottom:12px;
+}
+
+#createListInput{
+  flex:1;
+
+  min-width:0;
+
+  background:#05080e;
+
+  border:1px solid #1d3045;
+
+  border-radius:7px;
+
+  color:var(--green);
+
+  outline:none;
+
+  padding:10px;
+
+  font-family:monospace;
+
+  font-size:14px;
+}
+
+#createListInput:focus{
+  border-color:var(--accent);
+}
+
+.action-button{
+  border:1px solid #244;
+
+  background:#09111d;
+
+  color:#aaa;
+
+  border-radius:7px;
+
+  padding:8px 12px;
+
+  cursor:pointer;
+
+  font-family:monospace;
+
+  font-size:12px;
+}
+
+.action-button:hover{
+  border-color:var(--accent);
+  color:white;
+}
+
+
+/* =========================================================
+   LIST CARDS
+   ========================================================= */
+
+.lists{
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
+}
+
+.list-card{
+  border:1px solid #172438;
+
+  border-radius:9px;
+
+  background:#080d17;
+
+  overflow:hidden;
+}
+
+.list-card.active{
+  border-color:var(--accent);
+
+  box-shadow:
+    0 0 10px
+    rgba(0,170,255,.08);
+}
+
+
+/* =========================================================
+   LIST HEADER
+   ========================================================= */
+
+.list-header{
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  padding:10px;
+
+  cursor:pointer;
+}
+
+.list-number{
+  color:#444;
+
+  font-family:monospace;
+
+  font-size:11px;
+
+  min-width:24px;
+}
+
+.list-name{
+  flex:1;
+
+  color:#ddd;
+
+  font-family:monospace;
+
+  font-size:14px;
+
+  word-break:break-word;
+}
+
+.active .list-name{
+  color:var(--accent);
+}
+
+.list-count{
+  color:#555;
+
+  font-family:monospace;
+
+  font-size:10px;
+}
+
+.list-arrow{
+  color:#444;
+
+  font-family:monospace;
+}
+
+
+/* =========================================================
+   LIST ITEMS
+   ========================================================= */
+
+.list-items{
+  border-top:1px solid #111;
+
+  padding:5px 10px 7px 42px;
+}
+
+.item{
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  padding:6px 0;
+
+  border-bottom:1px solid rgba(255,255,255,.025);
+
+  font-family:monospace;
+
+  font-size:13px;
+}
+
+.item:last-child{
+  border-bottom:none;
+}
+
+.item-checkbox{
+  width:17px;
+  height:17px;
+
+  flex:none;
+}
+
+.item-text{
+  flex:1;
+
+  min-width:0;
+
+  word-break:break-word;
+}
+
+.item.done .item-text{
+  text-decoration:line-through;
+
+  opacity:.35;
+}
+
+.remove-item{
+  border:none;
+
+  background:none;
+
+  color:#444;
+
+  cursor:pointer;
+
+  font-size:14px;
+
+  padding:3px;
+}
+
+.remove-item:hover{
+  color:var(--danger);
+}
+
+.empty-items{
+  color:#444;
+
+  font-family:monospace;
+
+  font-size:11px;
+
+  padding:7px 0;
+}
+
+
+/* =========================================================
+   LIST ACTIONS
+   ========================================================= */
+
+.list-actions{
+  display:flex;
+
+  gap:5px;
+
+  padding:7px 10px;
+
+  border-top:1px solid #111;
+}
+
+.list-actions button{
+  flex:1;
+
+  border:1px solid #172438;
+
+  background:#080d17;
+
+  color:#555;
+
+  border-radius:5px;
+
+  padding:6px;
+
+  cursor:pointer;
+
+  font-family:monospace;
+
+  font-size:10px;
+}
+
+.list-actions button:hover{
+  color:#aaa;
+
+  border-color:#345;
+}
+
+.list-actions .delete:hover{
+  color:var(--danger);
+
+  border-color:var(--danger);
+}
+
+
+/* =========================================================
+   NO LISTS
+   ========================================================= */
+
+.no-lists{
+  text-align:center;
+
+  padding:25px 10px;
+
+  color:#444;
+
+  font-family:monospace;
+
+  font-size:12px;
+}
+
+
+/* =========================================================
+   EXPORT
+   ========================================================= */
+
+.output{
+  background:#000;
+
+  border:1px solid var(--accent);
+
+  border-radius:10px;
+
+  padding:12px;
+
+  white-space:pre-wrap;
+
+  font-family:monospace;
+
+  font-size:12px;
+
+  color:#aaa;
+
+  max-height:220px;
+
+  overflow:auto;
+}
+
+.export-actions{
+  display:flex;
+
+  gap:7px;
+
+  margin-top:8px;
+}
+
+.export-actions button{
+  flex:1;
+
+  border:1px solid #244;
+
+  background:#09111d;
+
+  color:#777;
+
+  border-radius:7px;
+
+  padding:8px;
+
+  cursor:pointer;
+
+  font-family:monospace;
+
+  font-size:11px;
+}
+
+.export-actions button:hover{
+  color:white;
+
+  border-color:var(--accent);
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width:600px){
+
+  .container{
+    padding:8px;
+  }
+
+  .card{
+    padding:11px;
+  }
+
+  h1{
+    font-size:16px;
+  }
+
+  .create-list{
+    flex-direction:column;
+  }
+
+  .create-list button{
+    width:100%;
+  }
+
+  .list-items{
+    padding-left:38px;
+  }
+
+  .command-help span{
+    font-size:9px;
+  }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="header">
+
+      <h1>GROCERY LIST TERMINAL</h1>
+
+      <div class="header-status">
+        OFFLINE
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       TERMINAL
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="terminal">
+
+      <div class="terminal-title">
+
+        <span>&gt;</span>
+        COMMAND TERMINAL
+
+      </div>
+
+
+      <div class="command-line">
+
+        <span class="prompt">&gt;</span>
+
+        <textarea
+          id="commandInput"
+          rows="1"
+          placeholder="create Supermarket"
+        ></textarea>
+
+      </div>
+
+
+      <div
+        id="log"
+        class="log"
+      ></div>
+
+
+      <div class="command-help">
+
+        <span>create NAME</span>
+
+        <span>use N</span>
+
+        <span>add ITEM</span>
+
+        <span>done N</span>
+
+        <span>remove N</span>
+
+        <span>lists</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       LISTS
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="section-header">
+
+      <div class="section-title">
+
+        LISTS
+
+        <span
+          id="listCount"
+          class="count"
+        >
+          0
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- CREATE LIST -->
+
+    <div class="create-list">
+
+      <input
+        id="createListInput"
+        placeholder="New list name..."
+      >
+
+      <button
+        class="action-button"
+        onclick="createListFromInput()"
+      >
+        + CREATE LIST
+      </button>
+
+    </div>
+
+
+    <!-- LIST CONTAINER -->
+
+    <div
+      id="lists"
+      class="lists"
+    ></div>
+
+  </div>
+
+
+  <!-- =====================================================
+       EXPORT
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="section-header">
+
+      <div class="section-title">
+        EXPORT
+      </div>
+
+    </div>
+
+
+    <div
+      id="output"
+      class="output"
+    ></div>
+
+
+    <div class="export-actions">
+
+      <button onclick="copyAll()">
+        COPY ALL
+      </button>
+
+      <button onclick="exportAll()">
+        EXPORT TXT
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   DATA MODEL
+   =========================================================
+
+   lists = [
+
+     {
+       name: "Supermarket",
+
+       items: [
+         { text:"Milk", done:false },
+         { text:"Bread", done:true }
+       ]
+     },
+
+     {
+       name: "Hardware",
+       items: [...]
+     }
+
+   ]
+
+   ========================================================= */
+
+const STORAGE_KEY =
+  "grocery_multi_list_terminal";
+
+
+let lists = [];
+
+let activeList = 0;
+
+
+/* =========================================================
+   LOAD
+   ========================================================= */
+
+function load(){
+
+  try{
+
+    const data =
+      localStorage.getItem(
+        STORAGE_KEY
+      );
+
+    if(data){
+
+      const parsed =
+        JSON.parse(data);
+
+      if(
+        parsed &&
+        Array.isArray(parsed.lists)
+      ){
+
+        lists =
+          parsed.lists;
+
+        activeList =
+          parsed.activeList || 0;
+
+      }
+
+    }
+
+  }catch(e){
+
+    lists = [];
+
+    activeList = 0;
+
+  }
+
+  render();
+
+}
+
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+function save(){
+
+  localStorage.setItem(
+
+    STORAGE_KEY,
+
+    JSON.stringify({
+
+      lists:lists,
+
+      activeList:activeList
+
+    })
+
+  );
+
+  render();
+
+}
+
+
+/* =========================================================
+   LOG
+   ========================================================= */
+
+function log(message){
+
+  const box =
+    document.getElementById("log");
+
+  const line =
+    document.createElement("div");
+
+  line.className =
+    "log-line";
+
+  line.textContent =
+    "> " + message;
+
+  box.appendChild(line);
+
+  box.scrollTop =
+    box.scrollHeight;
+
+}
+
+
+/* =========================================================
+   CREATE LIST
+   ========================================================= */
+
+function createList(name){
+
+  name =
+    name.trim();
+
+  if(!name){
+
+    log("List name required");
+
+    return;
+
+  }
+
+
+  lists.push({
+
+    name:name,
+
+    items:[]
+
+  });
+
+
+  activeList =
+    lists.length - 1;
+
+
+  log(
+    "Created list: " +
+    name
+  );
+
+
+  save();
+
+}
+
+
+/* =========================================================
+   CREATE LIST INPUT
+   ========================================================= */
+
+function createListFromInput(){
+
+  const input =
+    document.getElementById(
+      "createListInput"
+    );
+
+  createList(
+    input.value
+  );
+
+  input.value = "";
+
+  input.focus();
+
+}
+
+
+/* =========================================================
+   USE LIST
+   ========================================================= */
+
+function useList(index){
+
+  if(
+    index < 0 ||
+    index >= lists.length
+  ){
+
+    log("Invalid list number");
+
+    return;
+
+  }
+
+  activeList =
+    index;
+
+  log(
+    "Using list: " +
+    lists[index].name
+  );
+
+  save();
+
+}
+
+
+/* =========================================================
+   ADD ITEM
+   ========================================================= */
+
+function addItem(text){
+
+  if(
+    lists.length === 0
+  ){
+
+    log(
+      "Create a list first"
+    );
+
+    return;
+
+  }
+
+
+  text =
+    text.trim();
+
+  if(!text){
+
+    log("Item cannot be empty");
+
+    return;
+
+  }
+
+
+  /*
+    Support multiline:
+
+    add milk
+    bread
+    eggs
+  */
+
+  const lines =
+    text
+      .split(/\r?\n/)
+      .map(x => x.trim())
+      .filter(Boolean);
+
+
+  lines.forEach(line => {
+
+    line =
+      line.replace(
+        /^\s*(?:\d+[\.\)]|[-*•])\s*/,
+        ""
+      );
+
+    lists[activeList].items.push({
+
+      text:line,
+
+      done:false
+
+    });
+
+  });
+
+
+  log(
+    "Added " +
+    lines.length +
+    " item" +
+    (lines.length === 1 ? "" : "s") +
+    " to " +
+    lists[activeList].name
+  );
+
+
+  save();
+
+}
+
+
+/* =========================================================
+   TOGGLE ITEM
+   ========================================================= */
+
+function toggleItem(
+  listIndex,
+  itemIndex
+){
+
+  const list =
+    lists[listIndex];
+
+  if(!list){
+    return;
+  }
+
+  const item =
+    list.items[itemIndex];
+
+  if(!item){
+    return;
+  }
+
+  item.done =
+    !item.done;
+
+  save();
+
+}
+
+
+/* =========================================================
+   REMOVE ITEM
+   ========================================================= */
+
+function removeItem(
+  listIndex,
+  itemIndex
+){
+
+  const list =
+    lists[listIndex];
+
+  if(!list){
+    return;
+  }
+
+  if(
+    itemIndex < 0 ||
+    itemIndex >= list.items.length
+  ){
+
+    return;
+
+  }
+
+
+  const item =
+    list.items[itemIndex];
+
+
+  log(
+    "Removed: " +
+    item.text
+  );
+
+
+  list.items.splice(
+    itemIndex,
+    1
+  );
+
+
+  save();
+
+}
+
+
+/* =========================================================
+   RENAME LIST
+   ========================================================= */
+
+function renameList(index){
+
+  const list =
+    lists[index];
+
+  if(!list){
+    return;
+  }
+
+
+  const name =
+    prompt(
+      "Rename list:",
+      list.name
+    );
+
+
+  if(
+    name === null ||
+    !name.trim()
+  ){
+
+    return;
+
+  }
+
+
+  list.name =
+    name.trim();
+
+
+  save();
+
+}
+
+
+/* =========================================================
+   DELETE LIST
+   ========================================================= */
+
+function deleteList(index){
+
+  const list =
+    lists[index];
+
+  if(!list){
+    return;
+  }
+
+
+  if(
+    !confirm(
+      'Delete "' +
+      list.name +
+      '"?'
+    )
+  ){
+
+    return;
+
+  }
+
+
+  lists.splice(
+    index,
+    1
+  );
+
+
+  if(lists.length === 0){
+
+    activeList = 0;
+
+  }else if(
+    activeList >= lists.length
+  ){
+
+    activeList =
+      lists.length - 1;
+
+  }
+
+
+  log(
+    "Deleted list"
+  );
+
+
+  save();
+
+}
+
+
+/* =========================================================
+   CLEAR COMPLETED
+   ========================================================= */
+
+function clearDone(index){
+
+  const list =
+    lists[index];
+
+  if(!list){
+    return;
+  }
+
+
+  list.items =
+    list.items.filter(
+      item => !item.done
+    );
+
+
+  save();
+
+}
+
+
+/* =========================================================
+   CLEAR LIST
+   ========================================================= */
+
+function clearList(index){
+
+  const list =
+    lists[index];
+
+  if(!list){
+    return;
+  }
+
+
+  if(
+    !confirm(
+      'Clear all items from "' +
+      list.name +
+      '"?'
+    )
+  ){
+
+    return;
+
+  }
+
+
+  list.items = [];
+
+  save();
+
+}
+
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+
+function render(){
+
+  renderLists();
+
+  renderOutput();
+
+  updateCounts();
+
+}
+
+
+/* =========================================================
+   RENDER LISTS
+   ========================================================= */
+
+function renderLists(){
+
+  const container =
+    document.getElementById(
+      "lists"
+    );
+
+  container.innerHTML = "";
+
+
+  if(lists.length === 0){
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+    empty.className =
+      "no-lists";
+
+    empty.textContent =
+      "NO LISTS CREATED";
+
+    container.appendChild(
+      empty
+    );
+
+    return;
+
+  }
+
+
+  lists.forEach(
+    (list,listIndex) => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "list-card";
+
+
+      if(
+        listIndex === activeList
+      ){
+
+        card.classList.add(
+          "active"
+        );
+
+      }
+
+
+      /* =========================
+         HEADER
+         ========================= */
+
+      const header =
+        document.createElement(
+          "div"
+        );
+
+      header.className =
+        "list-header";
+
+
+      header.onclick =
+        () => useList(listIndex);
+
+
+      const number =
+        document.createElement(
+          "span"
+        );
+
+      number.className =
+        "list-number";
+
+      number.textContent =
+        "#" +
+        (listIndex + 1);
+
+
+      const name =
+        document.createElement(
+          "span"
+        );
+
+      name.className =
+        "list-name";
+
+      name.textContent =
+        list.name;
+
+
+      const count =
+        document.createElement(
+          "span"
+        );
+
+      count.className =
+        "list-count";
+
+      count.textContent =
+        list.items.length +
+        " item" +
+        (
+          list.items.length === 1
+          ? ""
+          : "s"
+        );
+
+
+      const arrow =
+        document.createElement(
+          "span"
+        );
+
+      arrow.className =
+        "list-arrow";
+
+      arrow.textContent =
+        listIndex === activeList
+        ? "●"
+        : "○";
+
+
+      header.appendChild(number);
+
+      header.appendChild(name);
+
+      header.appendChild(count);
+
+      header.appendChild(arrow);
+
+
+      /* =========================
+         ITEMS
+         ========================= */
+
+      const items =
+        document.createElement(
+          "div"
+        );
+
+      items.className =
+        "list-items";
+
+
+      if(
+        list.items.length === 0
+      ){
+
+        const empty =
+          document.createElement(
+            "div"
+          );
+
+        empty.className =
+          "empty-items";
+
+        empty.textContent =
+          "EMPTY";
+
+        items.appendChild(
+          empty
+        );
+
+      }
+
+
+      list.items.forEach(
+        (item,itemIndex) => {
+
+          const row =
+            document.createElement(
+              "div"
+            );
+
+          row.className =
+            "item";
+
+
+          if(item.done){
+
+            row.classList.add(
+              "done"
+            );
+
+          }
+
+
+          const checkbox =
+            document.createElement(
+              "input"
+            );
+
+          checkbox.type =
+            "checkbox";
+
+          checkbox.className =
+            "item-checkbox";
+
+          checkbox.checked =
+            item.done;
+
+
+          checkbox.onchange =
+            () => toggleItem(
+              listIndex,
+              itemIndex
+            );
+
+
+          const text =
+            document.createElement(
+              "span"
+            );
+
+          text.className =
+            "item-text";
+
+          text.textContent =
+            item.text;
+
+
+          const remove =
+            document.createElement(
+              "button"
+            );
+
+          remove.className =
+            "remove-item";
+
+          remove.textContent =
+            "×";
+
+          remove.title =
+            "Remove item";
+
+
+          remove.onclick =
+            () => removeItem(
+              listIndex,
+              itemIndex
+            );
+
+
+          row.appendChild(
+            checkbox
+          );
+
+          row.appendChild(
+            text
+          );
+
+          row.appendChild(
+            remove
+          );
+
+
+          items.appendChild(
+            row
+          );
+
+        }
+      );
+
+
+      /* =========================
+         ACTIONS
+         ========================= */
+
+      const actions =
+        document.createElement(
+          "div"
+        );
+
+      actions.className =
+        "list-actions";
+
+
+      const rename =
+        document.createElement(
+          "button"
+        );
+
+      rename.textContent =
+        "RENAME";
+
+      rename.onclick =
+        () => renameList(
+          listIndex
+        );
+
+
+      const clearDoneButton =
+        document.createElement(
+          "button"
+        );
+
+      clearDoneButton.textContent =
+        "CLEAR DONE";
+
+      clearDoneButton.onclick =
+        () => clearDone(
+          listIndex
+        );
+
+
+      const clear =
+        document.createElement(
+          "button"
+        );
+
+      clear.textContent =
+        "CLEAR";
+
+      clear.onclick =
+        () => clearList(
+          listIndex
+        );
+
+
+      const deleteButton =
+        document.createElement(
+          "button"
+        );
+
+      deleteButton.className =
+        "delete";
+
+      deleteButton.textContent =
+        "DELETE";
+
+      deleteButton.onclick =
+        () => deleteList(
+          listIndex
+        );
+
+
+      actions.appendChild(
+        rename
+      );
+
+      actions.appendChild(
+        clearDoneButton
+      );
+
+      actions.appendChild(
+        clear
+      );
+
+      actions.appendChild(
+        deleteButton
+      );
+
+
+      card.appendChild(
+        header
+      );
+
+      card.appendChild(
+        items
+      );
+
+      card.appendChild(
+        actions
+      );
+
+
+      container.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   COUNTS
+   ========================================================= */
+
+function updateCounts(){
+
+  document.getElementById(
+    "listCount"
+  ).textContent =
+    "(" +
+    lists.length +
+    ")";
+
+}
+
+
+/* =========================================================
+   OUTPUT
+   ========================================================= */
+
+function renderOutput(){
+
+  let output = "";
+
+
+  lists.forEach(
+    (list,index) => {
+
+      output +=
+        "=== " +
+        list.name +
+        " ===\n";
+
+
+      list.items.forEach(
+        item => {
+
+          output +=
+            (
+              item.done
+              ? "[x] "
+              : "[ ] "
+            ) +
+            item.text +
+            "\n";
+
+        }
+      );
+
+
+      output += "\n";
+
+    }
+  );
+
+
+  if(!output){
+
+    output =
+      "No lists created.";
+
+  }
+
+
+  document.getElementById(
+    "output"
+  ).textContent =
+    output;
+
+}
+
+
+/* =========================================================
+   TERMINAL COMMANDS
+   ========================================================= */
+
+function runCommand(command){
+
+  const text =
+    command.trim();
+
+
+  if(!text){
+    return;
+  }
+
+
+  /*
+    CREATE
+  */
+
+  if(
+    /^create\s+/i.test(text)
+  ){
+
+    createList(
+      text.replace(
+        /^create\s+/i,
+        ""
+      )
+    );
+
+    return;
+
+  }
+
+
+  /*
+    LISTS
+  */
+
+  if(
+    /^lists$/i.test(text)
+  ){
+
+    if(lists.length === 0){
+
+      log("No lists");
+
+      return;
+
+    }
+
+
+    lists.forEach(
+      (list,index) => {
+
+        log(
+          (index + 1) +
+          ". " +
+          list.name +
+          " (" +
+          list.items.length +
+          ")"
+        );
+
+      }
+    );
+
+    return;
+
+  }
+
+
+  /*
+    USE
+  */
+
+  const useMatch =
+    text.match(
+      /^use\s+(\d+)$/i
+    );
+
+
+  if(useMatch){
+
+    useList(
+      parseInt(
+        useMatch[1]
+      ) - 1
+    );
+
+    return;
+
+  }
+
+
+  /*
+    ADD
+  */
+
+  const addMatch =
+    text.match(
+      /^add\s+(.+)$/is
+    );
+
+
+  if(addMatch){
+
+    addItem(
+      addMatch[1]
+    );
+
+    return;
+
+  }
+
+
+  /*
+    LIST
+  */
+
+  if(
+    /^list$/i.test(text)
+  ){
+
+    if(
+      lists.length === 0
+    ){
+
+      log("No lists");
+
+      return;
+
+    }
+
+
+    const list =
+      lists[activeList];
+
+
+    log(
+      "LIST: " +
+      list.name
+    );
+
+
+    list.items.forEach(
+      (item,index) => {
+
+        log(
+          (index + 1) +
+          ". " +
+          (
+            item.done
+            ? "[x] "
+            : "[ ] "
+          ) +
+          item.text
+        );
+
+      }
+    );
+
+    return;
+
+  }
+
+
+  /*
+    DONE
+  */
+
+  const doneMatch =
+    text.match(
+      /^done\s+(\d+)$/i
+    );
+
+
+  if(doneMatch){
+
+    const index =
+      parseInt(
+        doneMatch[1]
+      ) - 1;
+
+
+    if(
+      lists[activeList] &&
+      lists[activeList].items[index]
+    ){
+
+      lists[activeList]
+        .items[index]
+        .done = true;
+
+      save();
+
+    }
+
+
+    return;
+
+  }
+
+
+  /*
+    UNDONE
+  */
+
+  const undoneMatch =
+    text.match(
+      /^undone\s+(\d+)$/i
+    );
+
+
+  if(undoneMatch){
+
+    const index =
+      parseInt(
+        undoneMatch[1]
+      ) - 1;
+
+
+    if(
+      lists[activeList] &&
+      lists[activeList].items[index]
+    ){
+
+      lists[activeList]
+        .items[index]
+        .done = false;
+
+      save();
+
+    }
+
+
+    return;
+
+  }
+
+
+  /*
+    REMOVE
+  */
+
+  const removeMatch =
+    text.match(
+      /^remove\s+(\d+)$/i
+    );
+
+
+  if(removeMatch){
+
+    removeItem(
+      activeList,
+
+      parseInt(
+        removeMatch[1]
+      ) - 1
+
+    );
+
+    return;
+
+  }
+
+
+  /*
+    CLEAR DONE
+  */
+
+  if(
+    /^clear-done$/i.test(text)
+  ){
+
+    clearDone(
+      activeList
+    );
+
+    return;
+
+  }
+
+
+  /*
+    CLEAR
+  */
+
+  if(
+    /^clear$/i.test(text)
+  ){
+
+    clearList(
+      activeList
+    );
+
+    return;
+
+  }
+
+
+  /*
+    DELETE LIST
+  */
+
+  if(
+    /^delete-list$/i.test(text)
+  ){
+
+    deleteList(
+      activeList
+    );
+
+    return;
+
+  }
+
+
+  /*
+    HELP
+  */
+
+  if(
+    /^help$/i.test(text)
+  ){
+
+    log(
+      "create NAME | use N | add ITEM | done N"
+    );
+
+    log(
+      "undone N | remove N | list | lists"
+    );
+
+    log(
+      "clear-done | clear | delete-list"
+    );
+
+    return;
+
+  }
+
+
+  log(
+    "Unknown command: " +
+    text
+  );
+
+}
+
+
+/* =========================================================
+   COMMAND INPUT
+   ========================================================= */
+
+const commandInput =
+  document.getElementById(
+    "commandInput"
+  );
+
+
+commandInput.addEventListener(
+  "keydown",
+  function(event){
+
+    /*
+      ENTER executes.
+
+      SHIFT + ENTER creates
+      another line.
+    */
+
+    if(
+      event.key === "Enter" &&
+      !event.shiftKey
+    ){
+
+      event.preventDefault();
+
+
+      const value =
+        commandInput.value;
+
+
+      if(value.trim()){
+
+        runCommand(
+          value
+        );
+
+        commandInput.value =
+          "";
+
+      }
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   CREATE LIST ENTER
+   ========================================================= */
+
+document
+  .getElementById(
+    "createListInput"
+  )
+  .addEventListener(
+    "keydown",
+    function(event){
+
+      if(
+        event.key === "Enter"
+      ){
+
+        event.preventDefault();
+
+        createListFromInput();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   COPY ALL
+   ========================================================= */
+
+async function copyAll(){
+
+  const text =
+    document.getElementById(
+      "output"
+    ).textContent;
+
+
+  try{
+
+    await navigator.clipboard
+      .writeText(text);
+
+    log(
+      "All lists copied"
+    );
+
+  }catch(e){
+
+    log(
+      "Clipboard unavailable"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   EXPORT
+   ========================================================= */
+
+function exportAll(){
+
+  const text =
+    document.getElementById(
+      "output"
+    ).textContent;
+
+
+  const blob =
+    new Blob(
+      [text],
+      {
+        type:
+          "text/plain"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    url;
+
+  link.download =
+    "grocery-lists.txt";
+
+
+  link.click();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+
+
+  log(
+    "Exported grocery-lists.txt"
+  );
+
+}
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+load();
+
+log(
+  "Terminal ready."
+);
+
+log(
+  "Create a list or use: create NAME"
+);
+
+</script>
+
+</body>
+</html>
