@@ -1,0 +1,1487 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buzzword Counter Terminal</title>
+
+<style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#0f1830;
+  --text:#eaeaf2;
+  --accent:#00aaff;
+  --green:#00ffcc;
+  --red:#ff5577;
+  --yellow:#ffcc00;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container{
+  padding:12px;
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(0,170,255,.25);
+  border-radius:14px;
+  padding:14px;
+}
+
+h1{
+  margin:0;
+  font-size:18px;
+  color:var(--accent);
+}
+
+h3{
+  font-size:14px;
+  margin:0 0 12px;
+  color:var(--accent);
+}
+
+.terminal{
+  background:#000;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  padding:10px;
+}
+
+.prompt{
+  color:#888;
+  font-size:12px;
+  line-height:1.8;
+}
+
+textarea,input,select{
+  width:100%;
+  background:#000;
+  color:var(--green);
+  border:1px solid #17243b;
+  border-radius:6px;
+  outline:none;
+  font-family:monospace;
+  padding:10px;
+  margin-top:8px;
+}
+
+textarea{
+  min-height:160px;
+  resize:vertical;
+  font-size:14px;
+  line-height:1.5;
+}
+
+input,select{font-size:14px}
+#cmdInput{font-size:16px}
+
+button{
+  background:#071526;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  border-radius:6px;
+  padding:10px 12px;
+  font-family:monospace;
+  font-size:12px;
+  cursor:pointer;
+}
+
+button:active{background:#10314b}
+button.success{color:var(--green);border-color:var(--green)}
+button.danger{color:var(--red);border-color:var(--red)}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.log{
+  max-height:120px;
+  overflow:auto;
+  font-size:12px;
+  color:#aaa;
+  margin-top:10px;
+  line-height:1.7;
+  overflow-wrap:anywhere;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.stat{
+  background:#000;
+  border:1px solid #17243b;
+  padding:12px;
+  border-radius:8px;
+}
+
+.stat .label{
+  font-size:10px;
+  color:#888;
+  font-family:monospace;
+  text-transform:uppercase;
+}
+
+.stat .value{
+  font-size:25px;
+  color:var(--green);
+  font-family:monospace;
+  margin-top:5px;
+  overflow-wrap:anywhere;
+}
+
+.stat small{
+  display:block;
+  color:#888;
+  font-size:10px;
+  margin-top:5px;
+}
+
+#results{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.buzz-item{
+  background:#000;
+  border:1px solid #17243b;
+  border-radius:8px;
+  padding:10px;
+}
+
+.buzz-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  font-family:monospace;
+  font-size:13px;
+}
+
+.buzz-name{
+  color:var(--green);
+  overflow-wrap:anywhere;
+}
+
+.buzz-count{
+  color:var(--yellow);
+  white-space:nowrap;
+}
+
+.bar{
+  height:5px;
+  background:#152033;
+  border-radius:5px;
+  margin-top:9px;
+  overflow:hidden;
+}
+
+.bar-fill{
+  height:100%;
+  background:var(--accent);
+}
+
+.buzz-meta{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  color:#777;
+  font-size:10px;
+  font-family:monospace;
+  margin-top:6px;
+}
+
+.empty{
+  padding:18px 8px;
+  color:#666;
+  text-align:center;
+  font:12px monospace;
+}
+
+.dictionary{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.word-chip{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  background:#000;
+  border:1px solid #26344a;
+  border-radius:5px;
+  padding:6px 8px;
+  font:11px monospace;
+  overflow-wrap:anywhere;
+}
+
+.word-chip button{
+  padding:1px 4px;
+  border:0;
+  color:var(--red);
+  background:transparent;
+  font-size:14px;
+}
+
+.field{font-size:14px}
+
+.status{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+  color:#888;
+  font:10px monospace;
+  margin-top:8px;
+}
+
+.dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+}
+
+.output{
+  background:#000;
+  border:1px solid var(--accent);
+  padding:12px;
+  border-radius:10px;
+  font-size:12px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  font-family:monospace;
+  color:var(--green);
+  min-height:60px;
+}
+
+footer{
+  text-align:center;
+  color:#555;
+  font:10px monospace;
+  padding:8px;
+}
+
+@media(min-width:600px){
+  .stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .container{padding:16px}
+}
+
+@media(max-width:600px){
+  .container{padding:8px}
+  .card{padding:12px}
+  h1{font-size:16px}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="card">
+    <h1>BUZZWORD COUNTER TERMINAL</h1>
+    <div class="status">
+      <span class="dot"></span>
+      SYSTEM ONLINE |
+      <span id="wordStatus">0 BUZZWORDS</span> |
+      LOCAL MODE
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>01 / Text Input</h3>
+
+    <div class="terminal">
+      <div class="prompt">&gt; paste a CV, job description, email, or document</div>
+      <div class="prompt">&gt; analysis runs locally in your browser</div>
+
+      <textarea id="textInput"
+        placeholder="Paste your text here..."></textarea>
+
+      <div class="actions">
+        <button class="success" id="analyzeBtn">[ ANALYZE ]</button>
+        <button id="sampleBtn">[ LOAD SAMPLE ]</button>
+        <button class="danger" id="clearTextBtn">[ CLEAR TEXT ]</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>02 / Analysis Overview</h3>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Total words</div>
+        <div class="value" id="totalWords">0</div>
+        <small>Words in input</small>
+      </div>
+
+      <div class="stat">
+        <div class="label">Buzzword hits</div>
+        <div class="value" id="totalHits">0</div>
+        <small>Total occurrences</small>
+      </div>
+
+      <div class="stat">
+        <div class="label">Unique buzzwords</div>
+        <div class="value" id="uniqueHits">0</div>
+        <small>Different terms found</small>
+      </div>
+
+      <div class="stat">
+        <div class="label">Buzzword density</div>
+        <div class="value" id="density">0%</div>
+        <small>Hits / total words</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>03 / Frequency Report</h3>
+
+    <div class="actions" style="margin-bottom:12px">
+      <button id="sortCountBtn">[ SORT: COUNT ]</button>
+      <button id="sortAlphaBtn">[ SORT: A-Z ]</button>
+      <button id="sortCategoryBtn">[ SORT: CATEGORY ]</button>
+    </div>
+
+    <div id="results">
+      <div class="empty">PASTE TEXT AND PRESS ANALYZE</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>04 / Custom Dictionary</h3>
+
+    <div class="terminal">
+      <div class="prompt">&gt; add or remove buzzwords</div>
+
+      <input id="customInput" class="field"
+        placeholder="Enter buzzword, e.g. synergy">
+
+      <select id="categoryInput" class="field">
+        <option value="Business">Business</option>
+        <option value="Cloud / DevOps">Cloud / DevOps</option>
+        <option value="Software Engineering">Software Engineering</option>
+        <option value="AI / Data">AI / Data</option>
+        <option value="Corporate">Corporate</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <div class="actions">
+        <button class="success" id="addWordBtn">[ ADD WORD ]</button>
+        <button id="resetDictBtn">[ RESET DEFAULTS ]</button>
+      </div>
+
+      <div class="log" id="dictLog"></div>
+    </div>
+
+    <p style="font-size:11px;color:#888">
+      Dictionary terms are saved locally. Remove individual terms
+      or reset the dictionary to restore the defaults.
+    </p>
+
+    <div id="dictionary" class="dictionary"></div>
+  </div>
+
+  <div class="card">
+    <h3>05 / Terminal Commands</h3>
+
+    <div class="terminal">
+      <div class="prompt">&gt; analyze</div>
+      <div class="prompt">&gt; list</div>
+      <div class="prompt">&gt; add synergy</div>
+      <div class="prompt">&gt; remove synergy</div>
+      <div class="prompt">&gt; cleartext</div>
+      <div class="prompt">&gt; export</div>
+      <div class="prompt">&gt; help</div>
+
+      <input id="cmdInput"
+        placeholder="Type command and press Enter...">
+
+      <div id="cmdLog" class="log"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>06 / Export Report</h3>
+
+    <div id="output" class="output">NO REPORT GENERATED</div>
+
+    <div class="actions">
+      <button class="success" id="copyBtn">[ COPY REPORT ]</button>
+      <button id="downloadBtn">[ DOWNLOAD TXT ]</button>
+    </div>
+  </div>
+
+  <footer>
+    BUZZWORD COUNTER TERMINAL // NO DEPENDENCIES // OFFLINE CAPABLE
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   STORAGE
+   ========================================================= */
+
+const DICT_KEY = "buzzword_terminal_dictionary_v1";
+
+const DEFAULT_WORDS = [
+
+  // BUSINESS
+  ["synergy","Business"],
+  ["leverage","Business"],
+  ["innovative","Business"],
+  ["innovation","Business"],
+  ["transformation","Business"],
+  ["disruption","Business"],
+  ["disruptive","Business"],
+  ["paradigm","Business"],
+  ["ecosystem","Business"],
+  ["scalable","Business"],
+  ["scalability","Business"],
+  ["strategic","Business"],
+  ["strategy","Business"],
+  ["optimize","Business"],
+  ["optimization","Business"],
+  ["streamline","Business"],
+  ["value proposition","Business"],
+  ["value-driven","Business"],
+  ["customer-centric","Business"],
+  ["customer-focused","Business"],
+  ["stakeholder","Business"],
+  ["stakeholders","Business"],
+  ["deliverables","Business"],
+  ["actionable","Business"],
+  ["impactful","Business"],
+  ["holistic","Business"],
+  ["best-in-class","Business"],
+  ["world-class","Business"],
+  ["thought leadership","Business"],
+  ["deep dive","Business"],
+  ["move the needle","Business"],
+  ["low-hanging fruit","Business"],
+  ["circle back","Business"],
+  ["bandwidth","Business"],
+  ["synergize","Business"],
+  ["game changer","Business"],
+  ["game-changing","Business"],
+  ["mission-critical","Business"],
+  ["future-proof","Business"],
+  ["future-proofing","Business"],
+  ["value-added","Business"],
+  ["pain point","Business"],
+  ["pain points","Business"],
+  ["alignment","Business"],
+  ["empower","Business"],
+  ["empowering","Business"],
+  ["enablement","Business"],
+  ["robust","Business"],
+  ["seamless","Business"],
+  ["frictionless","Business"],
+  ["next-generation","Business"],
+  ["cutting-edge","Business"],
+  ["revolutionary","Business"],
+  ["unprecedented","Business"],
+  ["proactive","Business"],
+  ["proactivity","Business"],
+  ["results-driven","Business"],
+  ["data-driven","Business"],
+  ["growth mindset","Business"],
+  ["thought partner","Business"],
+  ["ideate","Business"],
+  ["ideation","Business"],
+  ["north star","Business"],
+  ["key learnings","Business"],
+  ["win-win","Business"],
+  ["quick wins","Business"],
+  ["at scale","Business"],
+  ["learnings","Business"],
+  ["competitive advantage","Business"],
+  ["business value","Business"],
+  ["value creation","Business"],
+  ["operational excellence","Business"],
+  ["customer journey","Business"],
+  ["strategic initiative","Business"],
+
+  // CLOUD / DEVOPS
+  ["cloud-native","Cloud / DevOps"],
+  ["cloud first","Cloud / DevOps"],
+  ["cloud-first","Cloud / DevOps"],
+  ["microservices","Cloud / DevOps"],
+  ["serverless","Cloud / DevOps"],
+  ["devops","Cloud / DevOps"],
+  ["devsecops","Cloud / DevOps"],
+  ["platform engineering","Cloud / DevOps"],
+  ["automation","Cloud / DevOps"],
+  ["automated","Cloud / DevOps"],
+  ["orchestration","Cloud / DevOps"],
+  ["containerization","Cloud / DevOps"],
+  ["kubernetes","Cloud / DevOps"],
+  ["infrastructure as code","Cloud / DevOps"],
+  ["iac","Cloud / DevOps"],
+  ["continuous integration","Cloud / DevOps"],
+  ["continuous delivery","Cloud / DevOps"],
+  ["continuous deployment","Cloud / DevOps"],
+  ["ci/cd","Cloud / DevOps"],
+  ["pipeline","Cloud / DevOps"],
+  ["pipelines","Cloud / DevOps"],
+  ["observability","Cloud / DevOps"],
+  ["resilience","Cloud / DevOps"],
+  ["resilient","Cloud / DevOps"],
+  ["high availability","Cloud / DevOps"],
+  ["highly available","Cloud / DevOps"],
+  ["fault-tolerant","Cloud / DevOps"],
+  ["self-healing","Cloud / DevOps"],
+  ["zero downtime","Cloud / DevOps"],
+  ["elasticity","Cloud / DevOps"],
+  ["multi-cloud","Cloud / DevOps"],
+  ["hybrid cloud","Cloud / DevOps"],
+  ["cloud agnostic","Cloud / DevOps"],
+  ["immutable infrastructure","Cloud / DevOps"],
+  ["shift left","Cloud / DevOps"],
+  ["shift-left","Cloud / DevOps"],
+  ["gitops","Cloud / DevOps"],
+  ["infrastructure automation","Cloud / DevOps"],
+  ["scaling","Cloud / DevOps"],
+  ["auto-scaling","Cloud / DevOps"],
+  ["load balancing","Cloud / DevOps"],
+  ["event-driven","Cloud / DevOps"],
+  ["event-driven architecture","Cloud / DevOps"],
+  ["distributed systems","Cloud / DevOps"],
+  ["zero trust","Cloud / DevOps"],
+  ["least privilege","Cloud / DevOps"],
+  ["cloud security","Cloud / DevOps"],
+  ["cloud migration","Cloud / DevOps"],
+  ["infrastructure modernization","Cloud / DevOps"],
+  ["platform as a service","Cloud / DevOps"],
+  ["infrastructure as a service","Cloud / DevOps"],
+  ["software as a service","Cloud / DevOps"],
+
+  // SOFTWARE ENGINEERING
+  ["agile","Software Engineering"],
+  ["agility","Software Engineering"],
+  ["scrum","Software Engineering"],
+  ["lean","Software Engineering"],
+  ["refactoring","Software Engineering"],
+  ["clean code","Software Engineering"],
+  ["design patterns","Software Engineering"],
+  ["domain-driven design","Software Engineering"],
+  ["ddd","Software Engineering"],
+  ["test-driven development","Software Engineering"],
+  ["tdd","Software Engineering"],
+  ["behavior-driven development","Software Engineering"],
+  ["bdd","Software Engineering"],
+  ["pair programming","Software Engineering"],
+  ["code quality","Software Engineering"],
+  ["maintainability","Software Engineering"],
+  ["reusability","Software Engineering"],
+  ["interoperability","Software Engineering"],
+  ["modular","Software Engineering"],
+  ["modularity","Software Engineering"],
+  ["loosely coupled","Software Engineering"],
+  ["backward compatible","Software Engineering"],
+  ["api-first","Software Engineering"],
+  ["contract-first","Software Engineering"],
+  ["open source","Software Engineering"],
+  ["developer experience","Software Engineering"],
+  ["developer productivity","Software Engineering"],
+  ["technical debt","Software Engineering"],
+  ["clean architecture","Software Engineering"],
+  ["hexagonal architecture","Software Engineering"],
+  ["single responsibility","Software Engineering"],
+  ["separation of concerns","Software Engineering"],
+  ["best practices","Software Engineering"],
+  ["scalable architecture","Software Engineering"],
+  ["microservice architecture","Software Engineering"],
+  ["microservice-based","Software Engineering"],
+  ["event sourcing","Software Engineering"],
+  ["cqrs","Software Engineering"],
+  ["functional programming","Software Engineering"],
+  ["reactive programming","Software Engineering"],
+  ["concurrency","Software Engineering"],
+  ["parallel processing","Software Engineering"],
+  ["performance optimization","Software Engineering"],
+  ["low latency","Software Engineering"],
+  ["high throughput","Software Engineering"],
+  ["end-to-end testing","Software Engineering"],
+  ["test automation","Software Engineering"],
+  ["code coverage","Software Engineering"],
+  ["technical excellence","Software Engineering"],
+
+  // AI / DATA
+  ["artificial intelligence","AI / Data"],
+  ["machine learning","AI / Data"],
+  ["deep learning","AI / Data"],
+  ["generative ai","AI / Data"],
+  ["genai","AI / Data"],
+  ["large language model","AI / Data"],
+  ["llm","AI / Data"],
+  ["agentic","AI / Data"],
+  ["agentic ai","AI / Data"],
+  ["autonomous agents","AI / Data"],
+  ["ai-powered","AI / Data"],
+  ["ai-driven","AI / Data"],
+  ["intelligent automation","AI / Data"],
+  ["predictive analytics","AI / Data"],
+  ["big data","AI / Data"],
+  ["real-time analytics","AI / Data"],
+  ["data pipeline","AI / Data"],
+  ["data pipelines","AI / Data"],
+  ["data lake","AI / Data"],
+  ["data mesh","AI / Data"],
+  ["data fabric","AI / Data"],
+  ["digital twin","AI / Data"],
+  ["neural network","AI / Data"],
+  ["natural language processing","AI / Data"],
+  ["nlp","AI / Data"],
+  ["computer vision","AI / Data"],
+  ["responsible ai","AI / Data"],
+  ["explainable ai","AI / Data"],
+  ["fine-tuning","AI / Data"],
+  ["prompt engineering","AI / Data"],
+  ["retrieval augmented generation","AI / Data"],
+  ["rag","AI / Data"],
+  ["vector database","AI / Data"],
+  ["embeddings","AI / Data"],
+  ["data-driven","AI / Data"],
+  ["data democratization","AI / Data"],
+  ["data governance","AI / Data"],
+  ["predictive modeling","AI / Data"],
+  ["business intelligence","AI / Data"],
+  ["self-service analytics","AI / Data"],
+  ["decision intelligence","AI / Data"],
+  ["generative models","AI / Data"],
+  ["foundation models","AI / Data"],
+  ["ai transformation","AI / Data"],
+  ["intelligent agents","AI / Data"],
+
+  // CORPORATE
+  ["best practice","Corporate"],
+  ["going forward","Corporate"],
+  ["touch base","Corporate"],
+  ["on the same page","Corporate"],
+  ["outside the box","Corporate"],
+  ["think outside the box","Corporate"],
+  ["at the end of the day","Corporate"],
+  ["in terms of","Corporate"],
+  ["moving forward","Corporate"],
+  ["holistically","Corporate"],
+  ["proven track record","Corporate"],
+  ["fast-paced","Corporate"],
+  ["dynamic environment","Corporate"],
+  ["passionate","Corporate"],
+  ["results-oriented","Corporate"],
+  ["customer obsessed","Corporate"],
+  ["core competency","Corporate"],
+  ["core competencies","Corporate"],
+  ["thought-provoking","Corporate"],
+  ["high-level","Corporate"],
+  ["low-level","Corporate"],
+  ["end-to-end","Corporate"],
+  ["360-degree","Corporate"],
+  ["blue-sky thinking","Corporate"],
+  ["strategic alignment","Corporate"],
+  ["business agility","Corporate"],
+  ["scalable solutions","Corporate"],
+  ["stakeholder engagement","Corporate"],
+  ["operational efficiency","Corporate"],
+  ["key differentiator","Corporate"],
+  ["strategic initiatives","Corporate"],
+  ["innovative solutions","Corporate"],
+  ["best of breed","Corporate"],
+  ["paradigm shift","Corporate"],
+  ["action plan","Corporate"],
+  ["key performance indicators","Corporate"],
+  ["kpi","Corporate"],
+  ["kpis","Corporate"],
+  ["digital transformation","Corporate"],
+  ["digitalization","Corporate"],
+  ["digitization","Corporate"],
+  ["visionary","Corporate"],
+  ["blueprint","Corporate"],
+  ["thought leadership","Corporate"],
+  ["value-added services","Corporate"],
+  ["customer-first","Corporate"],
+  ["people-centric","Corporate"],
+  ["people-focused","Corporate"],
+  ["purpose-driven","Corporate"],
+  ["forward-thinking","Corporate"],
+  ["collaboration","Corporate"],
+  ["collaborative","Corporate"],
+  ["cross-functional","Corporate"],
+  ["empowerment","Corporate"],
+  ["ownership","Corporate"],
+  ["accountability","Corporate"],
+  ["transparency","Corporate"],
+  ["agility","Corporate"],
+  ["innovation-driven","Corporate"],
+  ["mission statement","Corporate"],
+  ["strategic roadmap","Corporate"],
+  ["roadmap","Corporate"],
+  ["deliver value","Corporate"],
+  ["value delivery","Corporate"],
+  ["thought partner","Corporate"],
+  ["quick win","Corporate"],
+  ["quick wins","Corporate"],
+  ["low-hanging fruit","Corporate"],
+  ["circle back","Corporate"],
+  ["touchpoint","Corporate"],
+  ["touchpoints","Corporate"],
+  ["bandwidth","Corporate"],
+  ["learnings","Corporate"],
+  ["buy-in","Corporate"],
+  ["buy in","Corporate"],
+  ["stakeholder management","Corporate"],
+  ["synergistic","Corporate"],
+  ["game-changing","Corporate"],
+  ["transformative","Corporate"],
+  ["best-in-breed","Corporate"]
+];
+
+let dictionary = [];
+let results = [];
+let totalWords = 0;
+let totalHits = 0;
+let currentSort = "count";
+let lastAnalyzedText = "";
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+
+function normalizeWord(word){
+  return word.trim().toLocaleLowerCase();
+}
+
+function log(id,message){
+  const box = $(id);
+  const line = document.createElement("div");
+  line.textContent = "> " + message;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setLog(id,message){
+  $(id).replaceChildren();
+  log(id,message);
+}
+
+/* =========================================================
+   DICTIONARY STORAGE
+   ========================================================= */
+
+function loadDictionary(){
+  try{
+    const saved = localStorage.getItem(DICT_KEY);
+
+    if(saved){
+      const parsed = JSON.parse(saved);
+
+      if(Array.isArray(parsed)){
+        dictionary = parsed.filter(item =>
+          item &&
+          typeof item.word === "string" &&
+          typeof item.category === "string"
+        );
+      }
+    }
+  }catch(error){
+    dictionary = [];
+  }
+
+  if(!dictionary.length){
+    dictionary = DEFAULT_WORDS.map(([word,category])=>({
+      word,
+      category
+    }));
+  }
+
+  dictionary = dictionary.map(item=>({
+    word:normalizeWord(item.word),
+    category:item.category || "Other"
+  }));
+
+  deduplicateDictionary();
+  saveDictionary();
+}
+
+function deduplicateDictionary(){
+  const seen = new Set();
+
+  dictionary = dictionary.filter(item=>{
+    const key = normalizeWord(item.word);
+
+    if(!key || seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+}
+
+function saveDictionary(){
+  try{
+    localStorage.setItem(
+      DICT_KEY,
+      JSON.stringify(dictionary)
+    );
+  }catch(error){
+    log("dictLog","Storage unavailable; using memory only.");
+  }
+
+  renderDictionary();
+
+  $("wordStatus").textContent =
+    dictionary.length + " BUZZWORDS";
+}
+
+function addWord(word,category){
+  word = normalizeWord(word);
+
+  if(!word){
+    log("dictLog","Enter a word first.");
+    return;
+  }
+
+  if(dictionary.some(item=>item.word===word)){
+    log("dictLog","Word already exists: " + word);
+    return;
+  }
+
+  dictionary.push({word,category});
+
+  saveDictionary();
+
+  log("dictLog","Added: " + word);
+
+  analyze();
+}
+
+function removeWord(word){
+  word = normalizeWord(word);
+
+  const before = dictionary.length;
+
+  dictionary = dictionary.filter(
+    item=>item.word!==word
+  );
+
+  if(dictionary.length===before){
+    log("cmdLog","Word not found: " + word);
+    return;
+  }
+
+  saveDictionary();
+
+  log("cmdLog","Removed: " + word);
+
+  analyze();
+}
+
+/* =========================================================
+   COUNTING ENGINE
+   ========================================================= */
+
+function tokenize(text){
+  return text.match(
+    /[\p{L}\p{N}_]+(?:[+#./'-][\p{L}\p{N}_]+)*/gu
+  ) || [];
+}
+
+function escapeRegex(text){
+  return text.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+}
+
+function countOccurrences(text,term){
+  const escaped = escapeRegex(term);
+
+  const pattern = escaped.replace(
+    /\\ /g,
+    "\\s+"
+  );
+
+  const regex = new RegExp(
+    "(?<![\\p{L}\\p{N}_])" +
+    pattern +
+    "(?![\\p{L}\\p{N}_])",
+    "giu"
+  );
+
+  let count = 0;
+  let match;
+
+  while((match=regex.exec(text))!==null){
+    count++;
+
+    if(match[0].length===0){
+      regex.lastIndex++;
+    }
+  }
+
+  return count;
+}
+
+function analyze(){
+  const text = $("textInput").value;
+
+  lastAnalyzedText = text;
+  totalWords = tokenize(text).length;
+  results = [];
+  totalHits = 0;
+
+  dictionary.forEach(item=>{
+    const count = countOccurrences(
+      text,
+      item.word
+    );
+
+    if(count>0){
+      results.push({
+        word:item.word,
+        category:item.category,
+        count
+      });
+
+      totalHits += count;
+    }
+  });
+
+  renderStats();
+  renderResults();
+  renderReport();
+
+  log(
+    "cmdLog",
+    "Analysis complete: " +
+    totalHits +
+    " hits across " +
+    results.length +
+    " unique terms."
+  );
+}
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
+
+function renderStats(){
+  $("totalWords").textContent = totalWords;
+  $("totalHits").textContent = totalHits;
+  $("uniqueHits").textContent = results.length;
+
+  const percentage = totalWords
+    ? totalHits / totalWords * 100
+    : 0;
+
+  $("density").textContent =
+    percentage.toFixed(2) + "%";
+}
+
+/* =========================================================
+   FREQUENCY RESULTS
+   ========================================================= */
+
+function renderResults(){
+  const box = $("results");
+  box.replaceChildren();
+
+  if(!results.length){
+    const empty = document.createElement("div");
+
+    empty.className = "empty";
+
+    empty.textContent = lastAnalyzedText.trim()
+      ? "NO BUZZWORDS FOUND"
+      : "PASTE TEXT AND PRESS ANALYZE";
+
+    box.appendChild(empty);
+    return;
+  }
+
+  const sorted = [...results];
+
+  if(currentSort==="alpha"){
+    sorted.sort((a,b)=>
+      a.word.localeCompare(b.word)
+    );
+  }else if(currentSort==="category"){
+    sorted.sort((a,b)=>
+      a.category.localeCompare(b.category) ||
+      b.count-a.count ||
+      a.word.localeCompare(b.word)
+    );
+  }else{
+    sorted.sort((a,b)=>
+      b.count-a.count ||
+      a.word.localeCompare(b.word)
+    );
+  }
+
+  const max = Math.max(
+    ...sorted.map(item=>item.count)
+  );
+
+  sorted.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "buzz-item";
+
+    const top = document.createElement("div");
+    top.className = "buzz-top";
+
+    const name = document.createElement("span");
+    name.className = "buzz-name";
+    name.textContent = item.word;
+
+    const count = document.createElement("span");
+    count.className = "buzz-count";
+
+    count.textContent =
+      item.count + " hit" +
+      (item.count===1 ? "" : "s");
+
+    top.append(name,count);
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+
+    const fill = document.createElement("div");
+    fill.className = "bar-fill";
+
+    fill.style.width =
+      (item.count/max*100) + "%";
+
+    bar.appendChild(fill);
+
+    const meta = document.createElement("div");
+    meta.className = "buzz-meta";
+
+    const category = document.createElement("span");
+    category.textContent = item.category;
+
+    const percentage = document.createElement("span");
+
+    percentage.textContent = totalWords
+      ? (item.count/totalWords*100).toFixed(2) +
+        "% of words"
+      : "0%";
+
+    meta.append(category,percentage);
+
+    card.append(top,bar,meta);
+
+    box.appendChild(card);
+  });
+}
+
+/* =========================================================
+   REPORT GENERATION
+   ========================================================= */
+
+function generateReport(){
+  const lines = [
+    "========================================",
+    "       BUZZWORD COUNTER REPORT",
+    "========================================",
+    "",
+    "Total words: " + totalWords,
+    "Buzzword hits: " + totalHits,
+    "Unique buzzwords: " + results.length,
+    "Buzzword density: " +
+      (
+        totalWords
+          ? (totalHits/totalWords*100).toFixed(2)
+          : "0.00"
+      ) + "%",
+    "",
+    "FREQUENCY BREAKDOWN",
+    "----------------------------------------"
+  ];
+
+  const sorted = [...results].sort((a,b)=>
+    b.count-a.count ||
+    a.word.localeCompare(b.word)
+  );
+
+  if(!sorted.length){
+    lines.push("No buzzwords found.");
+  }
+
+  sorted.forEach((item,index)=>{
+    lines.push(
+      (index+1) + ". " + item.word +
+      " | Hits: " + item.count +
+      " | Category: " + item.category
+    );
+  });
+
+  lines.push(
+    "",
+    "========================================",
+    "Generated locally by Buzzword Counter",
+    "========================================"
+  );
+
+  return lines.join("\n");
+}
+
+function renderReport(){
+  $("output").textContent = generateReport();
+}
+
+/* =========================================================
+   DICTIONARY DISPLAY
+   ========================================================= */
+
+function renderDictionary(){
+  const box = $("dictionary");
+  box.replaceChildren();
+
+  const sorted = [...dictionary].sort((a,b)=>
+    a.category.localeCompare(b.category) ||
+    a.word.localeCompare(b.word)
+  );
+
+  sorted.forEach(item=>{
+    const chip = document.createElement("div");
+    chip.className = "word-chip";
+
+    const label = document.createElement("span");
+    label.textContent = item.word;
+
+    const remove = document.createElement("button");
+
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.title = "Remove " + item.word;
+
+    remove.addEventListener("click",()=>{
+      dictionary = dictionary.filter(
+        entry=>entry.word!==item.word
+      );
+
+      saveDictionary();
+
+      log("dictLog","Removed: " + item.word);
+
+      analyze();
+    });
+
+    chip.append(label,remove);
+    box.appendChild(chip);
+  });
+}
+
+/* =========================================================
+   TERMINAL COMMANDS
+   ========================================================= */
+
+function runCommand(command){
+  const trimmed = command.trim();
+
+  if(!trimmed) return;
+
+  log("cmdLog",trimmed);
+
+  const firstSpace = trimmed.indexOf(" ");
+
+  const action = (
+    firstSpace<0
+      ? trimmed
+      : trimmed.slice(0,firstSpace)
+  ).toLowerCase();
+
+  const argument = firstSpace<0
+    ? ""
+    : trimmed.slice(firstSpace+1).trim();
+
+  switch(action){
+
+    case "analyze":
+      analyze();
+      break;
+
+    case "list":
+      if(!results.length){
+        log(
+          "cmdLog",
+          "No buzzwords found. Run analyze first."
+        );
+      }else{
+        [...results]
+          .sort((a,b)=>b.count-a.count)
+          .forEach((item,index)=>{
+            log(
+              "cmdLog",
+              (index+1) + ". " +
+              item.word + " = " +
+              item.count + " [" +
+              item.category + "]"
+            );
+          });
+      }
+      break;
+
+    case "add":
+      if(!argument){
+        log("cmdLog","Usage: add WORD");
+      }else{
+        addWord(
+          argument,
+          $("categoryInput").value
+        );
+      }
+      break;
+
+    case "remove":
+      if(!argument){
+        log("cmdLog","Usage: remove WORD");
+      }else{
+        removeWord(argument);
+      }
+      break;
+
+    case "cleartext":
+      $("textInput").value = "";
+      lastAnalyzedText = "";
+      totalWords = 0;
+      totalHits = 0;
+      results = [];
+
+      renderStats();
+      renderResults();
+      renderReport();
+
+      log("cmdLog","Text and results cleared.");
+      break;
+
+    case "export":
+      renderReport();
+      log("cmdLog","Report generated.");
+      break;
+
+    case "help":
+      [
+        "analyze       - analyze input text",
+        "list          - list detected buzzwords",
+        "add WORD      - add a dictionary word",
+        "remove WORD   - remove a dictionary word",
+        "cleartext     - clear input and results",
+        "export        - generate report",
+        "help          - show commands"
+      ].forEach(line=>log("cmdLog",line));
+      break;
+
+    default:
+      log("cmdLog","Unknown command. Type help.");
+  }
+}
+
+/* =========================================================
+   BUTTON HANDLERS
+   ========================================================= */
+
+$("analyzeBtn").addEventListener("click",()=>{
+  analyze();
+});
+
+$("sampleBtn").addEventListener("click",()=>{
+  $("textInput").value =
+`We leverage innovative cloud-native solutions
+to drive scalable business transformation.
+
+Our strategic, customer-centric approach enables
+seamless integration across a robust ecosystem
+of microservices and serverless platforms.
+
+We use DevOps, automation, Kubernetes,
+infrastructure as code, CI/CD pipelines,
+and continuous delivery to optimize performance.
+
+Our data-driven strategy uses artificial
+intelligence and machine learning to unlock
+actionable insights and deliver business value.
+
+We empower cross-functional teams to drive
+operational excellence, improve developer
+experience, and deliver innovative solutions
+at scale through agile collaboration.
+
+Our mission-critical systems are highly
+available, resilient, secure, and future-proof.`;
+
+  analyze();
+});
+
+$("clearTextBtn").addEventListener("click",()=>{
+  $("textInput").value = "";
+  lastAnalyzedText = "";
+  totalWords = 0;
+  totalHits = 0;
+  results = [];
+
+  renderStats();
+  renderResults();
+  renderReport();
+
+  log("cmdLog","Input text cleared.");
+});
+
+$("sortCountBtn").addEventListener("click",()=>{
+  currentSort = "count";
+  renderResults();
+});
+
+$("sortAlphaBtn").addEventListener("click",()=>{
+  currentSort = "alpha";
+  renderResults();
+});
+
+$("sortCategoryBtn").addEventListener("click",()=>{
+  currentSort = "category";
+  renderResults();
+});
+
+$("addWordBtn").addEventListener("click",()=>{
+  const input = $("customInput");
+
+  addWord(
+    input.value,
+    $("categoryInput").value
+  );
+
+  input.value = "";
+  input.focus();
+});
+
+$("customInput").addEventListener("keydown",event=>{
+  if(event.key==="Enter"){
+    event.preventDefault();
+    $("addWordBtn").click();
+  }
+});
+
+$("resetDictBtn").addEventListener("click",()=>{
+  dictionary = DEFAULT_WORDS.map(([word,category])=>({
+    word,
+    category
+  }));
+
+  deduplicateDictionary();
+  saveDictionary();
+
+  setLog("dictLog","Default dictionary restored.");
+
+  analyze();
+});
+
+$("cmdInput").addEventListener("keydown",event=>{
+  if(event.key==="Enter"){
+    const input = $("cmdInput");
+    runCommand(input.value);
+    input.value = "";
+  }
+});
+
+/* =========================================================
+   COPY AND DOWNLOAD
+   ========================================================= */
+
+async function copyReport(){
+  const text = generateReport();
+
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+    }else{
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+
+      document.body.appendChild(area);
+      area.select();
+
+      const copied = document.execCommand("copy");
+      area.remove();
+
+      if(!copied){
+        throw new Error("Copy command failed");
+      }
+    }
+
+    log("cmdLog","Report copied to clipboard.");
+  }catch(error){
+    log(
+      "cmdLog",
+      "Copy unavailable. Select and copy the report manually."
+    );
+  }
+}
+
+function downloadReport(){
+  const blob = new Blob(
+    [generateReport()],
+    {type:"text/plain;charset=utf-8"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "buzzword-report.txt";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+
+  log("cmdLog","Report download requested.");
+}
+
+$("copyBtn").addEventListener("click",copyReport);
+$("downloadBtn").addEventListener("click",downloadReport);
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+loadDictionary();
+
+renderStats();
+renderResults();
+renderReport();
+
+log("cmdLog","System ready. Type help for commands.");
+
+</script>
+</body>
+</html>
