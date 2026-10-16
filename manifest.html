@@ -1,0 +1,877 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENTROPY ENGINE // MANIFEST</title>
+
+<style>
+:root {
+  --bg: #050507;
+  --panel: #0c1220;
+  --panel2: #101827;
+  --border: #243247;
+  --text: #d8e2f0;
+  --muted: #8291a8;
+  --green: #39ff88;
+  --cyan: #00e5ff;
+  --yellow: #ffd166;
+  --red: #ff5370;
+  --purple: #b69cff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Consolas, "Courier New", monospace;
+  line-height: 1.6;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+header {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 24px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--green);
+}
+
+.eyebrow {
+  color: var(--green);
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+h1 {
+  margin: 0;
+  color: var(--green);
+  font-size: clamp(25px, 5vw, 42px);
+  letter-spacing: 2px;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tag {
+  border: 1px solid var(--border);
+  background: #080d15;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--cyan);
+}
+
+.status {
+  color: var(--green);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+button {
+  background: #0a111b;
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  padding: 10px 14px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+button:hover,
+button:focus-visible {
+  border-color: var(--green);
+  color: var(--green);
+  outline: none;
+}
+
+button.primary {
+  color: var(--bg);
+  background: var(--green);
+  border-color: var(--green);
+  font-weight: bold;
+}
+
+button.primary:hover {
+  background: #a3ffc7;
+  color: var(--bg);
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  margin-bottom: 14px;
+  padding: 20px;
+}
+
+.panel-title {
+  font-size: 13px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.panel p {
+  margin: 10px 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.green {
+  color: var(--green);
+}
+
+.cyan {
+  color: var(--cyan);
+}
+
+.yellow {
+  color: var(--yellow);
+}
+
+.red {
+  color: var(--red);
+}
+
+.purple {
+  color: var(--purple);
+}
+
+.manifest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rule {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 18px;
+  min-width: 0;
+}
+
+.rule-number {
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+
+.rule h2 {
+  font-size: 16px;
+  color: var(--text);
+  margin: 8px 0;
+}
+
+.rule p {
+  color: #aab8cb;
+  font-size: 13px;
+  margin: 0;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.loop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 0;
+}
+
+.loop-step {
+  width: min(100%, 350px);
+  border: 1px solid var(--border);
+  background: #080d15;
+  text-align: center;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.loop-step:first-child,
+.loop-step:last-child {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.arrow {
+  color: var(--cyan);
+  line-height: 1;
+}
+
+.branch {
+  width: min(100%, 700px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.branch > div {
+  border: 1px solid var(--border);
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metric {
+  background: #080d15;
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+
+.metric strong {
+  color: var(--cyan);
+  display: block;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.metric span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #080d15;
+  border: 1px solid var(--border);
+  padding: 15px;
+  color: var(--green);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+blockquote {
+  border-left: 3px solid var(--green);
+  margin: 0;
+  padding: 12px 16px;
+  background: #080d15;
+  color: var(--green);
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding: 20px 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 650px) {
+  body {
+    padding: 10px;
+  }
+
+  header,
+  .panel {
+    padding: 15px;
+  }
+
+  .manifest-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full {
+    grid-column: auto;
+  }
+
+  .branch {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  :root {
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel2: #f5f5f5;
+    --border: #bbbbbb;
+    --text: #111111;
+    --muted: #444444;
+    --green: #087b38;
+    --cyan: #006b83;
+    --yellow: #805d00;
+    --red: #a00020;
+    --purple: #5433a0;
+  }
+
+  body {
+    padding: 0;
+    background: white;
+    color: black;
+  }
+
+  header,
+  .panel,
+  .rule,
+  .metric {
+    break-inside: avoid;
+  }
+
+  .toolbar {
+    display: none;
+  }
+
+  .manifest-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  pre,
+  .loop-step,
+  .metric,
+  .rule,
+  blockquote {
+    background: white;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <div class="eyebrow">SYSTEM DOCUMENT // 001</div>
+  <h1>ENTROPY ENGINE</h1>
+  <div class="subtitle">
+    A Minimal Engineering Methodology for Reducing Uncertainty
+  </div>
+
+  <div class="header-meta">
+    <span class="tag">VERSION 0.1</span>
+    <span class="tag">16 OCT 2026</span>
+    <span class="tag">MODE: <span class="status">OPERATIONAL</span></span>
+    <span class="tag">DEPENDENCIES: ZERO</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="primary" onclick="window.print()">[ PRINT / PDF ]</button>
+  <button onclick="copyManifest()">[ COPY MANIFEST ]</button>
+  <button onclick="toggleAll()">[ EXPAND / COLLAPSE ]</button>
+</div>
+
+<section class="panel">
+  <div class="panel-title">01 // PURPOSE</div>
+
+  <p>
+    Entropy Engine is a methodology for reducing uncertainty in engineering work.
+  </p>
+
+  <p>
+    Its purpose is not to maximize activity, complexity, automation, or order.
+    Its purpose is to help us make better decisions, take effective actions,
+    and verify that those actions produce meaningful improvements.
+  </p>
+
+  <p>
+    Uncertainty is an engineering concern: something to identify, prioritize,
+    reduce when worthwhile, and accept when further investigation costs more
+    than it is expected to deliver.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel-title">02 // CORE PRINCIPLE</div>
+
+  <blockquote>
+    REDUCE UNCERTAINTY ONLY WHEN DOING SO IS WORTH THE COST.
+  </blockquote>
+
+  <p>
+    Not every unknown needs an answer. Not every problem needs automation.
+    Not every imperfection needs fixing. Not every action produces progress.
+  </p>
+
+  <p>
+    The engine must distinguish between what is unknown, what matters,
+    and what is worth doing about it.
+  </p>
+</section>
+
+<div class="panel-title">03 // THE SEVEN RULES</div>
+
+<div class="manifest-grid">
+
+  <article class="rule">
+    <div class="rule-number">RULE 01</div>
+    <h2>Define the Target</h2>
+    <p>
+      Establish the desired outcome before acting. Define the goal,
+      constraints, acceptance criteria, and available resources.
+      Without a target, improvement cannot be meaningfully measured.
+    </p>
+  </article>
+
+  <article class="rule">
+    <div class="rule-number">RULE 02</div>
+    <h2>Observe Before Transforming</h2>
+    <p>
+      Gather sufficient evidence about the current state. Separate facts
+      from assumptions, identify missing information, and avoid modifying
+      systems based on an incomplete understanding of their behavior.
+    </p>
+  </article>
+
+  <article class="rule">
+    <div class="rule-number">RULE 03</div>
+    <h2>Measure Uncertainty</h2>
+    <p>
+      Not all unknowns are equally important. Prioritize uncertainty
+      according to potential impact, likelihood of causing problems,
+      and cost of resolution. Focus on unknowns that could materially
+      change a decision.
+    </p>
+  </article>
+
+  <article class="rule">
+    <div class="rule-number">RULE 04</div>
+    <h2>Choose the Smallest Valuable Action</h2>
+    <p>
+      Select an action based on expected benefit, cost, and risk.
+      Prefer small, reversible actions that produce useful information
+      or move the system toward its target. Avoid unnecessary changes
+      and premature optimization.
+    </p>
+  </article>
+
+  <article class="rule">
+    <div class="rule-number">RULE 05</div>
+    <h2>Account for Every Cost</h2>
+    <p>
+      There is no free order. Actions consume time, compute, attention,
+      and resources. They can introduce complexity, maintenance
+      obligations, dependencies, and regressions. A more organized
+      system is not necessarily a better system.
+    </p>
+  </article>
+
+  <article class="rule">
+    <div class="rule-number">RULE 06</div>
+    <h2>Verify Every Claimed Improvement</h2>
+    <p>
+      A change is a hypothesis until evidence supports it. Test the
+      outcome against acceptance criteria. Check regressions and
+      unintended consequences. If verification is missing, success
+      remains unconfirmed.
+    </p>
+  </article>
+
+  <article class="rule full">
+    <div class="rule-number">RULE 07</div>
+    <h2>Know When to Stop</h2>
+    <p>
+      Further uncertainty reduction is not always worthwhile. Stop when
+      the target is satisfied, additional investigation has insufficient
+      expected value, or remaining uncertainty is acceptable within
+      agreed constraints. Escalate decisions that require human judgment,
+      authority, or explicit risk acceptance.
+    </p>
+  </article>
+
+</div>
+
+<section class="panel" style="margin-top:14px">
+  <div class="panel-title">04 // THE OPERATING LOOP</div>
+
+  <div class="loop">
+    <div class="loop-step">01 // DEFINE TARGET STATE</div>
+    <div class="arrow">↓</div>
+    <div class="loop-step">02 // OBSERVE CURRENT STATE</div>
+    <div class="arrow">↓</div>
+    <div class="loop-step">03 // MEASURE UNCERTAINTY</div>
+    <div class="arrow">↓</div>
+    <div class="loop-step">04 // SELECT ACTION</div>
+    <div class="arrow">↓</div>
+    <div class="loop-step">05 // TRANSFORM SYSTEM</div>
+    <div class="arrow">↓</div>
+    <div class="loop-step">06 // VERIFY OUTCOME</div>
+    <div class="arrow">↓</div>
+    <div class="loop-step">07 // UPDATE KNOWLEDGE</div>
+
+    <div class="branch">
+      <div class="green">
+        ACCEPT<br>
+        <span class="muted">STOP</span>
+      </div>
+      <div class="cyan">
+        ITERATE<br>
+        <span class="muted">OBSERVE AGAIN</span>
+      </div>
+      <div class="yellow">
+        ESCALATE<br>
+        <span class="muted">HUMAN JUDGMENT</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="muted">
+    The loop is complete only when the outcome informs the next decision.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel-title">05 // THE ENTROPY LEDGER</div>
+
+  <p>
+    Every meaningful action should leave a traceable record. The ledger
+    exists to prevent repeated mistakes, expose ineffective actions,
+    preserve knowledge, and make decisions explainable.
+  </p>
+
+  <p class="cyan">MINIMUM RECORD</p>
+
+  <ul>
+    <li>Intended outcome</li>
+    <li>Uncertainty or problem being addressed</li>
+    <li>Evidence supporting the decision</li>
+    <li>Selected action</li>
+    <li>Expected benefit, cost, and risk</li>
+    <li>Verification performed</li>
+    <li>Observed result</li>
+    <li>Next decision</li>
+  </ul>
+
+  <p class="yellow">
+    The cost of maintaining the ledger must not exceed its value.
+  </p>
+
+<pre>{
+  "goal": "Implement the requested endpoint",
+  "uncertainty": "The API response contract is unclear",
+  "priority": "high",
+  "action": "Clarify the response schema",
+  "cost": "low",
+  "risk": "low",
+  "evidence": "Approved schema recorded",
+  "outcome": "uncertainty reduced",
+  "next_decision": "continue"
+}</pre>
+</section>
+
+<section class="panel">
+  <div class="panel-title">06 // METRICS THAT MATTER</div>
+
+  <p>
+    Measure outcomes rather than activity. Metrics must remain proportional
+    to the problem; measurement itself consumes resources.
+  </p>
+
+  <div class="metrics">
+    <div class="metric">
+      <strong>UNCERTAINTY RESOLVED</strong>
+      <span>Important unknowns clarified with evidence.</span>
+    </div>
+
+    <div class="metric">
+      <strong>DECISION LATENCY</strong>
+      <span>Time required to reach a justified decision.</span>
+    </div>
+
+    <div class="metric">
+      <strong>VERIFICATION RATE</strong>
+      <span>Claimed improvements supported by checks.</span>
+    </div>
+
+    <div class="metric">
+      <strong>REWORK RATE</strong>
+      <span>Work repeated due to incorrect assumptions.</span>
+    </div>
+
+    <div class="metric">
+      <strong>REGRESSION RATE</strong>
+      <span>Unintended failures introduced by changes.</span>
+    </div>
+
+    <div class="metric">
+      <strong>COST PER IMPROVEMENT</strong>
+      <span>Resources consumed relative to verified benefit.</span>
+    </div>
+
+    <div class="metric">
+      <strong>TIME TO USEFUL OUTCOME</strong>
+      <span>Time from identifying a problem to a verified result.</span>
+    </div>
+
+    <div class="metric">
+      <strong>MEASUREMENT OVERHEAD</strong>
+      <span>Cost of collecting and maintaining the metrics.</span>
+    </div>
+  </div>
+
+  <p class="yellow">
+    A metric that encourages meaningless activity is a liability.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel-title">07 // THE ANTI-OVERENGINEERING PRINCIPLE</div>
+
+  <p>
+    Entropy Engine must not become another source of complexity.
+  </p>
+
+  <ul>
+    <li>Do not introduce a framework when a checklist is sufficient.</li>
+    <li>Do not automate a decision when manual execution is cheaper.</li>
+    <li>Do not add agents, services, dashboards, or metrics without a demonstrated need.</li>
+    <li>Do not confuse more documentation with more understanding.</li>
+    <li>Do not optimize a process before understanding its actual bottleneck.</li>
+  </ul>
+
+  <p>
+    Begin with the smallest useful implementation: a target, an uncertainty
+    list, a proposed action, a verification step, and a lightweight ledger.
+  </p>
+
+  <p class="green">
+    Add complexity only when evidence demonstrates that the simpler system
+    is insufficient.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel-title">08 // MAXWELL'S DEMON</div>
+
+  <p>
+    Entropy Engine draws inspiration from Maxwell's demon: a thought
+    experiment in which information is used to distinguish and organize
+    states.
+  </p>
+
+  <p>
+    The engineering lesson is that information processing and control
+    are not free. Observation, decision-making, action, and verification
+    all have costs.
+  </p>
+
+  <p class="muted">
+    This is an analogy for software and engineering systems, not a claim
+    that software uncertainty is equivalent to thermodynamic entropy.
+  </p>
+
+  <div class="rule">
+    <div class="rule-number">OPERATING CONSTRAINTS</div>
+    <p>01 // No free order.</p>
+    <p>02 // No blind transformations.</p>
+    <p>03 // No assumed improvement.</p>
+    <p>04 // No hidden costs.</p>
+    <p>05 // Preserve reversibility.</p>
+    <p>06 // Stop when further reduction is not worth the cost.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-title">09 // DECISION HEURISTIC</div>
+
+  <pre>NET VALUE = EXPECTED BENEFIT
+          - COST
+          - RISK PENALTY</pre>
+
+  <p>
+    The weights assigned to cost and risk depend on the context.
+    This is a practical decision heuristic, not a physical law or a
+    universally objective measurement.
+  </p>
+
+  <p>
+    Prefer an action when its expected value justifies its total cost
+    and risk. Prefer gathering information when it could materially
+    improve the decision. Prefer doing nothing when intervention is
+    not justified.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel-title">10 // FINAL COMMITMENT</div>
+
+  <p>Entropy Engine does not seek perfect knowledge.</p>
+  <p class="green">It seeks sufficient knowledge to act responsibly.</p>
+
+  <p>It does not seek maximum order.</p>
+  <p class="green">It seeks useful, sustainable improvement.</p>
+
+  <p>
+    It does not confuse motion with progress, documentation with
+    understanding, automation with efficiency, or complexity with
+    sophistication.
+  </p>
+
+  <blockquote>
+    EVERY ACTION MUST HAVE A REASON.<br>
+    EVERY CLAIMED IMPROVEMENT MUST HAVE EVIDENCE.<br>
+    EVERY ADDED MECHANISM MUST JUSTIFY ITS COST.
+  </blockquote>
+
+  <p style="margin-top:20px">
+    The objective is not to eliminate uncertainty. The objective is to
+    make uncertainty manageable, decisions defensible, and progress
+    verifiable.
+  </p>
+</section>
+
+<footer>
+  ENTROPY ENGINE // MANIFEST 0.1<br>
+  REDUCE UNCERTAINTY. VERIFY PROGRESS. CONTROL COMPLEXITY.
+</footer>
+
+</div>
+
+<script>
+const manifestText = `ENTROPY ENGINE — MANIFEST
+Version 0.1 | 16 October 2026
+
+CORE PRINCIPLE
+Reduce uncertainty only when doing so is worth the cost.
+
+THE SEVEN RULES
+1. Define the target.
+2. Observe before transforming.
+3. Measure uncertainty.
+4. Choose the smallest valuable action.
+5. Account for every cost.
+6. Verify every claimed improvement.
+7. Know when to stop.
+
+OPERATING LOOP
+DEFINE → OBSERVE → MEASURE UNCERTAINTY → SELECT ACTION
+→ TRANSFORM → VERIFY → UPDATE KNOWLEDGE
+→ STOP / ITERATE / ESCALATE
+
+ENTROPY LEDGER
+Record the intended outcome, uncertainty, evidence, action,
+expected benefit, cost, risk, verification, result, and next decision.
+
+METRICS
+Uncertainty resolved, decision latency, verification rate,
+rework rate, regression rate, cost per improvement,
+time to useful outcome, and measurement overhead.
+
+ANTI-OVERENGINEERING
+Start with the smallest useful implementation.
+Add complexity only when evidence demonstrates a need.
+
+MAXWELL'S DEMON ANALOGY
+Information processing and control are not free.
+Software uncertainty is not equivalent to thermodynamic entropy.
+
+DECISION HEURISTIC
+NET VALUE = EXPECTED BENEFIT - COST - RISK PENALTY
+
+FINAL COMMITMENT
+Every action must have a reason.
+Every claimed improvement must have evidence.
+Every added mechanism must justify its cost.
+
+The objective is not to eliminate uncertainty.
+The objective is to make uncertainty manageable,
+decisions defensible, and progress verifiable.`;
+
+async function copyManifest() {
+  try {
+    await navigator.clipboard.writeText(manifestText);
+    alert("MANIFEST COPIED");
+  } catch (error) {
+    const area = document.createElement("textarea");
+    area.value = manifestText;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+
+    try {
+      document.execCommand("copy");
+      alert("MANIFEST COPIED");
+    } catch (fallbackError) {
+      alert("COPY FAILED — SELECT AND COPY THE TEXT MANUALLY");
+    }
+
+    area.remove();
+  }
+}
+
+let expanded = true;
+
+function toggleAll() {
+  expanded = !expanded;
+
+  document.querySelectorAll(".rule, .metrics, .loop").forEach(element => {
+    element.style.display = expanded ? "" : "none";
+  });
+
+  document.querySelectorAll(".panel").forEach(panel => {
+    const title = panel.querySelector(".panel-title");
+
+    if (title && title.textContent.includes("OPERATING LOOP")) {
+      panel.querySelector(".loop").style.display = expanded ? "" : "none";
+    }
+  });
+}
+</script>
+
+</body>
+</html>
