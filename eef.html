@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050507">
+<title>ENTROPY ENGINE // FRAMEWORK v0.3</title>
+<style>
+:root{
+  --bg:#050507;
+  --panel:#0c1220;
+  --panel2:#101827;
+  --line:#233246;
+  --text:#d8e3ee;
+  --muted:#8192a7;
+  --green:#71f7a8;
+  --cyan:#61d9ff;
+  --amber:#ffd479;
+  --red:#ff7777;
+  --shadow:0 12px 32px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  line-height:1.6;font-size:14px;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:var(--cyan)}
+.shell{max-width:1180px;margin:0 auto;padding:18px}
+.topbar,.panel,.pillar,.rule,.step,.metric,.callout{
+  border:1px solid var(--line);background:var(--panel);border-radius:10px;
+}
+.topbar{padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.brandline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{color:var(--green);font-weight:900;letter-spacing:.09em}
+.status{color:var(--green);font-size:11px;border:1px solid #24533a;border-radius:4px;padding:4px 8px}
+h1{font-size:clamp(24px,4vw,42px);line-height:1.12;letter-spacing:-.04em;margin:18px 0 8px;color:#f3f8ff}
+h2{font-size:20px;margin:0 0 12px;color:var(--green)}
+h3{font-size:15px;margin:0 0 7px;color:var(--cyan)}
+p{margin:7px 0 12px}
+.subtitle{max-width:850px;color:var(--muted);font-size:14px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.tag{font-size:11px;color:var(--cyan);border:1px solid #25495a;border-radius:4px;padding:4px 7px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn{background:#101d2b;border:1px solid #2b455d;color:var(--text);border-radius:6px;padding:9px 12px}
+.btn:hover,.btn:focus-visible{border-color:var(--green);outline:none}
+.btn.primary{color:var(--green);border-color:#286243}
+.layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:14px;align-items:start}
+.sidebar{position:sticky;top:12px;padding:12px}
+.sidebar-title{font-size:11px;color:var(--muted);letter-spacing:.12em;margin:2px 8px 8px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{color:var(--text);text-decoration:none;padding:8px;border-radius:5px;font-size:12px;border:1px solid transparent}
+.nav a:hover{background:#111d2c;border-color:var(--line);color:var(--green)}
+.content{min-width:0}
+.panel{padding:18px;margin-bottom:14px;scroll-margin-top:12px}
+.kicker{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.lead{font-size:16px;color:#edf6ff}
+.callout{padding:15px;background:#0b1718;border-color:#245340;margin:12px 0}
+.callout strong{color:var(--green)}
+.pillars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pillar{padding:14px;background:linear-gradient(145deg,#0c1420,#090d14)}
+.pillar.wide{grid-column:1/-1}
+.pillar-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:7px}
+.num{flex:0 0 34px;height:34px;display:grid;place-items:center;border:1px solid #286243;color:var(--green);border-radius:6px;font-weight:bold}
+.pillar h3{margin:2px 0 3px}
+.pillar small{color:var(--muted)}
+.question{color:var(--amber);font-size:12px;margin-top:10px}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.control{background:#090f18;border:1px solid var(--line);padding:10px;border-radius:6px}
+.control b{display:block;color:var(--cyan);font-size:12px;margin-bottom:4px}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.rule{padding:13px}
+.rule .n{font-size:11px;color:var(--green);margin-bottom:5px}
+.rule p{margin:0;color:#bdcad8}
+.flow{display:flex;flex-direction:column;align-items:stretch;gap:6px;max-width:720px;margin:0 auto}
+.step{padding:12px;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start}
+.step .n{border:1px solid #286243;color:var(--green);border-radius:5px;width:30px;height:30px;display:grid;place-items:center}
+.step p{margin:3px 0 0;color:var(--muted)}
+.down{text-align:center;color:var(--green);line-height:1;font-size:18px}
+.formula{overflow-wrap:anywhere;padding:13px;border:1px dashed #31516b;background:#08111c;border-radius:6px;color:var(--cyan);text-align:center;font-size:16px}
+.small{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th,td{padding:10px;border:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#111b29;color:var(--green);font-weight:700}
+td{color:#c4d0dd}
+tbody tr:nth-child(even){background:#080d14}
+ul{padding-left:20px}
+li{margin:5px 0}
+.checklist{display:grid;gap:8px}
+.checkrow{display:flex;gap:9px;align-items:flex-start;padding:10px;background:#080e16;border:1px solid var(--line);border-radius:6px}
+.checkrow input{accent-color:var(--green);margin-top:4px;flex:0 0 auto}
+.checkrow span{flex:1}
+.result{padding:12px;margin-top:10px;border:1px solid var(--line);border-radius:6px;background:#080e16;min-height:48px}
+.result.good{border-color:#286243;color:var(--green)}
+.result.warn{border-color:#735d2c;color:var(--amber)}
+.footer{color:var(--muted);font-size:11px;text-align:center;padding:18px 0 28px}
+hr{border:0;border-top:1px solid var(--line);margin:15px 0}
+@media(max-width:800px){
+ .layout{grid-template-columns:1fr}
+ .sidebar{position:static}
+ .nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pillars,.rules,.controls{grid-template-columns:1fr}
+ .pillar.wide{grid-column:auto}
+ .shell{padding:10px}
+ .panel{padding:14px}
+}
+@media print{
+ :root{--bg:#fff;--panel:#fff;--panel2:#fff;--line:#bbb;--text:#111;--muted:#444;--green:#126b37;--cyan:#075a79;--amber:#855d00}
+ body{background:#fff;color:#111;font-size:10pt}
+ .shell{max-width:none;padding:0}
+ .layout{display:block}
+ .sidebar,.toolbar,.interactive-only{display:none!important}
+ .topbar,.panel,.pillar,.rule,.step,.metric,.callout{box-shadow:none;background:#fff;break-inside:avoid}
+ .panel{padding:12px;margin-bottom:9px}
+ h1{color:#111;font-size:25pt}
+ h2,h3,.brand,.num,.question{color:#126b37}
+ .subtitle,.small,.pillar small,.step p,.rule p{color:#333}
+ .pillars{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pillar.wide{grid-column:1/-1}
+ a{color:#111;text-decoration:none}
+ .callout{border-color:#888}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brandline">
+      <div class="brand">[ ENTROPY ENGINE // SYSTEM FRAMEWORK ]</div>
+      <div class="status">● OFFLINE / LOCAL</div>
+    </div>
+    <h1>Survive. Repurpose. Adapt.</h1>
+    <p class="subtitle">Framework v0.3 — a survival-oriented feedback system for reducing consequential uncertainty, selecting sufficient complexity, coordinating adaptive action, and circulating resources to preserve future capacity.</p>
+    <div class="meta">
+      <span class="tag">5 PILLARS</span><span class="tag">1 GOVERNING OBJECTIVE</span>
+      <span class="tag">DECISION CONSTITUTION</span><span class="tag">NO DEPENDENCIES</span>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" onclick="window.print()">PRINT / SAVE PDF</button>
+      <button class="btn" id="expandBtn" onclick="toggleDetails()">EXPAND ALL</button>
+      <button class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">BACK TO TOP ↑</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar panel">
+      <div class="sidebar-title">SYSTEM INDEX</div>
+      <nav class="nav">
+        <a href="#objective">01 / Objective</a>
+        <a href="#pillars">02 / Five Pillars</a>
+        <a href="#survival">03 / Survival Rule</a>
+        <a href="#constitution">04 / Decision Rules</a>
+        <a href="#entropy">05 / Uncertainty</a>
+        <a href="#economics">06 / Circulation</a>
+        <a href="#feedback">07 / Feedback Loop</a>
+        <a href="#stability">08 / Stability</a>
+        <a href="#metrics">09 / Validation</a>
+        <a href="#test">10 / Decision Test</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="panel" id="objective">
+        <div class="kicker">00 // Governing objective</div>
+        <h2>Preserve viability and the capacity to create future value.</h2>
+        <p class="lead">The system does not need to preserve its current structure. It needs to preserve the essential capabilities that let it continue fulfilling its purpose.</p>
+        <div class="callout"><strong>Core idea:</strong> Survival through adaptation and repurposing — not preservation of every existing component.</div>
+        <p>Entropy Engine treats order, simplicity, speed, profit, and reuse as means rather than unconditional goals. Each must justify itself against the purpose and long-term viability of the whole system.</p>
+      </section>
+
+      <section class="panel" id="pillars">
+        <div class="kicker">01 // Operating architecture</div>
+        <h2>The five pillars</h2>
+        <div class="pillars">
+          <article class="pillar">
+            <div class="pillar-head"><div class="num">01</div><div><h3>Entropy Engine</h3><small>Consequential uncertainty reduction</small></div></div>
+            <p>Observe before acting. Separate evidence, assumptions, and unknowns. Reduce uncertainty when doing so is likely to improve a consequential decision.</p>
+            <div class="question">QUESTION: What uncertainty is worth reducing?</div>
+          </article>
+          <article class="pillar">
+            <div class="pillar-head"><div class="num">02</div><div><h3>Complexity Hierarchy</h3><small>Sufficient complexity</small></div></div>
+            <p>Choose the least costly adequate solution. Add complexity only when the simpler approach demonstrably fails to meet the need.</p>
+            <div class="question">QUESTION: What is the least complex solution that works?</div>
+          </article>
+          <article class="pillar">
+            <div class="pillar-head"><div class="num">03</div><div><h3>Organization Adaptation</h3><small>Self-realignment</small></div></div>
+            <p>Move decisions toward relevant knowledge. Let teams, responsibilities, and resource allocations change with the problem while retaining clear accountability.</p>
+            <div class="question">QUESTION: How can the organization realign without waiting for centralized instructions?</div>
+          </article>
+          <article class="pillar">
+            <div class="pillar-head"><div class="num">04</div><div><h3>Dynamic Response</h3><small>Stable adaptation</small></div></div>
+            <p>Recognize that information, people, software, governance, and culture change at different speeds. Match the pace of intervention to the system's ability to absorb it.</p>
+            <div class="question">QUESTION: How quickly can the system change and still converge?</div>
+          </article>
+          <article class="pillar wide">
+            <div class="pillar-head"><div class="num">05</div><div><h3>Economic Feedback &amp; Sustainable Circulation</h3><small>Resource viability and regeneration</small></div></div>
+            <p>Allocate money, energy, time, knowledge, and other resources to meet obligations, replenish capacity, withstand shocks, reward participation under explicit rules, and create future value.</p>
+            <div class="question">QUESTION: How must rewards and resources circulate for the system to keep working?</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="survival">
+        <div class="kicker">02 // Foundational principle</div>
+        <h2>Survival through repurposing</h2>
+        <div class="callout"><strong>Survival Principle:</strong> Preserve the system's capacity to continue fulfilling its essential purpose by maintaining critical resources, adapting to changing conditions, and repurposing useful potential when existing arrangements no longer work.</div>
+        <ul>
+          <li>Survival is not the preservation of the current structure indefinitely.</li>
+          <li>Short-term output must not systematically destroy long-term capacity.</li>
+          <li>Repurpose useful potential before discarding it, when reuse is viable.</li>
+          <li>Change the purpose, structure, or business model when evidence shows the current arrangement is no longer viable.</li>
+        </ul>
+        <p class="small">Repurposing is a preference, not a command. If reuse is unsafe, infeasible, or more costly than a viable alternative, release the resource responsibly.</p>
+      </section>
+
+      <section class="panel" id="constitution">
+        <div class="kicker">03 // Conflict resolution</div>
+        <h2>The decision constitution</h2>
+        <p>Use these rules when pillars conflict. The order is a default sequence of consideration, not a universal formula for every ethical or business trade-off.</p>
+        <div class="rules">
+          <article class="rule"><div class="n">RULE 01</div><h3>Protect hard constraints</h3><p>Respect legal obligations, critical safety limits, contractual commitments, and minimum viability thresholds.</p></article>
+          <article class="rule"><div class="n">RULE 02</div><h3>Protect future viability</h3><p>Account for cash, capacity, maintenance, people, knowledge, and the resources needed to continue operating.</p></article>
+          <article class="rule"><div class="n">RULE 03</div><h3>Pursue intended value</h3><p>Evaluate choices against the system's purpose, beneficiaries, and external dependencies.</p></article>
+          <article class="rule"><div class="n">RULE 04</div><h3>Choose sufficient action</h3><p>Compare lifecycle cost, risk, opportunity cost, complexity, and expected benefit.</p></article>
+          <article class="rule"><div class="n">RULE 05</div><h3>Preserve options</h3><p>Prefer bounded, reversible experiments under uncertainty when appropriate. Compare repurposing with replacement, retirement, and inaction.</p></article>
+          <article class="rule"><div class="n">RULE 06</div><h3>Verify and reconsider</h3><p>Assign an owner, define expected results, specify reconsideration triggers, and change course when evidence changes.</p></article>
+        </div>
+        <div class="callout"><strong>Conflict rule:</strong> When legitimate objectives conflict, make the trade-off explicit, identify who bears the cost, and assign responsibility for the decision.</div>
+      </section>
+
+      <section class="panel" id="entropy">
+        <div class="kicker">04 // Decision economics</div>
+        <h2>Reduce uncertainty only when it is worth the cost</h2>
+        <p>Not all uncertainty is harmful. Some is tolerable; some creates opportunity. Entropy is a guiding metaphor here, not a universal organizational quantity or a claim that all uncertainty can be measured as physical entropy.</p>
+        <div class="formula">V(a) = B(a) − C(a) − R(a) − O(a)</div>
+        <ul>
+          <li><strong>B(a)</strong> — expected benefit of action <em>a</em>.</li>
+          <li><strong>C(a)</strong> — total cost: implementation, operation, verification, maintenance, and failure handling.</li>
+          <li><strong>R(a)</strong> — expected risk penalty, including downside exposure.</li>
+          <li><strong>O(a)</strong> — opportunity cost of committed resources.</li>
+        </ul>
+        <p class="small">This is a conceptual decision aid, not a precise universal calculation. Use ranges, scenarios, and explicit assumptions when exact measurement is not possible. Include the value of information when an experiment can improve a later decision.</p>
+      </section>
+
+      <section class="panel" id="economics">
+        <div class="kicker">05 // Resource allocation</div>
+        <h2>Sustainable circulation</h2>
+        <p>The goal is neither to distribute everything nor to accumulate everything. It is to preserve a viable balance between obligations, renewal, resilience, rewards, and future opportunity.</p>
+        <div class="flow">
+          <div class="step"><div class="n">1</div><div><h3>Meet obligations and essential operating costs</h3><p>Keep the system legally, contractually, and operationally viable.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">2</div><div><h3>Maintain and replenish</h3><p>Restore infrastructure, skills, working capacity, knowledge, and other critical inputs.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">3</div><div><h3>Maintain appropriate resilience</h3><p>Hold reserves and spare capacity proportionate to uncertainty and potential shocks.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">4</div><div><h3>Distribute agreed rewards</h3><p>Use explicit rules that account for contributions, responsibility, agreements, rights, and fairness.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">5</div><div><h3>Invest in validated opportunities</h3><p>Allocate capital and effort based on expected value, risk, uncertainty, and opportunity cost.</p></div></div>
+        </div>
+        <p class="small">These are priorities for consideration, not a rigid waterfall. Legal obligations, liquidity, risk, and business conditions may require concurrent funding or a different order.</p>
+        <hr>
+        <h3>Stocks and flows</h3>
+        <div class="formula">Change in stock = inflow − outflow</div>
+        <p>Track critical stocks such as cash, available capacity, expertise, trust, asset health, and ecological resources. If consumption persistently exceeds replenishment, the stock declines even while current output looks strong.</p>
+      </section>
+
+      <section class="panel" id="feedback">
+        <div class="kicker">06 // Operating cycle</div>
+        <h2>The self-realignment loop</h2>
+        <div class="flow">
+          <div class="step"><div class="n">1</div><div><h3>Sense</h3><p>Observe the market, system health, constraints, and emerging risks.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">2</div><div><h3>Interpret</h3><p>Separate evidence, assumptions, uncertainty, urgency, and consequence.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">3</div><div><h3>Decide</h3><p>Apply the decision constitution and name the accountable owner.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">4</div><div><h3>Act</h3><p>Choose a bounded, proportionate intervention.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">5</div><div><h3>Verify</h3><p>Compare observed results with expected outcomes and costs.</p></div></div>
+          <div class="down">↓</div>
+          <div class="step"><div class="n">6</div><div><h3>Realign</h3><p>Repurpose resources, update priorities, scale, stop, or reverse the decision.</p></div></div>
+        </div>
+        <p class="small">This is a feedback loop, not a rigid waterfall. Small, low-risk decisions need not incur heavyweight review. Higher-impact or irreversible decisions require stronger evidence and controls.</p>
+      </section>
+
+      <section class="panel" id="stability">
+        <div class="kicker">07 // Dynamic stability</div>
+        <h2>Adapt without oscillation</h2>
+        <div class="controls">
+          <div class="control"><b>DAMPING</b>Do not make large changes in response to every small fluctuation.</div>
+          <div class="control"><b>PROPORTIONALITY</b>Match intervention size and speed to urgency, confidence, and reversibility.</div>
+          <div class="control"><b>PROTECTED SLACK</b>Maintain spare capacity for shocks, exploration, and recovery.</div>
+          <div class="control"><b>TIME CONSTANTS</b>Account for different response speeds in information, people, systems, governance, and culture.</div>
+        </div>
+        <div class="callout"><strong>Rule:</strong> Never confuse the speed of issuing a change with the speed of achieving a stable new state.</div>
+        <p class="small">Time-constant models are approximations. Real systems can be nonlinear, coupled, delayed, and subject to sudden shocks. Validate assumptions against observed behavior.</p>
+      </section>
+
+      <section class="panel" id="metrics">
+        <div class="kicker">08 // Falsification and learning</div>
+        <h2>Test whether the framework works</h2>
+        <table>
+          <thead><tr><th>Dimension</th><th>Possible evidence</th><th>Warning signal</th></tr></thead>
+          <tbody>
+            <tr><td>Survival</td><td>Liquidity, obligations met, critical-risk exposure</td><td>Output rises while ability to continue declines</td></tr>
+            <tr><td>Value</td><td>Customer outcomes, retention, validated demand, mission results</td><td>Activity increases without meaningful outcomes</td></tr>
+            <tr><td>Regeneration</td><td>Maintenance backlog, staff capacity, learning, asset renewal</td><td>Critical stocks are depleted faster than replenished</td></tr>
+            <tr><td>Adaptation</td><td>Time from evidence to effective change; recovery after failure</td><td>Persistent overreaction, delay, or oscillation</td></tr>
+            <tr><td>Decision efficiency</td><td>Decision latency, rework, coordination overhead, cost per verified outcome</td><td>The framework adds more overhead than value</td></tr>
+          </tbody>
+        </table>
+        <div class="callout"><strong>Metrics are sensors, not targets.</strong> Use multiple measures, inspect unintended effects, and do not let a single score determine the system's direction.</div>
+        <p>Every substantial intervention should have an expected result and a review condition. If it fails, revise or reverse it. If the framework itself does not improve outcomes, reduce risk, or preserve options, simplify the framework.</p>
+      </section>
+
+      <section class="panel" id="test">
+        <div class="kicker">09 // Interactive tool</div>
+        <h2>Decision admission test</h2>
+        <p>Before introducing a new process, technology, agent, structure, or investment, check the conditions below. This is a prompt for disciplined judgment, not an automatic approval algorithm.</p>
+        <div class="checklist" id="checks">
+          <label class="checkrow"><input type="checkbox"><span><strong>Purpose:</strong> The intended outcome and affected system are explicit.</span></label>
+          <label class="checkrow"><input type="checkbox"><span><strong>Evidence:</strong> The problem or opportunity is supported by observations, not only assumptions.</span></label>
+          <label class="checkrow"><input type="checkbox"><span><strong>Simpler alternative:</strong> A less complex viable option has been considered.</span></label>
+          <label class="checkrow"><input type="checkbox"><span><strong>Viability:</strong> Hard constraints and minimum resource levels remain protected.</span></label>
+          <label class="checkrow"><input type="checkbox"><span><strong>Repurposing:</strong> Reuse, replacement, retirement, and inaction have been compared where relevant.</span></label>
+          <label class="checkrow"><input type="checkbox"><span><strong>Accountability:</strong> An owner, expected result, and review trigger are defined.</span></label>
+          <label class="checkrow"><input type="checkbox"><span><strong>Verification:</strong> There is a practical way to evaluate the result and reverse course if needed.</span></label>
+        </div>
+        <div class="result" id="checkResult" aria-live="polite">0 of 7 checks complete. Use this to expose missing reasoning, not to manufacture certainty.</div>
+        <div class="toolbar interactive-only">
+          <button class="btn primary" onclick="evaluateChecks()">EVALUATE DECISION</button>
+          <button class="btn" onclick="resetChecks()">RESET CHECKS</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="kicker">10 // Compact definition</div>
+        <h2>Entropy Engine</h2>
+        <p class="lead">A survival-oriented, self-realigning framework for reducing consequential uncertainty, selecting sufficient complexity, coordinating adaptive action, and circulating resources so that a system can continue creating value.</p>
+        <p>It operates under explicit safety, accountability, and viability constraints; preserves useful potential through repurposing where justified; and continuously tests its decisions against observed outcomes.</p>
+        <hr>
+        <div class="kicker">Design criterion</div>
+        <div class="callout"><strong>The system must become more capable of surviving, creating value, and adapting without undermining the capacities that make those outcomes possible.</strong></div>
+      </section>
+    </main>
+  </div>
+  <footer class="footer">ENTROPY ENGINE // FRAMEWORK v0.3 // STANDALONE HTML / NO EXTERNAL DEPENDENCIES</footer>
+</div>
+<script>
+function toggleDetails(){
+  const btn=document.getElementById('expandBtn');
+  const items=[...document.querySelectorAll('.panel')];
+  const open=btn.dataset.open!=='true';
+  items.forEach(el=>{
+    el.querySelectorAll('.pillar p,.pillar .question,.rule p,.step p').forEach(node=>{
+      node.style.display=open?'block':'';
+    });
+  });
+  btn.dataset.open=String(open);
+  btn.textContent=open?'COMPACT VIEW':'EXPAND ALL';
+}
+const checks=[...document.querySelectorAll('#checks input[type="checkbox"]')];
+const result=document.getElementById('checkResult');
+function updateCount(){
+  const n=checks.filter(c=>c.checked).length;
+  result.className='result';
+  result.textContent=n+' of '+checks.length+' checks complete. '+(n===checks.length?'All checks are marked complete; validate the assumptions and risks before acting.':'Use this to expose missing reasoning, not to manufacture certainty.');
+}
+function evaluateChecks(){
+  const n=checks.filter(c=>c.checked).length;
+  result.className='result '+(n===checks.length?'good':'warn');
+  if(n===checks.length){
+    result.textContent='All 7 checks complete. This is not automatic approval: confirm evidence quality, proportionality, constraints, and accountable ownership.';
+  }else{
+    result.textContent=(checks.length-n)+' check(s) remain. Resolve or explicitly accept the gaps before proceeding with a consequential or irreversible decision.';
+  }
+}
+function resetChecks(){checks.forEach(c=>c.checked=false);updateCount();}
+checks.forEach(c=>c.addEventListener('change',updateCount));
+</script>
+</body>
+</html>
