@@ -7,6 +7,8 @@ AI slop for the busy-busy life, in a lot of topics towards VPL and units of work
 
 ## CORE
 
+The core is based in the Maxwell daemon paradox in combination with physics, financial engineering,  information theory, and 
+basic common sense. Try it out with your Agents.  
 
 [Entropy Engine](https://luhub.github.io/recipe-io/eef.html)
 
