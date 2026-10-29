@@ -5,6 +5,13 @@ recipe-io
 
 AI slop for the busy-busy life, in a lot of topics towards VPL and units of work. 
 
+## CORE
+
+
+[Entropy Engine](https://luhub.github.io/recipe-io/eef.html)
+
+[Entropy Engine Framework](https://luhub.github.io/recipe-io/eem.html)
+
 
 ## PROJECTS
 
