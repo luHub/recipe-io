@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>The Art of Software Engineering</title>
+
+<style>
+
+/* =========================================================
+   THEME
+   ========================================================= */
+
+:root {
+    --bg: #050507;
+    --panel: #0c1220;
+    --panel2: #101a2b;
+    --border: #1d3045;
+
+    --accent: #00aaff;
+    --green: #00ffcc;
+    --text: #d5e1ec;
+    --muted: #8293a5;
+    --white: #ffffff;
+
+    --danger: #ff647c;
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    line-height: 1.7;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--green);
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+
+.container {
+    max-width: 1050px;
+    margin: auto;
+    padding: 25px;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+
+    padding: 25px;
+    margin: 20px 0;
+
+    border-radius: 5px;
+}
+
+.panel-highlight {
+    border-left: 3px solid var(--accent);
+}
+
+.panel-green {
+    border-left: 3px solid var(--green);
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header {
+    padding: 25px 0 35px;
+    border-bottom: 1px solid var(--border);
+}
+
+.system-label {
+    color: var(--green);
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+h1 {
+    color: var(--white);
+
+    font-size: clamp(30px, 6vw, 56px);
+
+    line-height: 1.15;
+    margin: 25px 0 15px;
+
+    letter-spacing: -2px;
+}
+
+.subtitle {
+    color: var(--accent);
+    font-size: 16px;
+    max-width: 700px;
+}
+
+.metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+.badge {
+    border: 1px solid var(--border);
+    background: var(--panel);
+
+    padding: 5px 10px;
+
+    color: var(--muted);
+    font-size: 11px;
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin: 25px 0;
+}
+
+nav a {
+    border: 1px solid var(--border);
+
+    padding: 6px 10px;
+
+    font-size: 11px;
+    color: var(--muted);
+}
+
+nav a:hover {
+    border-color: var(--accent);
+    color: var(--green);
+}
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+
+.section-number {
+    color: var(--green);
+    font-size: 11px;
+    letter-spacing: 2px;
+
+    margin-bottom: 5px;
+}
+
+h2 {
+    color: var(--white);
+    font-size: 23px;
+
+    margin: 0 0 15px;
+}
+
+h3 {
+    color: var(--accent);
+    font-size: 15px;
+
+    margin: 15px 0 8px;
+}
+
+p {
+    margin: 12px 0;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+strong {
+    color: var(--green);
+}
+
+/* =========================================================
+   QUOTES
+   ========================================================= */
+
+blockquote {
+    margin: 25px 0;
+
+    padding: 20px;
+
+    background: var(--panel2);
+
+    border-left: 3px solid var(--green);
+
+    color: var(--white);
+
+    font-size: 17px;
+}
+
+blockquote small {
+    display: block;
+
+    margin-top: 12px;
+
+    color: var(--muted);
+    font-size: 11px;
+}
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 12px;
+
+    margin: 20px 0;
+}
+
+.card {
+    background: var(--panel2);
+
+    border: 1px solid var(--border);
+
+    padding: 18px;
+}
+
+.card-title {
+    color: var(--green);
+    font-size: 12px;
+
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+/* =========================================================
+   PROCESS
+   ========================================================= */
+
+.process {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    margin: 20px 0;
+}
+
+.process-step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 12px;
+
+    background: var(--panel2);
+    border: 1px solid var(--border);
+}
+
+.process-number {
+    color: var(--green);
+    font-size: 18px;
+
+    min-width: 35px;
+}
+
+.process-arrow {
+    color: var(--accent);
+    text-align: center;
+}
+
+/* =========================================================
+   PRINCIPLE LIST
+   ========================================================= */
+
+.principle {
+    display: flex;
+    gap: 15px;
+
+    padding: 15px 0;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.principle:last-child {
+    border-bottom: none;
+}
+
+.principle-number {
+    color: var(--green);
+    min-width: 35px;
+    font-size: 17px;
+}
+
+.principle-content {
+    flex: 1;
+}
+
+/* =========================================================
+   FINAL STATEMENT
+   ========================================================= */
+
+.final-statement {
+    margin: 40px 0;
+
+    padding: 35px 25px;
+
+    border: 1px solid var(--accent);
+
+    background:
+        linear-gradient(
+            135deg,
+            #0c1220,
+            #07101b
+        );
+
+    text-align: center;
+}
+
+.final-statement h2 {
+    color: var(--green);
+    font-size: clamp(22px, 4vw, 32px);
+}
+
+.final-statement p {
+    color: var(--white);
+    font-size: 16px;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer {
+    border-top: 1px solid var(--border);
+
+    margin-top: 50px;
+    padding: 25px 0;
+
+    color: var(--muted);
+    font-size: 11px;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin: 20px 0;
+}
+
+.btn {
+    background: var(--panel2);
+
+    border: 1px solid var(--accent);
+
+    color: var(--accent);
+
+    padding: 9px 14px;
+
+    font-size: 11px;
+}
+
+.btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+}
+
+/* =========================================================
+   COLLAPSIBLE SECTIONS
+   ========================================================= */
+
+details {
+    border: 1px solid var(--border);
+
+    background: var(--panel);
+
+    margin: 10px 0;
+    padding: 15px;
+}
+
+summary {
+    color: var(--green);
+    cursor: pointer;
+}
+
+details[open] summary {
+    margin-bottom: 15px;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+
+    body {
+        background: white;
+        color: black;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .panel,
+    .card,
+    .process-step,
+    details {
+        background: white;
+        border-color: #ccc;
+        color: black;
+        break-inside: avoid;
+    }
+
+    h1, h2, h3, p, strong,
+    blockquote, .subtitle,
+    .section-number,
+    .principle-number,
+    .process-number {
+        color: black !important;
+    }
+
+    nav,
+    .actions {
+        display: none;
+    }
+
+    blockquote {
+        border-left-color: black;
+    }
+
+    .final-statement {
+        background: white;
+        border-color: black;
+    }
+
+    footer {
+        color: black;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width: 600px) {
+
+    .container {
+        padding: 15px;
+    }
+
+    .panel {
+        padding: 17px;
+    }
+
+    h1 {
+        letter-spacing: -1px;
+    }
+
+    blockquote {
+        font-size: 15px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header>
+
+    <div class="system-label">
+        [ SOFTWARE ENGINEERING // DECLARATION ]
+    </div>
+
+    <h1>
+        THE ART OF<br>
+        SOFTWARE ENGINEERING
+    </h1>
+
+    <div class="subtitle">
+        A declaration of craft, curiosity, creativity
+        and the freedom to engineer.
+    </div>
+
+    <div class="metadata">
+
+        <span class="badge">
+            DOCUMENT // 001
+        </span>
+
+        <span class="badge">
+            VERSION 1.0
+        </span>
+
+        <span class="badge">
+            MODE: PHILOSOPHICAL
+        </span>
+
+        <span class="badge">
+            DEPENDENCIES: ZERO
+        </span>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     ACTIONS
+     ===================================================== -->
+
+<div class="actions">
+
+    <button class="btn" onclick="window.print()">
+        PRINT / SAVE PDF
+    </button>
+
+    <button class="btn" onclick="expandAll()">
+        EXPAND ALL
+    </button>
+
+    <button class="btn" onclick="collapseAll()">
+        COLLAPSE ALL
+    </button>
+
+</div>
+
+
+<!-- =====================================================
+     NAVIGATION
+     ===================================================== -->
+
+<nav>
+
+    <a href="#manifesto">00 / Manifesto</a>
+    <a href="#craft">01 / The Craft</a>
+    <a href="#curiosity">02 / Curiosity</a>
+    <a href="#technology">03 / Technology</a>
+    <a href="#code">04 / Writing Code</a>
+    <a href="#delegation">05 / Delegation</a>
+    <a href="#doctrine">06 / Doctrine</a>
+    <a href="#principles">07 / Principles</a>
+    <a href="#conclusion">08 / Conclusion</a>
+
+</nav>
+
+
+<!-- =====================================================
+     00 MANIFESTO
+     ===================================================== -->
+
+<section id="manifesto" class="panel panel-highlight">
+
+    <div class="section-number">
+        00 // THE MANIFESTO
+    </div>
+
+    <h2>
+        Software Engineering is an Art.
+    </h2>
+
+    <p>
+        Software Engineering is often described as the application
+        of mathematics, logic, engineering principles and technology
+        to solve problems.
+    </p>
+
+    <p>
+        All of that is true. But it is not the whole story.
+    </p>
+
+    <p>
+        There is something that cannot be fully described through
+        methodologies, certifications, frameworks, architectures
+        or development processes.
+    </p>
+
+    <p>
+        There is a craft behind the profession.
+        An instinct for structure. A curiosity for possibilities.
+        An appreciation for elegance. A desire to understand,
+        experiment, construct and refine.
+    </p>
+
+    <p>
+        Software Engineering is also an artistic pursuit.
+    </p>
+
+    <blockquote>
+        You do not become a software engineer simply by learning
+        how to write code.
+
+        <small>
+            YOU BECOME ONE BY LEARNING TO CREATE WITH IT.
+        </small>
+    </blockquote>
+
+</section>
+
+
+<!-- =====================================================
+     01 THE CRAFT
+     ===================================================== -->
+
+<section id="craft" class="panel">
+
+    <div class="section-number">
+        01 // THE CRAFT
+    </div>
+
+    <h2>
+        You cannot be a painter if you hate painting.
+    </h2>
+
+    <p>
+        Imagine someone who wants to be a painter but dislikes
+        touching paint, mixing colors, experimenting with brushes,
+        making mistakes or getting their hands dirty.
+    </p>
+
+    <p>
+        They might appreciate the finished paintings.
+        They might understand color theory.
+        They might know every painting technique.
+        They might even operate the most sophisticated equipment.
+    </p>
+
+    <p>
+        But if they dislike the act of painting itself,
+        something fundamental is missing.
+    </p>
+
+    <p>
+        The same applies to Software Engineering.
+    </p>
+
+    <p>
+        If you cannot appreciate the lines of code, the structure,
+        the interactions, the problem-solving and the process
+        of turning an abstract idea into something tangible,
+        you might be pursuing the wrong profession.
+    </p>
+
+    <p>
+        You do not need to love every programming language,
+        every framework or every task.
+        You do not need to enjoy every technical responsibility.
+    </p>
+
+    <p>
+        But you should feel something when you create.
+    </p>
+
+    <div class="grid">
+
+        <div class="card">
+
+            <div class="card-title">
+                THE PAINTER
+            </div>
+
+            Mixing colors.
+
+            <br>
+
+            Experimenting with textures.
+
+            <br>
+
+            Finding composition.
+
+            <br>
+
+            Making something visible.
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+                THE ENGINEER
+            </div>
+
+            Combining abstractions.
+
+            <br>
+
+            Experimenting with structures.
+
+            <br>
+
+            Finding solutions.
+
+            <br>
+
+            Making something executable.
+
+        </div>
+
+    </div>
+
+    <blockquote>
+        The medium is different. The creative impulse is not.
+    </blockquote>
+
+</section>
+
+
+<!-- =====================================================
+     02 CURIOSITY
+     ===================================================== -->
+
+<section id="curiosity" class="panel">
+
+    <div class="section-number">
+        02 // CURIOSITY IS A REQUIREMENT
+    </div>
+
+    <h2>
+        The profession belongs to the curious.
+    </h2>
+
+    <p>
+        Technology does not stand still.
+    </p>
+
+    <p>
+        Languages evolve. Paradigms change. Hardware develops.
+        New abstractions emerge. Entire ways of building software
+        become obsolete while new possibilities appear.
+    </p>
+
+    <p>
+        A software engineer should not approach these changes
+        exclusively with fear, resistance or resentment.
+    </p>
+
+    <p>
+        Curiosity is not about blindly adopting everything new.
+        It is about wanting to understand what has changed,
+        why it exists, what it enables and whether it is useful.
+    </p>
+
+    <p>
+        You do not have to use every new technology.
+        You should, however, remain interested in understanding it.
+    </p>
+
+    <h3>
+        THE CREATIVE ATTITUDE
+    </h3>
+
+    <div class="principle">
+
+        <div class="principle-number">01</div>
+
+        <div class="principle-content">
+            <strong>Explore</strong>
+
+            <br>
+
+            Be interested in things you do not yet understand.
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">02</div>
+
+        <div class="principle-content">
+            <strong>Experiment</strong>
+
+            <br>
+
+            Try things. Break things. Discover limitations.
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">03</div>
+
+        <div class="principle-content">
+            <strong>Question</strong>
+
+            <br>
+
+            Do not confuse established practices with universal truths.
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">04</div>
+
+        <div class="principle-content">
+            <strong>Create</strong>
+
+            <br>
+
+            Turn observations and ideas into working solutions.
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">05</div>
+
+        <div class="principle-content">
+            <strong>Refine</strong>
+
+            <br>
+
+            Improve the result through feedback and understanding.
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     03 TECHNOLOGY
+     ===================================================== -->
+
+<section id="technology" class="panel">
+
+    <div class="section-number">
+        03 // TECHNOLOGY IS AN INSTRUMENT
+    </div>
+
+    <h2>
+        Tools enhance the artist. They do not create the artist.
+    </h2>
+
+    <p>
+        A painter can use digital brushes, automated color palettes,
+        sophisticated canvases and artificial intelligence.
+    </p>
+
+    <p>
+        A musician can use synthesizers, digital audio workstations
+        and generative tools.
+    </p>
+
+    <p>
+        A software engineer can use IDEs, compilers, frameworks,
+        code generators, AI agents and automated development systems.
+    </p>
+
+    <p>
+        None of these tools diminish the creative process.
+        They expand the available possibilities.
+    </p>
+
+    <p>
+        Technology should be embraced when it provides value.
+        It should be questioned when it introduces unnecessary
+        complexity or removes something that matters to the work.
+    </p>
+
+    <div class="grid">
+
+        <div class="card">
+
+            <div class="card-title">
+                TECHNOLOGY
+            </div>
+
+            <p>
+                Provides capabilities.
+            </p>
+
+            <p>
+                Accelerates execution.
+            </p>
+
+            <p>
+                Removes limitations.
+            </p>
+
+            <p>
+                Expands possibilities.
+            </p>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+                THE ENGINEER
+            </div>
+
+            <p>
+                Defines intentions.
+            </p>
+
+            <p>
+                Makes judgments.
+            </p>
+
+            <p>
+                Explores alternatives.
+            </p>
+
+            <p>
+                Gives direction to creation.
+            </p>
+
+        </div>
+
+    </div>
+
+    <blockquote>
+        Technology can make you more capable.
+        It cannot give you a reason to create.
+    </blockquote>
+
+    <p>
+        Someone who does not enjoy discovering, understanding
+        and creating with technology will probably find this
+        profession increasingly miserable.
+    </p>
+
+    <p>
+        Not because technology is difficult, but because
+        the source of satisfaction is missing.
+    </p>
+
+</section>
+
+
+<!-- =====================================================
+     04 WRITING CODE
+     ===================================================== -->
+
+<section id="code" class="panel panel-green">
+
+    <div class="section-number">
+        04 // THE JOY OF CREATION
+    </div>
+
+    <h2>
+        Enjoying the process of writing code is not a problem.
+    </h2>
+
+    <p>
+        There is a particular pleasure in sitting down with
+        an incomplete specification, an idea or even a vague
+        problem and gradually discovering what the solution
+        should become.
+    </p>
+
+    <p>
+        You start with an intention.
+        You explore the problem.
+        You discover missing requirements.
+        You refine the specification.
+        You experiment with structures.
+        You write code.
+        You observe the result.
+        You change your mind.
+        You improve the design.
+    </p>
+
+    <p>
+        Sometimes the act of programming is itself part
+        of the thinking process.
+    </p>
+
+    <p>
+        The code is not simply the final implementation
+        of an already completed thought.
+        Writing it can help you discover what you actually
+        meant in the first place.
+    </p>
+
+    <div class="process">
+
+        <div class="process-step">
+
+            <div class="process-number">01</div>
+
+            <div>
+                <strong>IDEA</strong>
+
+                <br>
+
+                Something could exist.
+            </div>
+
+        </div>
+
+        <div class="process-arrow">↓</div>
+
+        <div class="process-step">
+
+            <div class="process-number">02</div>
+
+            <div>
+                <strong>EXPLORATION</strong>
+
+                <br>
+
+                Discover the problem and its possibilities.
+            </div>
+
+        </div>
+
+        <div class="process-arrow">↓</div>
+
+        <div class="process-step">
+
+            <div class="process-number">03</div>
+
+            <div>
+                <strong>SPECIFICATION</strong>
+
+                <br>
+
+                Refine intentions into something understandable.
+            </div>
+
+        </div>
+
+        <div class="process-arrow">↓</div>
+
+        <div class="process-step">
+
+            <div class="process-number">04</div>
+
+            <div>
+                <strong>CREATION</strong>
+
+                <br>
+
+                Write, experiment, construct and discover.
+            </div>
+
+        </div>
+
+        <div class="process-arrow">↓</div>
+
+        <div class="process-step">
+
+            <div class="process-number">05</div>
+
+            <div>
+                <strong>REFINEMENT</strong>
+
+                <br>
+
+                Challenge assumptions and improve the result.
+            </div>
+
+        </div>
+
+        <div class="process-arrow">↓</div>
+
+        <div class="process-step">
+
+            <div class="process-number">06</div>
+
+            <div>
+                <strong>REALIZATION</strong>
+
+                <br>
+
+                Something that previously existed only as an idea
+                now works.
+            </div>
+
+        </div>
+
+    </div>
+
+    <blockquote>
+        There is nothing wrong with enjoying every minute
+        of that process.
+
+        <small>
+            THE CREATIVE PROCESS IS NOT A WASTE OF TIME.
+        </small>
+    </blockquote>
+
+</section>
+
+
+<!-- =====================================================
+     05 DELEGATION
+     ===================================================== -->
+
+<section id="delegation" class="panel">
+
+    <div class="section-number">
+        05 // CREATIVE FREEDOM INCLUDES DELEGATION
+    </div>
+
+    <h2>
+        You are also free not to write the code.
+    </h2>
+
+    <p>
+        Here is an equally important point:
+    </p>
+
+    <p>
+        Enjoying the creative process does not make writing
+        every line of code mandatory.
+    </p>
+
+    <p>
+        You may enjoy exploring a specification yourself.
+        You may prefer to delegate its implementation.
+        You may use an AI agent, another engineer, a code generator
+        or an abstraction that takes care of the details.
+    </p>
+
+    <p>
+        You might want to focus on architecture, system behavior,
+        product design, experimentation or something entirely different.
+    </p>
+
+    <p>
+        That is perfectly legitimate.
+    </p>
+
+    <p>
+        Delegation is not a betrayal of the craft.
+        Automation is not a betrayal of the craft.
+        Abstraction is not a betrayal of the craft.
+    </p>
+
+    <p>
+        The important distinction is understanding what you are
+        delegating, why you are doing it and how you establish
+        confidence in the resulting work.
+    </p>
+
+    <div class="grid">
+
+        <div class="card">
+
+            <div class="card-title">
+                PATH A // HANDS-ON
+            </div>
+
+            <h3>
+                The Craftsperson
+            </h3>
+
+            <p>
+                Enjoys working directly with the material.
+                Explores specifications through implementation.
+                Finds satisfaction in the details.
+            </p>
+
+            <p class="muted">
+                Creation through direct interaction.
+            </p>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+                PATH B // DELEGATION
+            </div>
+
+            <h3>
+                The Orchestrator
+            </h3>
+
+            <p>
+                Enjoys defining intentions, coordinating tools,
+                delegating execution and validating results.
+            </p>
+
+            <p class="muted">
+                Creation through direction and composition.
+            </p>
+
+        </div>
+
+    </div>
+
+    <p>
+        Neither path is inherently superior.
+        Both can involve creativity, intelligence, responsibility
+        and craftsmanship.
+    </p>
+
+    <blockquote>
+        The objective is not to maximize the number of lines
+        you personally write.
+
+        The objective is to create something meaningful
+        and make sure it works.
+    </blockquote>
+
+</section>
+
+
+<!-- =====================================================
+     06 DOCTRINE
+     ===================================================== -->
+
+<section id="doctrine" class="panel">
+
+    <div class="section-number">
+        06 // AGAINST DOCTRINE
+    </div>
+
+    <h2>
+        This profession was never supposed to be a religion.
+    </h2>
+
+    <p>
+        Over time, Software Engineering has accumulated
+        methodologies, processes, conventions, certifications,
+        frameworks, patterns and doctrines.
+    </p>
+
+    <p>
+        Many of them are useful.
+        Some are necessary.
+        Some solve real organizational and technical problems.
+    </p>
+
+    <p>
+        But none of them should become the purpose of the profession.
+    </p>
+
+    <p>
+        There is no universal development methodology
+        that makes every engineer creative.
+        There is no framework that guarantees good judgment.
+        There is no programming language that automatically
+        produces elegant solutions.
+    </p>
+
+    <p>
+        A technique is a tool.
+        A methodology is a tool.
+        A framework is a tool.
+        An architecture is a tool.
+        An AI agent is a tool.
+    </p>
+
+    <p>
+        They should serve the work, not become its masters.
+    </p>
+
+    <div class="panel panel-highlight">
+
+        <h3>
+            WHAT WE SHOULD RESIST
+        </h3>
+
+        <div class="principle">
+
+            <div class="principle-number">01</div>
+
+            <div>
+                Treating a programming language as an identity.
+            </div>
+
+        </div>
+
+        <div class="principle">
+
+            <div class="principle-number">02</div>
+
+            <div>
+                Confusing years of experience with curiosity.
+            </div>
+
+        </div>
+
+        <div class="principle">
+
+            <div class="principle-number">03</div>
+
+            <div>
+                Rejecting new tools simply because they challenge
+                established habits.
+            </div>
+
+        </div>
+
+        <div class="principle">
+
+            <div class="principle-number">04</div>
+
+            <div>
+                Measuring engineering quality exclusively
+                through process compliance.
+            </div>
+
+        </div>
+
+        <div class="principle">
+
+            <div class="principle-number">05</div>
+
+            <div>
+                Assuming that writing everything manually
+                is inherently more valuable.
+            </div>
+
+        </div>
+
+        <div class="principle">
+
+            <div class="principle-number">06</div>
+
+            <div>
+                Confusing technical sophistication with
+                creative achievement.
+            </div>
+
+        </div>
+
+    </div>
+
+    <blockquote>
+        The moment the process becomes more important
+        than the creation, we have forgotten why we started.
+    </blockquote>
+
+</section>
+
+
+<!-- =====================================================
+     07 PRINCIPLES
+     ===================================================== -->
+
+<section id="principles" class="panel">
+
+    <div class="section-number">
+        07 // A CREATIVE CONSTITUTION
+    </div>
+
+    <h2>
+        Principles of the Craft
+    </h2>
+
+    <p>
+        Not commandments. Not a methodology.
+        Just principles worth defending.
+    </p>
+
+    <div class="principle">
+
+        <div class="principle-number">01</div>
+
+        <div class="principle-content">
+
+            <strong>Be curious.</strong>
+
+            <br>
+
+            Never stop exploring what technology makes possible.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">02</div>
+
+        <div class="principle-content">
+
+            <strong>Enjoy the material.</strong>
+
+            <br>
+
+            Appreciate the code, the abstractions,
+            the systems and the act of creation.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">03</div>
+
+        <div class="principle-content">
+
+            <strong>Question everything.</strong>
+
+            <br>
+
+            Including your own assumptions and established practices.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">04</div>
+
+        <div class="principle-content">
+
+            <strong>Use every useful instrument.</strong>
+
+            <br>
+
+            Do not reject technology because it changes how
+            the craft is performed.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">05</div>
+
+        <div class="principle-content">
+
+            <strong>Choose your level of involvement.</strong>
+
+            <br>
+
+            Write, delegate, automate or orchestrate.
+            Choose according to the work and your intentions.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">06</div>
+
+        <div class="principle-content">
+
+            <strong>Take responsibility.</strong>
+
+            <br>
+
+            Creativity does not remove accountability.
+            Verify what you create, regardless of who or what
+            produced it.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">07</div>
+
+        <div class="principle-content">
+
+            <strong>Do not worship the tools.</strong>
+
+            <br>
+
+            The purpose is creation, not technological conformity.
+
+        </div>
+
+    </div>
+
+    <div class="principle">
+
+        <div class="principle-number">08</div>
+
+        <div class="principle-content">
+
+            <strong>Keep the joy alive.</strong>
+
+            <br>
+
+            Do not allow the machinery surrounding the profession
+            to extinguish the curiosity that brought you into it.
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     08 CONCLUSION
+     ===================================================== -->
+
+<section id="conclusion">
+
+    <div class="section-number">
+        08 // FINAL DECLARATION
+    </div>
+
+    <div class="final-statement">
+
+        <h2>
+            SOFTWARE ENGINEERING IS AN ART.
+        </h2>
+
+        <p>
+            Not because code is beautiful by definition,
+            but because creating software requires imagination,
+            exploration, experimentation, judgment and refinement.
+        </p>
+
+        <p>
+            You can enjoy writing every line.
+            You can delegate the implementation.
+            You can work close to the hardware or at the highest
+            level of abstraction.
+        </p>
+
+        <p>
+            You can embrace AI, reject unnecessary complexity,
+            change languages, reinvent your workflow
+            and challenge established conventions.
+        </p>
+
+        <p>
+            There is no contradiction in any of that.
+        </p>
+
+        <br>
+
+        <h2>
+            THERE IS NO SINGLE WAY TO CREATE.
+        </h2>
+
+        <p>
+            There is only the willingness to explore,
+            the freedom to experiment and the responsibility
+            to make something that works.
+        </p>
+
+        <br>
+
+        <h2>
+            KEEP CREATING.
+        </h2>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer>
+
+    <div>
+        SOFTWARE ENGINEERING // THE ART OF CREATION
+    </div>
+
+    <div>
+        CURIOSITY. CREATIVITY. CRAFT.
+    </div>
+
+    <div>
+        END OF DOCUMENT // 001
+    </div>
+
+</footer>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+function expandAll() {
+
+    document.querySelectorAll("details").forEach(el => {
+        el.open = true;
+    });
+
+}
+
+function collapseAll() {
+
+    document.querySelectorAll("details").forEach(el => {
+        el.open = false;
+    });
+
+}
+
+</script>
+
+</body>
+</html>
