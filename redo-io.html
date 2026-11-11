@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050507">
+<title>Redo-io // Repetitive Task Terminal</title>
+<style>
+:root{
+  --bg:#050507;--panel:#0c1220;--panel2:#0f1830;
+  --text:#eaeaf2;--muted:#666;--accent:#00aaff;
+  --green:#00ff99;--yellow:#ffcc00;--danger:#ff5577;
+  --border:rgba(0,170,255,.25);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,select,textarea{font-family:inherit}
+button{cursor:pointer}
+.container{width:100%;max-width:900px;margin:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:14px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{margin:0;font-size:18px;color:var(--accent);font-family:monospace}
+.header-status{font-family:monospace;font-size:11px;color:var(--green)}
+.terminal{background:#000;border:1px solid var(--accent);border-radius:10px;padding:10px;font-family:monospace}
+.terminal-title{color:#777;font-size:11px;margin-bottom:8px}
+.terminal-title span{color:var(--accent)}
+.command-line{display:flex;align-items:flex-start;gap:7px}
+.prompt{color:var(--accent);font-size:16px;padding-top:10px}
+#commandInput{flex:1;min-width:0;background:transparent;border:none;outline:none;resize:vertical;color:var(--green);font-family:monospace;font-size:16px;padding:10px 0}
+#commandInput::placeholder{color:#444}
+.log{margin-top:8px;max-height:100px;overflow:auto;border-top:1px solid #111;padding-top:7px;color:#777;font-size:11px}
+.log-line{padding:2px 0}
+.command-help{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.command-help span{padding:4px 6px;border:1px solid #182333;border-radius:5px;color:#555;font-family:monospace;font-size:10px}
+.section-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.section-title{color:#aaa;font-size:13px;font-family:monospace}
+.count{color:var(--green)}
+.input-group{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
+.input-label{color:#777;font-family:monospace;font-size:10px}
+.field{width:100%;min-width:0;background:#05080e;border:1px solid #1d3045;border-radius:7px;color:var(--green);outline:none;padding:10px;font-family:monospace;font-size:14px}
+.field:focus{border-color:var(--accent)}
+.field::placeholder{color:#444}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.interval-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.action-button{border:1px solid #244;background:#09111d;color:#aaa;border-radius:7px;padding:9px 12px;cursor:pointer;font-family:monospace;font-size:11px}
+.action-button:hover{border-color:var(--accent);color:white}
+.primary-button{border-color:var(--accent);color:var(--accent)}
+.danger-button:hover{border-color:var(--danger);color:var(--danger)}
+.search-bar{margin-bottom:10px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.filter-button{background:#080d17;border:1px solid #172438;border-radius:6px;padding:6px 9px;color:#666;font-family:monospace;font-size:10px}
+.filter-button.active{border-color:var(--accent);color:var(--accent)}
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-card{background:#080d17;border:1px solid #172438;border-radius:9px;overflow:hidden}
+.task-card:hover{border-color:#345}
+.task-main{display:flex;align-items:flex-start;gap:10px;padding:11px}
+.task-check{width:25px;height:25px;flex:none;accent-color:var(--green);margin:3px 0 0}
+.task-info{flex:1;min-width:0}
+.task-name{display:block;color:#ddd;font-family:monospace;font-size:13px;word-break:break-word}
+.task-name.done{text-decoration:line-through;color:#666}
+.task-description{display:block;color:#666;font-family:monospace;font-size:10px;margin-top:5px;overflow-wrap:anywhere}
+.task-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px;font-family:monospace;font-size:10px}
+.task-interval{color:var(--green)}
+.task-due{color:#777}
+.task-due.overdue{color:var(--yellow)}
+.task-due.done-state{color:var(--accent)}
+.task-actions{display:flex;align-items:center;gap:3px;flex:none}
+.icon-button{background:none;border:1px solid transparent;border-radius:5px;color:#555;padding:7px;font-size:13px}
+.icon-button:hover{border-color:#345;color:white}
+.icon-button.delete:hover{color:var(--danger);border-color:var(--danger)}
+.task-footer{display:flex;gap:7px;padding:8px 10px;border-top:1px solid #172438;background:#09111d}
+.task-footer button{flex:1;background:transparent;border:0;color:var(--accent);padding:3px;font-family:monospace;font-size:10px}
+.task-footer button:hover{color:white}
+.empty{text-align:center;padding:25px 10px;color:#444;font-family:monospace;font-size:12px}
+.output{background:#000;border:1px solid var(--accent);border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:monospace;font-size:12px;color:#aaa;max-height:200px;overflow:auto}
+.export-actions{display:flex;gap:7px;margin-top:8px}
+.export-actions button{flex:1;border:1px solid #244;background:#09111d;color:#777;border-radius:7px;padding:8px;cursor:pointer;font-family:monospace;font-size:11px}
+.export-actions button:hover{color:white;border-color:var(--accent)}
+.footer{text-align:center;color:#333;font-family:monospace;font-size:10px;padding:5px}
+.small-note{color:#555;font:10px monospace;line-height:1.5;margin-top:5px}
+.hidden{display:none!important}
+@media(max-width:600px){
+ .container{padding:8px}.card{padding:11px}h1{font-size:16px}
+ .form-grid,.interval-grid{grid-template-columns:1fr}
+ .task-main{gap:7px}.task-actions{gap:0}.icon-button{padding:6px}
+ .command-help span{font-size:9px}.task-meta{gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="card">
+  <div class="header">
+    <h1>REDO-IO // TASK TERMINAL</h1>
+    <div class="header-status">OFFLINE / LOCAL</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="terminal">
+    <div class="terminal-title"><span>&gt;</span> COMMAND TERMINAL</div>
+    <div class="command-line">
+      <span class="prompt">&gt;</span>
+      <textarea id="commandInput" rows="1" placeholder="add Water plants every 3 days"></textarea>
+    </div>
+    <div id="log" class="log" aria-live="polite"></div>
+    <div class="command-help">
+      <span>add NAME EVERY N UNIT</span><span>done N</span><span>undo N</span>
+      <span>delete N</span><span>list</span><span>search TEXT</span><span>help</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-header"><div class="section-title" id="formTitle">ADD REPEATING TASK</div></div>
+  <div class="input-group">
+    <label class="input-label" for="taskName">TASK</label>
+    <input id="taskName" class="field" placeholder="Water plants">
+  </div>
+  <div class="input-group">
+    <label class="input-label" for="taskDescription">DESCRIPTION (OPTIONAL)</label>
+    <input id="taskDescription" class="field" placeholder="Indoor plants and balcony">
+  </div>
+  <div class="interval-grid">
+    <div class="input-group">
+      <label class="input-label" for="intervalValue">REPEAT EVERY</label>
+      <input id="intervalValue" class="field" type="number" min="1" step="1" value="1">
+    </div>
+    <div class="input-group">
+      <label class="input-label" for="intervalUnit">UNIT</label>
+      <select id="intervalUnit" class="field">
+        <option value="minutes">Minutes</option>
+        <option value="hours">Hours</option>
+        <option value="days" selected>Days</option>
+        <option value="years">Years</option>
+      </select>
+    </div>
+  </div>
+  <div class="small-note">The countdown starts when you create a task. Every interval, the task automatically resets to TODO — whether it was DONE or not. The schedule continues independently of completion and is checked when the app is open and whenever it is reopened.</div>
+  <button id="saveTaskButton" class="action-button primary-button" style="width:100%;margin-top:10px" onclick="saveTaskFromInput()">+ SAVE TASK</button>
+  <button id="cancelEditButton" class="action-button hidden" style="width:100%;margin-top:7px" onclick="cancelEdit()">CANCEL EDIT</button>
+</div>
+
+<div class="card">
+  <div class="section-header">
+    <div class="section-title">TASKS <span id="taskCount" class="count">(0)</span></div>
+    <div class="section-title" id="doneCount">DONE 0</div>
+  </div>
+  <input id="searchInput" class="field search-bar" placeholder="Search task or description...">
+  <div class="filters" id="filters">
+    <button class="filter-button active" data-filter="ALL" onclick="setFilter('ALL')">ALL</button>
+    <button class="filter-button" data-filter="TODO" onclick="setFilter('TODO')">TODO</button>
+    <button class="filter-button" data-filter="DONE" onclick="setFilter('DONE')">DONE</button>
+  </div>
+  <div id="taskList" class="task-list"></div>
+</div>
+
+<div class="card">
+  <div class="section-header"><div class="section-title">EXPORT / BACKUP</div></div>
+  <div id="output" class="output">No tasks saved.</div>
+  <div class="export-actions">
+    <button onclick="copyAll()">COPY ALL</button>
+    <button onclick="exportTXT()">EXPORT TXT</button>
+    <button onclick="exportJSON()">BACKUP JSON</button>
+  </div>
+  <div style="margin-top:8px">
+    <button class="action-button" style="width:100%" onclick="document.getElementById('importFile').click()">IMPORT JSON BACKUP</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden onchange="importJSON(event)">
+  </div>
+</div>
+
+<div class="footer">REDO-IO // LOCAL STORAGE // ZERO DEPENDENCIES</div>
+</div>
+
+<script>
+/* =========================================================
+   DATA MODEL
+   =========================================================
+   {
+     id, name, description, intervalValue, intervalUnit,
+     done, completedAt, nextResetAt, createdAt
+   }
+
+   A task's cycle begins at completion. On expiry it
+   becomes TODO and waits for the next completion.
+   ========================================================= */
+
+const STORAGE_KEY = "redo_io_terminal_v1";
+let tasks = [];
+let activeFilter = "ALL";
+let searchTerm = "";
+let editingId = null;
+let tickHandle = null;
+
+const $ = id => document.getElementById(id);
+
+function makeId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function addInterval(date, amount, unit){
+  const next = new Date(date);
+  if(unit === "minutes") next.setMinutes(next.getMinutes() + amount);
+  if(unit === "hours") next.setHours(next.getHours() + amount);
+  if(unit === "days") next.setDate(next.getDate() + amount);
+  if(unit === "years") next.setFullYear(next.getFullYear() + amount);
+  return next;
+}
+
+function intervalLabel(task){
+  return "EVERY " + task.intervalValue + " " + task.intervalUnit.toUpperCase();
+}
+
+function formatDate(value){
+  if(!value) return "—";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString();
+}
+
+function remainingText(target){
+  const ms = target - Date.now();
+  if(ms <= 0) return "RESET DUE";
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if(days > 0) return days + "d " + hours + "h remaining";
+  if(hours > 0) return hours + "h " + minutes + "m remaining";
+  if(minutes > 0) return minutes + "m " + seconds + "s remaining";
+  return seconds + "s remaining";
+}
+
+/* LOAD / SAVE */
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      if(data && Array.isArray(data.tasks)){
+        tasks = data.tasks.filter(t =>
+          t && typeof t.name === "string" &&
+          Number.isInteger(Number(t.intervalValue)) &&
+          Number(t.intervalValue) > 0 &&
+          ["minutes","hours","days","years"].includes(t.intervalUnit)
+        ).map(t => {
+          const createdAt = t.createdAt || new Date().toISOString();
+          return {
+            id: String(t.id || makeId()),
+            name: t.name,
+            description: typeof t.description === "string" ? t.description : "",
+            intervalValue: Number(t.intervalValue),
+            intervalUnit: t.intervalUnit,
+            done: Boolean(t.done),
+            completedAt: t.completedAt || null,
+            nextResetAt: t.nextResetAt || addInterval(new Date(createdAt), Number(t.intervalValue), t.intervalUnit).toISOString(),
+            createdAt
+          };
+        });
+      }
+    }
+  }catch(e){
+    tasks = [];
+    log("Storage could not be loaded");
+  }
+  processResets();
+  render();
+}
+
+function save(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({tasks}));
+  }catch(e){
+    log("Storage error: unable to save");
+  }
+  render();
+}
+
+/* RESET ENGINE */
+function processResets(){
+  const now = Date.now();
+  let changed = false;
+
+  tasks.forEach(task => {
+    if(!task.nextResetAt){
+      const start = task.createdAt ? new Date(task.createdAt) : new Date(now);
+      task.nextResetAt = addInterval(start, task.intervalValue, task.intervalUnit).toISOString();
+      changed = true;
+    }
+
+    let nextReset = new Date(task.nextResetAt).getTime();
+    if(Number.isFinite(nextReset) && nextReset <= now){
+      /* Advance by whole intervals until the next reset is in the future.
+         This also handles an app that was closed for multiple intervals. */
+      let resetCount = 0;
+      while(nextReset <= now && resetCount < 100000){
+        task.done = false;
+        task.completedAt = null;
+        nextReset = addInterval(new Date(nextReset), task.intervalValue, task.intervalUnit).getTime();
+        resetCount++;
+      }
+      task.nextResetAt = new Date(nextReset).toISOString();
+      changed = true;
+      log("Cycle reset: " + task.name + " // " + resetCount + " interval(s)");
+    }
+  });
+
+  if(changed){
+    try{localStorage.setItem(STORAGE_KEY, JSON.stringify({tasks}));}
+    catch(e){log("Storage error during reset");}
+  }
+}
+
+function startClock(){
+  if(tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(() => {
+    const before = tasks.some(t => t.done && t.nextResetAt && new Date(t.nextResetAt).getTime() <= Date.now());
+    processResets();
+    if(before) save();
+    else renderTaskListAndOutput();
+  }, 1000);
+}
+
+/* LOG */
+function log(message){
+  const box = $("log");
+  if(!box) return;
+  const line = document.createElement("div");
+  line.className = "log-line";
+  line.textContent = "> " + message;
+  box.appendChild(line);
+  while(box.children.length > 30) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* TASK CREATE / EDIT */
+function readForm(){
+  const name = $("taskName").value.trim();
+  const description = $("taskDescription").value.trim();
+  const intervalValue = Number($("intervalValue").value);
+  const intervalUnit = $("intervalUnit").value;
+  if(!name){log("Task name required");return null;}
+  if(!Number.isSafeInteger(intervalValue) || intervalValue < 1){
+    log("Repeat interval must be a positive whole number");return null;
+  }
+  return {name,description,intervalValue,intervalUnit};
+}
+
+function saveTaskFromInput(){
+  const values = readForm();
+  if(!values) return;
+  if(editingId){
+    const task = tasks.find(t => t.id === editingId);
+    if(!task){cancelEdit();return;}
+    Object.assign(task, values);
+    /* Changing the interval starts a fresh schedule from now. */
+    task.nextResetAt = addInterval(new Date(), task.intervalValue, task.intervalUnit).toISOString();
+    task.done = false;
+    task.completedAt = null;
+    log("Updated: " + task.name);
+    cancelEdit(false);
+  }else{
+    const createdAt = new Date().toISOString();
+    tasks.push({
+      id:makeId(), ...values, done:false, completedAt:null,
+      nextResetAt:addInterval(new Date(createdAt), values.intervalValue, values.intervalUnit).toISOString(),
+      createdAt
+    });
+    log("Created: " + values.name);
+    clearForm();
+  }
+  save();
+}
+
+function clearForm(){
+  $("taskName").value = "";
+  $("taskDescription").value = "";
+  $("intervalValue").value = "1";
+  $("intervalUnit").value = "days";
+}
+
+function editTask(id){
+  const task = tasks.find(t => t.id === id);
+  if(!task) return;
+  editingId = id;
+  $("taskName").value = task.name;
+  $("taskDescription").value = task.description;
+  $("intervalValue").value = task.intervalValue;
+  $("intervalUnit").value = task.intervalUnit;
+  $("formTitle").textContent = "EDIT REPEATING TASK";
+  $("saveTaskButton").textContent = "SAVE CHANGES";
+  $("cancelEditButton").classList.remove("hidden");
+  $("taskName").focus();
+  log("Editing: " + task.name);
+}
+
+function cancelEdit(clear=true){
+  editingId = null;
+  $("formTitle").textContent = "ADD REPEATING TASK";
+  $("saveTaskButton").textContent = "+ SAVE TASK";
+  $("cancelEditButton").classList.add("hidden");
+  if(clear) clearForm();
+}
+
+function toggleDone(id, checked){
+  const task = tasks.find(t => t.id === id);
+  if(!task) return;
+
+  if(checked){
+    task.done = true;
+    task.completedAt = new Date().toISOString();
+    log("Completed: " + task.name + " // scheduled reset " + formatDate(task.nextResetAt));
+  }else{
+    task.done = false;
+    task.completedAt = null;
+    log("Reopened: " + task.name + " // schedule unchanged");
+  }
+  save();
+}
+
+function deleteTask(id){
+  const index = tasks.findIndex(t => t.id === id);
+  if(index < 0) return;
+  if(!confirm('Delete "' + tasks[index].name + '"?')) return;
+  log("Deleted: " + tasks[index].name);
+  tasks.splice(index,1);
+  if(editingId === id) cancelEdit();
+  save();
+}
+
+/* FILTER / SEARCH */
+function setFilter(filter){
+  activeFilter = filter;
+  document.querySelectorAll(".filter-button").forEach(button =>
+    button.classList.toggle("active", button.dataset.filter === filter)
+  );
+  renderTaskListAndOutput();
+}
+
+function searchTasks(value){
+  searchTerm = value.toLowerCase().trim();
+  renderTaskListAndOutput();
+}
+
+function getVisibleTasks(){
+  return tasks.map((task,index)=>({task,index}))
+    .filter(({task}) => {
+      if(activeFilter === "TODO" && task.done) return false;
+      if(activeFilter === "DONE" && !task.done) return false;
+      const haystack = (task.name + " " + task.description + " " + intervalLabel(task)).toLowerCase();
+      return !searchTerm || haystack.includes(searchTerm);
+    });
+}
+
+/* SAFE DOM RENDERING: user text is always assigned with textContent. */
+function renderTaskList(){
+  const container = $("taskList");
+  container.replaceChildren();
+  const visible = getVisibleTasks();
+  if(!visible.length){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = tasks.length ? "NO MATCHING TASKS" : "NO TASKS CREATED";
+    container.appendChild(empty);
+    return;
+  }
+
+  visible.forEach(({task}) => {
+    const card = document.createElement("div");
+    card.className = "task-card";
+
+    const main = document.createElement("div");
+    main.className = "task-main";
+
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "task-check";
+    check.checked = task.done;
+    check.setAttribute("aria-label", "Mark " + task.name + " done");
+    check.addEventListener("change", () => toggleDone(task.id, check.checked));
+
+    const info = document.createElement("div");
+    info.className = "task-info";
+
+    const name = document.createElement("span");
+    name.className = "task-name" + (task.done ? " done" : "");
+    name.textContent = task.name;
+    info.appendChild(name);
+
+    if(task.description){
+      const description = document.createElement("span");
+      description.className = "task-description";
+      description.textContent = task.description;
+      info.appendChild(description);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "task-meta";
+    const interval = document.createElement("span");
+    interval.className = "task-interval";
+    interval.textContent = intervalLabel(task);
+    meta.appendChild(interval);
+
+    const due = document.createElement("span");
+    due.className = "task-due" + (task.done ? " done-state" : "");
+    if(task.nextResetAt){
+      due.textContent = "NEXT RESET IN " + remainingText(new Date(task.nextResetAt).getTime());
+    }else{
+      due.textContent = "RESET SCHEDULE PENDING";
+    }
+    meta.appendChild(due);
+    info.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "task-actions";
+    const edit = document.createElement("button");
+    edit.className = "icon-button";
+    edit.type = "button";
+    edit.textContent = "✎";
+    edit.title = "Edit task";
+    edit.addEventListener("click", () => editTask(task.id));
+    const remove = document.createElement("button");
+    remove.className = "icon-button delete";
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.title = "Delete task";
+    remove.addEventListener("click", () => deleteTask(task.id));
+    actions.append(edit,remove);
+
+    main.append(check,info,actions);
+    card.appendChild(main);
+
+    const footer = document.createElement("div");
+    footer.className = "task-footer";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.textContent = task.done ? "↶ RESET TO TODO NOW" : "✓ MARK DONE";
+    toggle.addEventListener("click", () => toggleDone(task.id, !task.done));
+    footer.appendChild(toggle);
+
+    if(task.nextResetAt){
+      const date = document.createElement("button");
+      date.type = "button";
+      date.textContent = "DUE: " + formatDate(task.nextResetAt);
+      date.title = "Scheduled reset date and time";
+      date.disabled = true;
+      footer.appendChild(date);
+    }
+    card.appendChild(footer);
+    container.appendChild(card);
+  });
+}
+
+function renderCounts(){
+  $("taskCount").textContent = "(" + tasks.length + ")";
+  $("doneCount").textContent = "DONE " + tasks.filter(t=>t.done).length;
+}
+
+function renderOutput(){
+  if(!tasks.length){$("output").textContent = "No tasks saved.";return;}
+  $("output").textContent = tasks.map((t,i) =>
+    (i+1) + ". " + t.name + "\n" +
+    "   INTERVAL: " + intervalLabel(t) + "\n" +
+    "   STATUS: " + (t.done ? "DONE" : "TODO") + "\n" +
+    "   COMPLETED: " + (t.completedAt ? formatDate(t.completedAt) : "—") + "\n" +
+    "   NEXT RESET: " + (t.nextResetAt ? formatDate(t.nextResetAt) : "—") + "\n"
+  ).join("\n");
+}
+
+function renderTaskListAndOutput(){
+  renderTaskList();
+  renderCounts();
+  renderOutput();
+}
+
+function render(){renderTaskListAndOutput();}
+
+/* COMMAND TERMINAL */
+function runCommand(command){
+  const input = command.trim();
+  if(!input) return;
+
+  let match = input.match(/^add\s+(.+?)\s+every\s+(\d+)\s+(minutes?|hours?|days?|years?)$/i);
+  if(match){
+    const unit = match[3].toLowerCase().replace(/s$/,"") + "s";
+    tasks.push({
+      id:makeId(),name:match[1].trim(),description:"",
+      intervalValue:Number(match[2]),intervalUnit:unit,
+      done:false,completedAt:null,
+      nextResetAt:addInterval(new Date(), Number(match[2]), unit).toISOString(),
+      createdAt:new Date().toISOString()
+    });
+    log("Created: " + match[1] + " // every " + match[2] + " " + unit);
+    save();return;
+  }
+
+  match = input.match(/^(done|undo|delete|edit)\s+(\d+)$/i);
+  if(match){
+    const index = Number(match[2])-1;
+    const task = tasks[index];
+    if(!task){log("Task number not found");return;}
+    const action = match[1].toLowerCase();
+    if(action === "done") toggleDone(task.id,true);
+    if(action === "undo") toggleDone(task.id,false);
+    if(action === "delete") deleteTask(task.id);
+    if(action === "edit") editTask(task.id);
+    return;
+  }
+
+  if(/^list$/i.test(input)){
+    if(!tasks.length){log("No tasks created");return;}
+    tasks.forEach((t,i)=>log((i+1)+". "+t.name+" ["+(t.done?"DONE":"TODO")+"] "+intervalLabel(t)));
+    return;
+  }
+
+  match = input.match(/^search\s+(.+)$/i);
+  if(match){
+    $("searchInput").value = match[1];
+    searchTasks(match[1]);
+    log("Search: " + match[1]);return;
+  }
+
+  if(/^all$/i.test(input)){
+    activeFilter="ALL";$("searchInput").value="";searchTerm="";
+    setFilter("ALL");log("Showing all tasks");return;
+  }
+  if(/^todo$/i.test(input)){setFilter("TODO");log("Showing TODO");return;}
+  if(/^completed|^done$/i.test(input)){setFilter("DONE");log("Showing DONE");return;}
+  if(/^help$/i.test(input)){
+    log("add NAME every N minutes|hours|days|years");
+    log("done N | undo N | edit N | delete N | list");
+    log("search TEXT | todo | completed | all | help");
+    return;
+  }
+  log("Unknown command: " + input);
+}
+
+/* IMPORT / EXPORT */
+function downloadFile(content,filename,type){
+  const blob = new Blob([content],{type});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href=url;link.download=filename;
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+async function copyAll(){
+  const text = tasks.map(t=>t.name+" | "+intervalLabel(t)+" | "+(t.done?"DONE":"TODO")).join("\n");
+  try{await navigator.clipboard.writeText(text);log("All tasks copied");}
+  catch(e){log("Clipboard unavailable");}
+}
+
+function exportTXT(){
+  if(!tasks.length){log("Nothing to export");return;}
+  downloadFile($("output").textContent,"redo-io-tasks.txt","text/plain;charset=utf-8");
+  log("Exported redo-io-tasks.txt");
+}
+
+function exportJSON(){
+  downloadFile(JSON.stringify({version:1,tasks},null,2),"redo-io-backup.json","application/json");
+  log("JSON backup exported");
+}
+
+function importJSON(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.tasks)) throw new Error("Invalid format");
+      const imported=parsed.tasks.filter(t=>
+        t && typeof t.name==="string" && t.name.trim() &&
+        Number.isSafeInteger(Number(t.intervalValue)) && Number(t.intervalValue)>0 &&
+        ["minutes","hours","days","years"].includes(t.intervalUnit)
+      ).map(t=>({
+        id:makeId(),name:t.name.trim(),
+        description:typeof t.description==="string"?t.description:"",
+        intervalValue:Number(t.intervalValue),intervalUnit:t.intervalUnit,
+        done:Boolean(t.done),completedAt:t.completedAt||null,
+        nextResetAt:t.nextResetAt||addInterval(new Date(t.createdAt||Date.now()), Number(t.intervalValue), t.intervalUnit).toISOString(),
+        createdAt:t.createdAt||new Date().toISOString()
+      }));
+      if(!confirm("Import "+imported.length+" tasks? Existing tasks will be replaced.")) return;
+      tasks=imported;
+      processResets();
+      cancelEdit();
+      activeFilter="ALL";searchTerm="";$("searchInput").value="";
+      setFilter("ALL");save();
+      log("Imported "+tasks.length+" tasks");
+    }catch(e){log("Import failed: invalid JSON backup");}
+    finally{event.target.value="";}
+  };
+  reader.readAsText(file);
+}
+
+/* INPUT EVENTS */
+$("commandInput").addEventListener("keydown",event=>{
+  if(event.key==="Enter" && !event.shiftKey){
+    event.preventDefault();
+    const value=$("commandInput").value;
+    if(value.trim()){runCommand(value);$("commandInput").value="";}
+  }
+});
+$("searchInput").addEventListener("input",function(){searchTasks(this.value);});
+["taskName","taskDescription","intervalValue","intervalUnit"].forEach(id=>{
+  $(id).addEventListener("keydown",event=>{
+    if(event.key==="Enter"){
+      event.preventDefault();
+      if(id==="taskDescription" || id==="intervalValue" || id==="intervalUnit") saveTaskFromInput();
+      else if(id==="taskName") $("taskDescription").focus();
+    }
+  });
+});
+
+/* START */
+load();
+startClock();
+log("Redo-io ready.");
+log("Every task resets to TODO after its configured interval, whether completed or not.");
+</script>
+</body>
+</html>
