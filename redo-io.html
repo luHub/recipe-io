@@ -122,6 +122,10 @@ h1{margin:0;font-size:18px;color:var(--accent);font-family:monospace}
     <label class="input-label" for="taskDescription">DESCRIPTION (OPTIONAL)</label>
     <input id="taskDescription" class="field" placeholder="Indoor plants and balcony">
   </div>
+  <div class="input-group">
+    <label class="input-label" for="startDateTime">SCHEDULE START DATE &amp; TIME</label>
+    <input id="startDateTime" class="field" type="datetime-local">
+  </div>
   <div class="interval-grid">
     <div class="input-group">
       <label class="input-label" for="intervalValue">REPEAT EVERY</label>
@@ -137,7 +141,7 @@ h1{margin:0;font-size:18px;color:var(--accent);font-family:monospace}
       </select>
     </div>
   </div>
-  <div class="small-note">The countdown starts when you create a task. Every interval, the task automatically resets to TODO — whether it was DONE or not. The schedule continues independently of completion and is checked when the app is open and whenever it is reopened.</div>
+  <div class="small-note">Choose when the repeating schedule starts. Every interval from that start, the task automatically resets to TODO — whether it was DONE or not. The schedule continues independently of completion and is checked when the app is open and whenever it is reopened.</div>
   <button id="saveTaskButton" class="action-button primary-button" style="width:100%;margin-top:10px" onclick="saveTaskFromInput()">+ SAVE TASK</button>
   <button id="cancelEditButton" class="action-button hidden" style="width:100%;margin-top:7px" onclick="cancelEdit()">CANCEL EDIT</button>
 </div>
@@ -255,7 +259,8 @@ function load(){
             intervalUnit: t.intervalUnit,
             done: Boolean(t.done),
             completedAt: t.completedAt || null,
-            nextResetAt: t.nextResetAt || addInterval(new Date(createdAt), Number(t.intervalValue), t.intervalUnit).toISOString(),
+            scheduleStartAt: t.scheduleStartAt || createdAt,
+            nextResetAt: t.nextResetAt || addInterval(new Date(t.scheduleStartAt || createdAt), Number(t.intervalValue), t.intervalUnit).toISOString(),
             createdAt
           };
         });
@@ -341,11 +346,16 @@ function readForm(){
   const description = $("taskDescription").value.trim();
   const intervalValue = Number($("intervalValue").value);
   const intervalUnit = $("intervalUnit").value;
+  const startValue = $("startDateTime").value;
+  const startDate = startValue ? new Date(startValue) : new Date();
   if(!name){log("Task name required");return null;}
   if(!Number.isSafeInteger(intervalValue) || intervalValue < 1){
     log("Repeat interval must be a positive whole number");return null;
   }
-  return {name,description,intervalValue,intervalUnit};
+  if(Number.isNaN(startDate.getTime())){
+    log("A valid schedule start date and time is required");return null;
+  }
+  return {name,description,intervalValue,intervalUnit,scheduleStartAt:startDate.toISOString()};
 }
 
 function saveTaskFromInput(){
@@ -355,8 +365,8 @@ function saveTaskFromInput(){
     const task = tasks.find(t => t.id === editingId);
     if(!task){cancelEdit();return;}
     Object.assign(task, values);
-    /* Changing the interval starts a fresh schedule from now. */
-    task.nextResetAt = addInterval(new Date(), task.intervalValue, task.intervalUnit).toISOString();
+    /* Recalculate the repeating schedule from the selected start date/time. */
+    task.nextResetAt = addInterval(new Date(task.scheduleStartAt), task.intervalValue, task.intervalUnit).toISOString();
     task.done = false;
     task.completedAt = null;
     log("Updated: " + task.name);
@@ -365,7 +375,7 @@ function saveTaskFromInput(){
     const createdAt = new Date().toISOString();
     tasks.push({
       id:makeId(), ...values, done:false, completedAt:null,
-      nextResetAt:addInterval(new Date(createdAt), values.intervalValue, values.intervalUnit).toISOString(),
+      nextResetAt:addInterval(new Date(values.scheduleStartAt), values.intervalValue, values.intervalUnit).toISOString(),
       createdAt
     });
     log("Created: " + values.name);
@@ -374,11 +384,17 @@ function saveTaskFromInput(){
   save();
 }
 
+function toLocalDateTimeValue(date){
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0,16);
+}
+
 function clearForm(){
   $("taskName").value = "";
   $("taskDescription").value = "";
   $("intervalValue").value = "1";
   $("intervalUnit").value = "days";
+  $("startDateTime").value = toLocalDateTimeValue(new Date());
 }
 
 function editTask(id){
@@ -389,6 +405,7 @@ function editTask(id){
   $("taskDescription").value = task.description;
   $("intervalValue").value = task.intervalValue;
   $("intervalUnit").value = task.intervalUnit;
+  $("startDateTime").value = toLocalDateTimeValue(new Date(task.scheduleStartAt || task.createdAt));
   $("formTitle").textContent = "EDIT REPEATING TASK";
   $("saveTaskButton").textContent = "SAVE CHANGES";
   $("cancelEditButton").classList.remove("hidden");
@@ -589,6 +606,7 @@ function runCommand(command){
       id:makeId(),name:match[1].trim(),description:"",
       intervalValue:Number(match[2]),intervalUnit:unit,
       done:false,completedAt:null,
+      scheduleStartAt:new Date().toISOString(),
       nextResetAt:addInterval(new Date(), Number(match[2]), unit).toISOString(),
       createdAt:new Date().toISOString()
     });
@@ -681,7 +699,8 @@ function importJSON(event){
         description:typeof t.description==="string"?t.description:"",
         intervalValue:Number(t.intervalValue),intervalUnit:t.intervalUnit,
         done:Boolean(t.done),completedAt:t.completedAt||null,
-        nextResetAt:t.nextResetAt||addInterval(new Date(t.createdAt||Date.now()), Number(t.intervalValue), t.intervalUnit).toISOString(),
+        scheduleStartAt:t.scheduleStartAt||t.createdAt||new Date().toISOString(),
+        nextResetAt:t.nextResetAt||addInterval(new Date(t.scheduleStartAt||t.createdAt||Date.now()), Number(t.intervalValue), t.intervalUnit).toISOString(),
         createdAt:t.createdAt||new Date().toISOString()
       }));
       if(!confirm("Import "+imported.length+" tasks? Existing tasks will be replaced.")) return;
@@ -718,6 +737,7 @@ $("searchInput").addEventListener("input",function(){searchTasks(this.value);});
 
 /* START */
 load();
+clearForm();
 startClock();
 log("Redo-io ready.");
 log("Every task resets to TODO after its configured interval, whether completed or not.");
