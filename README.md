@@ -21,6 +21,8 @@ More on the go!
 
 # RECIPE-IO
 
+Because you cant design high level abstractions if you don't eat first... 
+
 [Check me](https://luhub.github.io/recipe-io/in.html)
 
 ### Have you ever! 
