@@ -2231,7 +2231,7 @@ function renderOutput(){
    TERMINAL COMMANDS
    ========================================================= */
 
-function runCommand(command){
+function runBaseCommand(command){
 
   const text =
     command.trim();
@@ -2781,7 +2781,7 @@ const p2pIncoming = [];
 let p2pLocalPairing = null;
 let p2pSignalMode = null;
 
-const originalRunCommand = runCommand;
+const originalRunCommand = runBaseCommand;
 
 function p2pLog(message){
   log("[P2P] " + message);
